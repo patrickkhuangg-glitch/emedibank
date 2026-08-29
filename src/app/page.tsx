@@ -7,17 +7,16 @@ export default function Home() {
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
           <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
-          GAMSAT now · UCAT &amp; interview coming
+          UCAT · GAMSAT · ISAT · Interviews
         </span>
 
         <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-          Medical-admissions exam prep, done properly.
+          Every question, explained.
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted">
-          Question banks, video courses, analytics and tutor feedback — one
-          platform built to grow across every admissions exam. We&rsquo;re
-          starting with GAMSAT.
+          Exam-accurate question banks with written and video explanations that show
+          exactly how to reach the answer — across every medical-admissions exam.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -54,14 +53,14 @@ export default function Home() {
 const FEATURES = [
   {
     title: 'Question banks',
-    body: 'Exam-accurate practice with detailed explanations, filtered by topic and difficulty.',
+    body: 'Exam-accurate practice across UCAT, GAMSAT and ISAT, filtered by subtest and difficulty.',
   },
   {
-    title: 'Video courses',
-    body: 'Structured lessons that build the fundamentals, on your schedule.',
+    title: 'Video explanations',
+    body: 'Every question worked through on video — the premium way to learn from your mistakes.',
   },
   {
-    title: 'Analytics & feedback',
-    body: 'Track progress over time and get targeted feedback from tutors.',
+    title: 'Timed mock exams',
+    body: 'Sit full papers in a faithful test interface, with your progress tracked over time.',
   },
 ]

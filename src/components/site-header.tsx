@@ -3,6 +3,7 @@ import { Container } from './container'
 import { getUser, getProfile } from '@/lib/auth/dal'
 import { signOutAction } from '@/lib/auth/actions'
 import { ButtonLink, Button } from './ui/button'
+import { Wordmark } from './ui/wordmark'
 
 export async function SiteHeader() {
   const user = await getUser()
@@ -11,14 +12,8 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-border bg-surface/80 backdrop-blur">
       <Container className="flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span
-            aria-hidden
-            className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-brand-foreground text-sm font-bold"
-          >
-            EP
-          </span>
-          <span>Exam Prep</span>
+        <Link href="/" className="flex items-center" aria-label="EMediBank home">
+          <Wordmark className="text-xl" />
         </Link>
 
         <nav className="flex items-center gap-2 text-sm">

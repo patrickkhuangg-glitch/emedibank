@@ -1,33 +1,34 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Sora, Manrope } from 'next/font/google'
 import './globals.css'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const sora = Sora({
+  variable: '--font-sora',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const manrope = Manrope({
+  variable: '--font-manrope',
   subsets: ['latin'],
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Exam Prep — Medical admissions exam preparation',
-    template: '%s · Exam Prep',
+    default: 'EMediBank — Medical admissions question bank',
+    template: '%s · EMediBank',
   },
   description:
-    'A subscription platform for medical-admissions exam prep. GAMSAT first, with UCAT and interview prep to follow.',
+    'Practise UCAT, GAMSAT and ISAT questions with written and video explanations. Part of EMeducate.',
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sora.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteHeader />
