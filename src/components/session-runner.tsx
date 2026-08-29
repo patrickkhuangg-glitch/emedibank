@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
-import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction } from '@/lib/questions/actions'
+import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction } from '@/lib/questions/actions'
 
 type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
@@ -12,8 +12,10 @@ type SafeQuestion = {
   topic: string | null
   stem: string
   passage: string | null
+  image: string | null
   table: { headers: string[]; rows: string[][] } | null
   statements: { index: number; text: string }[] | null
+  mostLeast: { actions: { index: number; text: string }[] } | null
   options: { id: string; label: string; body: string }[]
 }
 type Result = { is_correct: boolean; correct_option_id: string | null; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
@@ -21,6 +23,8 @@ type GridResult = { is_correct: boolean; per_statement: { index: number; correct
 type Video = { playbackId: string; token: string }
 type Answered = { selectedId: string; result: Result; video: Video | null }
 type GridAnswered = { result: GridResult; video: Video | null }
+type MostLeastResult = { is_correct: boolean; correct_most: number; correct_least: number; most_correct: boolean; least_correct: boolean; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
+type MLAnswered = { result: MostLeastResult; video: Video | null }
 
 const ARIAL = 'Arial, Helvetica, sans-serif'
 const BAR = 'linear-gradient(#1a78bf,#1268ad)'
@@ -59,6 +63,9 @@ export function SessionRunner({
   const [answers, setAnswers] = useState<Record<string, Answered>>({})
   const [gridPending, setGridPending] = useState<Record<string, Record<number, YesNo>>>({})
   const [gridAnswers, setGridAnswers] = useState<Record<string, GridAnswered>>({})
+  const [mlPending, setMlPending] = useState<Record<string, { most?: number; least?: number }>>({})
+  const [mlAnswers, setMlAnswers] = useState<Record<string, MLAnswered>>({})
+  const [mlSelected, setMlSelected] = useState<number | null>(null)
   const [flags, setFlags] = useState<Record<string, boolean>>({})
   const [calcOpen, setCalcOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
@@ -69,9 +76,10 @@ export function SessionRunner({
   const id = questionIds[i]
   const q = cache[id]
   const isGrid = !!q?.statements
+  const isML = !!q?.mostLeast
   const answered = answers[id]
   const gridAnswered = gridAnswers[id]
-  const isAnswered = !!answered || !!gridAnswered
+  const mlAnswered = mlAnswers[id]
 
   const ensure = useCallback(async (qid: string) => {
     if (qid in cache) return
@@ -79,6 +87,7 @@ export function SessionRunner({
     setCache((c) => ({ ...c, [qid]: r.locked ? null : (r.question as SafeQuestion) }))
   }, [cache])
   useEffect(() => { if (phase === 'running') ensure(id) }, [id, phase, ensure])
+  useEffect(() => { setMlSelected(null) }, [i])
 
   const finish = useCallback(() => {
     setPhase('done')
@@ -103,6 +112,20 @@ export function SessionRunner({
       setGridAnswers((a) => ({ ...a, [id]: { result: r, video } }))
       return
     }
+    if (cur.mostLeast) {
+      if (mlAnswers[id]) return
+      const ch = mlPending[id]
+      if (ch?.most == null || ch?.least == null) return
+      const r = await submitMostLeastAction(id, { most: ch.most, least: ch.least })
+      if ('denied' in r) return
+      let video: Video | null = null
+      if (r.can_watch_video && r.video_ready) {
+        const v = await loadExplanationVideoAction(id)
+        if (!('denied' in v)) video = v
+      }
+      setMlAnswers((a) => ({ ...a, [id]: { result: r, video } }))
+      return
+    }
     if (answers[id]) return
     const sel = pending[id]
     if (!sel) return
@@ -114,7 +137,7 @@ export function SessionRunner({
       if (!('denied' in v)) video = v
     }
     setAnswers((a) => ({ ...a, [id]: { selectedId: sel, result: r, video } }))
-  }, [cache, id, gridAnswers, gridPending, answers, pending])
+  }, [cache, id, gridAnswers, gridPending, mlAnswers, mlPending, answers, pending])
 
   const go = useCallback((d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))), [total])
 
@@ -145,7 +168,7 @@ export function SessionRunner({
         return
       }
       const cur = cache[id]
-      if (!calcOpen && cur && !cur.statements && !answers[id]) {
+      if (!calcOpen && cur && !cur.statements && !cur.mostLeast && !answers[id]) {
         const idx = ['a', 'b', 'c', 'd', 'e'].indexOf(e.key.toLowerCase())
         const opt = cur.options[idx]
         if (opt) setPending((p) => ({ ...p, [id]: opt.id }))
@@ -161,11 +184,12 @@ export function SessionRunner({
     setPhase('running')
   }
 
-  function isDone(qid: string) { return !!answers[qid] || !!gridAnswers[qid] }
+  function isDone(qid: string) { return !!answers[qid] || !!gridAnswers[qid] || !!mlAnswers[qid] }
   const correctCount =
     Object.values(answers).filter((a) => a.result.is_correct).length +
-    Object.values(gridAnswers).filter((a) => a.result.is_correct).length
-  const answeredCount = new Set([...Object.keys(answers), ...Object.keys(gridAnswers)]).size
+    Object.values(gridAnswers).filter((a) => a.result.is_correct).length +
+    Object.values(mlAnswers).filter((a) => a.result.is_correct).length
+  const answeredCount = new Set([...Object.keys(answers), ...Object.keys(gridAnswers), ...Object.keys(mlAnswers)]).size
 
   const CounterIcon = () => (
     <svg width="18" height="15" viewBox="0 0 24 20" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="2" width="20" height="4" rx="1" /><rect x="2" y="8" width="20" height="4" rx="1" /><rect x="4" y="14" width="16" height="3" rx="1" /></svg>
@@ -215,7 +239,7 @@ export function SessionRunner({
           </div>
           <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-2">
             {questionIds.map((qid, idx) => {
-              const res = answers[qid]?.result ?? gridAnswers[qid]?.result
+              const res = answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
               const cls = !res ? 'bg-gray-100 text-gray-500' : res.is_correct ? 'bg-[#e2efe4] text-[#157d72]' : 'bg-[#fdecec] text-[#dc2626]'
               return <button key={qid} onClick={() => { setPhase('running'); setI(idx) }} className={`h-10 rounded ${cls} text-sm`}>{idx + 1}</button>
             })}
@@ -239,7 +263,7 @@ export function SessionRunner({
     return { ...p, [id]: row }
   })
 
-  const Explanation = (result: Result | GridResult | undefined, video: Video | null | undefined) => result ? (
+  const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined) => result ? (
     <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
       <p className={`text-sm font-semibold ${result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{result.is_correct ? 'Correct' : 'Not quite'}</p>
       {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{result.explanation_text}</div> : null}
@@ -323,6 +347,59 @@ export function SessionRunner({
     </div>
   ) : null
 
+  const setML = (slot: 'most' | 'least', idx: number) => setMlPending((p) => {
+    const cur: { most?: number; least?: number } = { ...(p[id] ?? {}) }
+    cur[slot] = idx
+    if (slot === 'most' && cur.least === idx) delete cur.least
+    if (slot === 'least' && cur.most === idx) delete cur.most
+    return { ...p, [id]: cur }
+  })
+  const clearML = (slot: 'most' | 'least') => setMlPending((p) => { const cur = { ...(p[id] ?? {}) }; delete cur[slot]; return { ...p, [id]: cur } })
+
+  const Img = q?.image ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={q.image} alt="Question diagram" className="my-4 max-w-full border border-gray-200" />
+  ) : null
+
+  const ML = q?.mostLeast ? (
+    <div className="mt-6">
+      <div className="flex flex-col gap-3">
+        {(['most', 'least'] as const).map((slot) => {
+          const label = slot === 'most' ? 'Most Appropriate' : 'Least Appropriate'
+          const idx = mlPending[id]?.[slot]
+          const action = idx != null ? q.mostLeast!.actions.find((a) => a.index === idx) : undefined
+          const ok = mlAnswered ? (slot === 'most' ? mlAnswered.result.most_correct : mlAnswered.result.least_correct) : null
+          let boxCls = 'border-gray-400 bg-[#b3aca7] text-white'
+          if (mlAnswered && ok != null) boxCls = ok ? 'border-[#157d72] bg-[#e2efec] text-[#157d72]' : 'border-[#dc2626] bg-[#fdecec] text-[#dc2626]'
+          else if (action) boxCls = 'border-[#1268ad] bg-[#eef5fb] text-[#1268ad]'
+          return (
+            <div key={slot} className="flex items-stretch gap-3">
+              <div className="grid w-40 flex-none place-items-center border-2 border-black px-2 py-3 text-center text-[15px]">{label}</div>
+              <div
+                onClick={() => { if (!mlAnswered) { if (mlSelected != null) { setML(slot, mlSelected); setMlSelected(null) } else if (action) clearML(slot) } }}
+                onDragOver={(e) => { if (!mlAnswered) e.preventDefault() }}
+                onDrop={(e) => { if (!mlAnswered) { const v = Number(e.dataTransfer.getData('text/plain')); if (!Number.isNaN(v)) setML(slot, v) } }}
+                className={`flex min-h-[64px] flex-1 cursor-pointer items-center justify-center border-2 px-4 text-center text-[15px] ${boxCls}`}
+              >{action ? action.text : ''}</div>
+            </div>
+          )
+        })}
+      </div>
+      {!mlAnswered ? (
+        <div className="mt-6 flex flex-col gap-3 bg-gray-200 p-3">
+          {q.mostLeast.actions.map((a) => {
+            const used = mlPending[id]?.most === a.index || mlPending[id]?.least === a.index
+            return (
+              <div key={a.index} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', String(a.index))} onClick={() => setMlSelected(mlSelected === a.index ? null : a.index)}
+                className={`cursor-grab border-2 px-4 py-3 text-center text-[15px] active:cursor-grabbing ${mlSelected === a.index ? 'border-[#1268ad] bg-[#eef5fb]' : 'border-black bg-white'} ${used ? 'opacity-50' : ''}`}>{a.text}</div>
+            )
+          })}
+          <p className="text-xs text-gray-500">Drag an action into a box, or tap an action then tap a box.</p>
+        </div>
+      ) : null}
+    </div>
+  ) : null
+
   return (
     <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
       {warn ? (
@@ -355,13 +432,21 @@ export function SessionRunner({
         ) : isGrid ? (
           <div className="mx-auto max-w-6xl">
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+            {Img}
             {Table}
             {Grid}
             {Explanation(gridAnswered?.result, gridAnswered?.video)}
           </div>
+        ) : isML ? (
+          <div className="mx-auto max-w-4xl">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+            {Img}
+            {ML}
+            {Explanation(mlAnswered?.result, mlAnswered?.video)}
+          </div>
         ) : q.passage ? (
           <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
-            <div className="whitespace-pre-wrap text-[15px] leading-relaxed md:pr-8">{q.passage}</div>
+            <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Img}</div>
             <div className="md:pl-8">
               <p className="text-[15px] leading-relaxed">{q.stem}</p>
               <div className="mt-6">{Options}</div>
@@ -372,6 +457,7 @@ export function SessionRunner({
           <div className="mx-auto max-w-3xl">
             {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
             <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+            {Img}
             {Table}
             <div className="mt-5">{Options}</div>
             {Explanation(answered?.result, answered?.video)}

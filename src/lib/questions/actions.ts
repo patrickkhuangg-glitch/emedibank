@@ -37,3 +37,14 @@ export async function submitGridAction(
   const { submitGridAnswer } = await import('@/lib/access/questions')
   return submitGridAnswer(user.id, questionId, answers, timeSpentSeconds)
 }
+
+export async function submitMostLeastAction(
+  questionId: string,
+  choice: { most: number; least: number },
+  timeSpentSeconds?: number,
+) {
+  const user = await getUser()
+  if (!user) return { denied: true } as const
+  const { submitMostLeastAnswer } = await import('@/lib/access/questions')
+  return submitMostLeastAnswer(user.id, questionId, choice, timeSpentSeconds)
+}

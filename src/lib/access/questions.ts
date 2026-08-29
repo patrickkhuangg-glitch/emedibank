@@ -9,8 +9,10 @@ import type { QuestionKind } from '@/lib/supabase/types'
 type YesNo = 'Yes' | 'No'
 type QData = {
   passage?: string
+  image?: string
   table?: { headers: string[]; rows: string[][] }
   statements?: { text: string; correct: YesNo }[]
+  mostLeast?: { actions: { text: string }[]; correctMost: number; correctLeast: number }
 }
 
 type QuestionMeta = {
@@ -61,9 +63,12 @@ export type SafeQuestion = {
   topic: string | null
   stem: string
   passage: string | null
+  image: string | null
   table: { headers: string[]; rows: string[][] } | null
   // present => 5-statement Yes/No grid (Decision Making syllogisms / interpreting info)
   statements: { index: number; text: string }[] | null
+  // present => SJT most/least appropriate drag-and-drop
+  mostLeast: { actions: { index: number; text: string }[] } | null
   options: { id: string; label: string; body: string }[]
 }
 
@@ -82,6 +87,7 @@ export async function getQuestionForAttempt(
     topic: m.topic,
     stem: m.stem,
     passage: m.data?.passage ?? null,
+    image: m.data?.image ?? null,
     table: m.data?.table ?? null,
   }
 
@@ -91,6 +97,19 @@ export async function getQuestionForAttempt(
       question: {
         ...base,
         statements: m.data.statements.map((s, index) => ({ index, text: s.text })),
+        mostLeast: null,
+        options: [],
+      },
+    }
+  }
+
+  if (m.data?.mostLeast?.actions?.length) {
+    return {
+      locked: false,
+      question: {
+        ...base,
+        statements: null,
+        mostLeast: { actions: m.data.mostLeast.actions.map((a, index) => ({ index, text: a.text })) },
         options: [],
       },
     }
@@ -107,6 +126,7 @@ export async function getQuestionForAttempt(
     question: {
       ...base,
       statements: null,
+      mostLeast: null,
       options: (opts ?? []).map((o) => ({ id: o.id, label: o.label, body: o.body })),
     },
   }
@@ -234,4 +254,58 @@ export async function getExplanationPlayback(
 
   const { createPlaybackToken } = await import('@/lib/mux/playback')
   return { playbackId: q.mux_playback_id, token: await createPlaybackToken(q.mux_playback_id) }
+}
+
+
+export type MostLeastResult = {
+  is_correct: boolean
+  correct_most: number
+  correct_least: number
+  most_correct: boolean
+  least_correct: boolean
+  explanation_text: string | null
+  can_watch_video: boolean
+  has_video: boolean
+  video_ready: boolean
+}
+
+/** Grade an SJT most/least submission — both must match to count correct. */
+export async function submitMostLeastAnswer(
+  userId: string,
+  questionId: string,
+  choice: { most: number; least: number },
+  timeSpentSeconds?: number,
+): Promise<MostLeastResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published || !m.data?.mostLeast) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+
+  const { correctMost, correctLeast } = m.data.mostLeast
+  const most_correct = choice.most === correctMost
+  const least_correct = choice.least === correctLeast
+  const is_correct = most_correct && least_correct
+
+  const supabase = createAdminClient()
+  await supabase.from('question_attempts').insert({
+    user_id: userId,
+    question_id: questionId,
+    subtest_id: m.subtest_id,
+    exam_id: m.exam_id,
+    selected_option_id: null,
+    response: choice,
+    is_correct,
+    time_spent_seconds: timeSpentSeconds ?? null,
+  })
+
+  return {
+    is_correct,
+    correct_most: correctMost,
+    correct_least: correctLeast,
+    most_correct,
+    least_correct,
+    explanation_text: m.explanation_text,
+    can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
+    has_video: m.video_status !== 'none',
+    video_ready: m.video_status === 'ready',
+  }
 }
