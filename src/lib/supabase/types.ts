@@ -225,10 +225,42 @@ export type Database = {
           },
         ]
       }
+      stimuli: {
+        Row: {
+          id: string
+          subtest_id: string
+          title: string | null
+          data: unknown
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          subtest_id: string
+          title?: string | null
+          data?: unknown
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          title?: string | null
+          data?: unknown
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'stimuli_subtest_id_fkey'
+            columns: ['subtest_id']
+            referencedRelation: 'subtests'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       questions: {
         Row: {
           id: string
           subtest_id: string
+          stimulus_id: string | null
           topic: string | null
           kind: QuestionKind
           stem: string
@@ -247,6 +279,7 @@ export type Database = {
         Insert: {
           id?: string
           subtest_id: string
+          stimulus_id?: string | null
           topic?: string | null
           kind?: QuestionKind
           stem: string
@@ -263,6 +296,7 @@ export type Database = {
           created_at?: string
         }
         Update: {
+          stimulus_id?: string | null
           topic?: string | null
           kind?: QuestionKind
           stem?: string
@@ -387,3 +421,4 @@ export type Entitlement = Database['public']['Tables']['entitlements']['Row']
 export type Question = Database['public']['Tables']['questions']['Row']
 export type QuestionOption = Database['public']['Tables']['question_options']['Row']
 export type QuestionAttempt = Database['public']['Tables']['question_attempts']['Row']
+export type Stimulus = Database['public']['Tables']['stimuli']['Row']

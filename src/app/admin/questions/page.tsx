@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
@@ -35,6 +36,7 @@ export default async function AdminQuestionsPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Questions</h1>
           <p className="mt-1 text-muted">Author every UCAT question type and attach video explanations.</p>
+          <Link href="/admin/questions/import" className="mt-3 inline-block rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">Bulk import from CSV →</Link>
         </div>
 
         <NewQuestionForm subtests={subtestList} />

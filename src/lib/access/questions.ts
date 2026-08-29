@@ -18,6 +18,7 @@ type QData = {
 type QuestionMeta = {
   id: string
   subtest_id: string
+  stimulus_id: string | null
   exam_id: string
   published: boolean
   kind: QuestionKind
@@ -30,11 +31,7 @@ type QuestionMeta = {
 
 async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
   const supabase = createAdminClient()
-  const { data: q } = await supabase
-    .from('questions')
-    .select('id, subtest_id, published, kind, topic, stem, data, explanation_text, video_status')
-    .eq('id', questionId)
-    .maybeSingle()
+  const { data: q } = await supabase.from('questions').select('*').eq('id', questionId).maybeSingle()
   if (!q) return null
   const { data: st } = await supabase
     .from('subtests')
@@ -42,7 +39,7 @@ async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
     .eq('id', q.subtest_id)
     .maybeSingle()
   if (!st) return null
-  return { ...q, data: (q.data as QData | null) ?? null, exam_id: st.exam_id }
+  return { ...q, stimulus_id: q.stimulus_id ?? null, data: (q.data as QData | null) ?? null, exam_id: st.exam_id }
 }
 
 export async function canAttemptQuestion(userId: string | null | undefined, questionId: string) {
@@ -81,14 +78,20 @@ export async function getQuestionForAttempt(
   if (!m || !m.published) return { locked: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { locked: true }
 
+  let sd: QData | null = null
+  if (m.stimulus_id) {
+    const sup = createAdminClient()
+    const { data: stim } = await sup.from('stimuli').select('data').eq('id', m.stimulus_id).maybeSingle()
+    sd = (stim?.data as QData | null) ?? null
+  }
   const base = {
     id: m.id,
     kind: m.kind,
     topic: m.topic,
     stem: m.stem,
-    passage: m.data?.passage ?? null,
-    image: m.data?.image ?? null,
-    table: m.data?.table ?? null,
+    passage: sd?.passage ?? m.data?.passage ?? null,
+    image: sd?.image ?? m.data?.image ?? null,
+    table: sd?.table ?? m.data?.table ?? null,
   }
 
   if (m.data?.statements?.length) {
