@@ -14,6 +14,7 @@ type QuestionMeta = {
   kind: QuestionKind
   topic: string | null
   stem: string
+  passage: string | null
   explanation_text: string | null
   video_status: string
 }
@@ -22,7 +23,7 @@ async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
   const supabase = createAdminClient()
   const { data: q } = await supabase
     .from('questions')
-    .select('id, subtest_id, published, kind, topic, stem, explanation_text, video_status')
+    .select('id, subtest_id, published, kind, topic, stem, data, explanation_text, video_status')
     .eq('id', questionId)
     .maybeSingle()
   if (!q) return null
@@ -32,7 +33,9 @@ async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
     .eq('id', q.subtest_id)
     .maybeSingle()
   if (!st) return null
-  return { ...q, exam_id: st.exam_id }
+  const data = q.data as { passage?: string } | null
+  const { data: _drop, ...rest } = q
+  return { ...rest, passage: data?.passage ?? null, exam_id: st.exam_id }
 }
 
 /** Can this user attempt the question? (Paid; free access arrives via mocks in P3.) */
@@ -54,6 +57,7 @@ export type SafeQuestion = {
   kind: QuestionKind
   topic: string | null
   stem: string
+  passage: string | null
   options: { id: string; label: string; body: string }[]
 }
 
@@ -80,6 +84,7 @@ export async function getQuestionForAttempt(
       kind: m.kind,
       topic: m.topic,
       stem: m.stem,
+      passage: m.passage,
       options: (opts ?? []).map((o) => ({ id: o.id, label: o.label, body: o.body })),
     },
   }
