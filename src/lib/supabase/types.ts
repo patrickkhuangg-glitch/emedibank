@@ -9,6 +9,9 @@ export type UserRole = 'student' | 'tutor' | 'admin'
 export type ProductKind = 'exam' | 'bundle'
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled'
 export type EntitlementSource = 'subscription' | 'bundle' | 'comp'
+export type QuestionKind = 'single_best_answer'
+export type VideoStatus = 'none' | 'processing' | 'ready'
+export type Difficulty = 'easy' | 'medium' | 'hard'
 
 export type Database = {
   public: {
@@ -222,6 +225,134 @@ export type Database = {
           },
         ]
       }
+      questions: {
+        Row: {
+          id: string
+          subtest_id: string
+          topic: string | null
+          kind: QuestionKind
+          stem: string
+          data: unknown
+          explanation_text: string | null
+          difficulty: Difficulty | null
+          sort_order: number
+          published: boolean
+          mux_asset_id: string | null
+          mux_playback_id: string | null
+          video_status: VideoStatus
+          video_duration_seconds: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          subtest_id: string
+          topic?: string | null
+          kind?: QuestionKind
+          stem: string
+          data?: unknown
+          explanation_text?: string | null
+          difficulty?: Difficulty | null
+          sort_order?: number
+          published?: boolean
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          video_status?: VideoStatus
+          video_duration_seconds?: number | null
+          created_at?: string
+        }
+        Update: {
+          topic?: string | null
+          kind?: QuestionKind
+          stem?: string
+          data?: unknown
+          explanation_text?: string | null
+          difficulty?: Difficulty | null
+          sort_order?: number
+          published?: boolean
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          video_status?: VideoStatus
+          video_duration_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'questions_subtest_id_fkey'
+            columns: ['subtest_id']
+            referencedRelation: 'subtests'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      question_options: {
+        Row: {
+          id: string
+          question_id: string
+          label: string
+          body: string
+          is_correct: boolean
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          question_id: string
+          label: string
+          body: string
+          is_correct?: boolean
+          sort_order?: number
+        }
+        Update: {
+          label?: string
+          body?: string
+          is_correct?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'question_options_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      question_attempts: {
+        Row: {
+          id: string
+          user_id: string
+          question_id: string
+          subtest_id: string
+          exam_id: string
+          selected_option_id: string | null
+          response: unknown
+          is_correct: boolean
+          time_spent_seconds: number | null
+          answered_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          question_id: string
+          subtest_id: string
+          exam_id: string
+          selected_option_id?: string | null
+          response?: unknown
+          is_correct: boolean
+          time_spent_seconds?: number | null
+          answered_at?: string
+        }
+        Update: {
+          is_correct?: boolean
+          time_spent_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'question_attempts_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<never, never>
     Functions: {
@@ -236,6 +367,8 @@ export type Database = {
       product_kind: ProductKind
       subscription_status: SubscriptionStatus
       entitlement_source: EntitlementSource
+      question_kind: QuestionKind
+      video_status: VideoStatus
     }
     CompositeTypes: Record<never, never>
   }
@@ -248,3 +381,6 @@ export type Subtest = Database['public']['Tables']['subtests']['Row']
 export type Product = Database['public']['Tables']['products']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 export type Entitlement = Database['public']['Tables']['entitlements']['Row']
+export type Question = Database['public']['Tables']['questions']['Row']
+export type QuestionOption = Database['public']['Tables']['question_options']['Row']
+export type QuestionAttempt = Database['public']['Tables']['question_attempts']['Row']
