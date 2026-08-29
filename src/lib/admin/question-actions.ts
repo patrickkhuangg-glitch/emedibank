@@ -25,6 +25,10 @@ export async function createQuestionAction(formData: FormData) {
       topic: String(formData.get('topic') ?? '').trim() || null,
       explanation_text: String(formData.get('explanation_text') ?? '').trim() || null,
       difficulty: (String(formData.get('difficulty') ?? '') || null) as 'easy' | 'medium' | 'hard' | null,
+      tags: String(formData.get('tags') ?? '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       published: formData.get('published') === 'on',
     })
     .select('id')

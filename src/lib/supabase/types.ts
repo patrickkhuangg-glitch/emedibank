@@ -232,6 +232,7 @@ export type Database = {
           topic: string | null
           kind: QuestionKind
           stem: string
+          tags: string[]
           data: unknown
           explanation_text: string | null
           difficulty: Difficulty | null
@@ -249,6 +250,7 @@ export type Database = {
           topic?: string | null
           kind?: QuestionKind
           stem: string
+          tags?: string[]
           data?: unknown
           explanation_text?: string | null
           difficulty?: Difficulty | null
@@ -264,6 +266,7 @@ export type Database = {
           topic?: string | null
           kind?: QuestionKind
           stem?: string
+          tags?: string[]
           data?: unknown
           explanation_text?: string | null
           difficulty?: Difficulty | null

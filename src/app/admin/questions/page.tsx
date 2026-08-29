@@ -66,6 +66,10 @@ export default async function AdminQuestionsPage() {
             </label>
           </div>
           <label className="block text-sm">
+            <span className="mb-1 block font-medium">Tags (comma-separated: question types / skills)</span>
+            <input name="tags" className={inputCls} placeholder="e.g. ratios, unit-conversion" />
+          </label>
+          <label className="block text-sm">
             <span className="mb-1 block font-medium">Question stem</span>
             <textarea name="stem" required rows={3} className={inputCls} />
           </label>
