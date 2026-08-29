@@ -22,6 +22,9 @@ export async function SiteHeader() {
           </Link>
           {user ? (
             <>
+              <Link href="/exams" className="px-3 py-2 text-muted transition-colors hover:text-foreground">
+                Practice
+              </Link>
               <Link href="/dashboard" className="px-3 py-2 text-muted transition-colors hover:text-foreground">
                 Dashboard
               </Link>
