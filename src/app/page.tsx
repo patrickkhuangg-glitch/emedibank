@@ -21,14 +21,17 @@ export default function Home() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <span className="cursor-not-allowed rounded-lg bg-brand px-5 py-3 font-medium text-brand-foreground opacity-60">
-            Get started (coming soon)
-          </span>
           <Link
-            href="/status"
+            href="/signup"
+            className="rounded-lg bg-brand px-5 py-3 font-medium text-brand-foreground transition-opacity hover:opacity-90"
+          >
+            Start free
+          </Link>
+          <Link
+            href="/pricing"
             className="rounded-lg border border-border bg-surface px-5 py-3 font-medium transition-colors hover:bg-surface-muted"
           >
-            System status
+            See pricing
           </Link>
         </div>
       </div>
