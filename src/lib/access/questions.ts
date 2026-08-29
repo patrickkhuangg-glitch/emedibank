@@ -130,3 +130,30 @@ export async function submitAnswer(
     video_ready: m.video_status === 'ready',
   }
 }
+
+/**
+ * Mint a signed Mux playback token for a question's explanation — paid users only,
+ * only when the video is ready. Returns null-ish for everyone else.
+ */
+export async function getExplanationPlayback(
+  userId: string | null | undefined,
+  questionId: string,
+): Promise<{ playbackId: string; token: string } | { denied: true }> {
+  const supabase = createAdminClient()
+  const { data: q } = await supabase
+    .from('questions')
+    .select('mux_playback_id, video_status, subtest_id')
+    .eq('id', questionId)
+    .maybeSingle()
+  if (!q || q.video_status !== 'ready' || !q.mux_playback_id) return { denied: true }
+
+  const { data: st } = await supabase
+    .from('subtests')
+    .select('exam_id')
+    .eq('id', q.subtest_id)
+    .maybeSingle()
+  if (!st || !(await hasActiveEntitlement(userId, st.exam_id))) return { denied: true }
+
+  const { createPlaybackToken } = await import('@/lib/mux/playback')
+  return { playbackId: q.mux_playback_id, token: await createPlaybackToken(q.mux_playback_id) }
+}

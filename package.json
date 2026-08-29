@@ -10,6 +10,7 @@
     "seed:stripe": "node --env-file=.env.local scripts/seed-stripe.ts"
   },
   "dependencies": {
+    "@mux/mux-node": "^15.1.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "next": "16.3.3",
