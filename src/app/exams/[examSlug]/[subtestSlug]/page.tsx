@@ -61,7 +61,7 @@ export default async function SubtestPage({
             No questions here yet — they&rsquo;re on the way.
           </div>
         ) : entitled ? (
-          <Runner subtestName={subtest.name} questionIds={questionIds} />
+          <Runner subtestName={subtest.name} examSlug={exam.slug} questionIds={questionIds} />
         ) : (
           <div>
             <p className="mb-4 text-sm text-muted">
