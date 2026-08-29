@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/*
+ * Design system — clean, neutral foundation (not final branding).
+ * Tokens live on :root and are exposed to Tailwind via @theme inline, so you can
+ * use utilities like bg-surface, text-muted, border-border, text-brand, etc.
+ */
+
+:root {
+  /* Neutrals */
+  --background: #fbfbfd;
+  --surface: #ffffff;
+  --surface-muted: #f4f4f7;
+  --foreground: #17171c;
+  --muted: #5b5b66;
+  --border: #e4e4ea;
+
+  /* Brand — a calm, trustworthy indigo. Placeholder until real branding. */
+  --brand: #4f46e5;
+  --brand-foreground: #ffffff;
+  --brand-muted: #eef0ff;
+
+  /* Feedback */
+  --success: #15803d;
+  --success-muted: #eaf7ef;
+
+  /* Shape */
+  --radius: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0b0f;
+    --surface: #141419;
+    --surface-muted: #1c1c23;
+    --foreground: #ededf2;
+    --muted: #9a9aa6;
+    --border: #2a2a33;
+
+    --brand: #8b85f5;
+    --brand-foreground: #0b0b0f;
+    --brand-muted: #1e1e35;
+
+    --success: #4ade80;
+    --success-muted: #14251b;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-lg: var(--radius);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
