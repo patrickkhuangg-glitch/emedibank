@@ -123,7 +123,7 @@ export function SessionRunner({
   // ---- Results ----
   if (finished) {
     return (
-      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-auto bg-[#eef1f4] p-6">
+      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-auto bg-[#eef1f4] p-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-8">
           <h1 className="text-2xl font-semibold text-[#1b2a46]">Session complete</h1>
           <p className="mt-2 text-gray-600">{label}</p>
@@ -152,7 +152,7 @@ export function SessionRunner({
 
   // ---- Runner ----
   return (
-    <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-[#eef1f4]">
+    <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-[#eef1f4]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
       {warn ? (
         <div className="flex items-center justify-between bg-[#dc2626] px-5 py-2 text-sm text-white">
           <span>You left the test window — in the real exam this isn&rsquo;t allowed.</span>

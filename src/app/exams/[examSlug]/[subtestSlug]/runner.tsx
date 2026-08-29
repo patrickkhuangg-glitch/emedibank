@@ -69,7 +69,7 @@ export function Runner({
 
   const blue = '#0e6cb0'
   return (
-    <div className="overflow-hidden rounded-lg border border-[#0a5286] shadow-sm">
+    <div className="overflow-hidden rounded-lg border border-[#0a5286] shadow-sm" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
       {/* top bar */}
       <div className="flex items-center justify-between px-5 py-3 text-white" style={{ background: 'linear-gradient(#1a78bf,#0e6cb0)' }}>
         <span className="text-lg font-semibold">{subtestName} Question Bank</span>
