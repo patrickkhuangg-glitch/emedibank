@@ -4,11 +4,23 @@ import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
-import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction } from '@/lib/questions/actions'
+import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction } from '@/lib/questions/actions'
 
-type SafeQuestion = { id: string; topic: string | null; stem: string; passage: string | null; options: { id: string; label: string; body: string }[] }
+type YesNo = 'Yes' | 'No'
+type SafeQuestion = {
+  id: string
+  topic: string | null
+  stem: string
+  passage: string | null
+  table: { headers: string[]; rows: string[][] } | null
+  statements: { index: number; text: string }[] | null
+  options: { id: string; label: string; body: string }[]
+}
 type Result = { is_correct: boolean; correct_option_id: string | null; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
-type Answered = { selectedId: string; result: Result; video: { playbackId: string; token: string } | null }
+type GridResult = { is_correct: boolean; per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
+type Video = { playbackId: string; token: string }
+type Answered = { selectedId: string; result: Result; video: Video | null }
+type GridAnswered = { result: GridResult; video: Video | null }
 
 const ARIAL = 'Arial, Helvetica, sans-serif'
 const BAR = 'linear-gradient(#1a78bf,#1268ad)'
@@ -45,6 +57,8 @@ export function SessionRunner({
   const [cache, setCache] = useState<Record<string, SafeQuestion | null>>({})
   const [pending, setPending] = useState<Record<string, string>>({})
   const [answers, setAnswers] = useState<Record<string, Answered>>({})
+  const [gridPending, setGridPending] = useState<Record<string, Record<number, YesNo>>>({})
+  const [gridAnswers, setGridAnswers] = useState<Record<string, GridAnswered>>({})
   const [flags, setFlags] = useState<Record<string, boolean>>({})
   const [calcOpen, setCalcOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
@@ -54,12 +68,15 @@ export function SessionRunner({
 
   const id = questionIds[i]
   const q = cache[id]
+  const isGrid = !!q?.statements
   const answered = answers[id]
+  const gridAnswered = gridAnswers[id]
+  const isAnswered = !!answered || !!gridAnswered
 
   const ensure = useCallback(async (qid: string) => {
     if (qid in cache) return
     const r = await fetchQuestionAction(qid)
-    setCache((c) => ({ ...c, [qid]: r.locked ? null : r.question }))
+    setCache((c) => ({ ...c, [qid]: r.locked ? null : (r.question as SafeQuestion) }))
   }, [cache])
   useEffect(() => { if (phase === 'running') ensure(id) }, [id, phase, ensure])
 
@@ -69,22 +86,38 @@ export function SessionRunner({
   }, [])
 
   const explain = useCallback(async () => {
+    const cur = cache[id]
+    if (!cur) return
+    if (cur.statements) {
+      if (gridAnswers[id]) return
+      const ans = gridPending[id] ?? {}
+      const asStr: Record<string, YesNo> = {}
+      for (const k of Object.keys(ans)) asStr[k] = ans[Number(k)]
+      const r = await submitGridAction(id, asStr)
+      if ('denied' in r) return
+      let video: Video | null = null
+      if (r.can_watch_video && r.video_ready) {
+        const v = await loadExplanationVideoAction(id)
+        if (!('denied' in v)) video = v
+      }
+      setGridAnswers((a) => ({ ...a, [id]: { result: r, video } }))
+      return
+    }
     if (answers[id]) return
     const sel = pending[id]
     if (!sel) return
     const r = await answerQuestionAction(id, sel)
     if ('denied' in r) return
-    let video: Answered['video'] = null
+    let video: Video | null = null
     if (r.can_watch_video && r.video_ready) {
       const v = await loadExplanationVideoAction(id)
       if (!('denied' in v)) video = v
     }
     setAnswers((a) => ({ ...a, [id]: { selectedId: sel, result: r, video } }))
-  }, [answers, id, pending])
+  }, [cache, id, gridAnswers, gridPending, answers, pending])
 
   const go = useCallback((d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))), [total])
 
-  // timer
   useEffect(() => {
     if (phase !== 'running' || !timed) return
     if (remaining <= 0) { finish(); return }
@@ -92,7 +125,6 @@ export function SessionRunner({
     return () => clearTimeout(t)
   }, [phase, timed, remaining, finish])
 
-  // kiosk: warn on leaving the tab
   useEffect(() => {
     if (phase !== 'running') return
     const onVis = () => { if (document.hidden) { setLeftCount((n) => n + 1); setWarn(true) } }
@@ -100,7 +132,6 @@ export function SessionRunner({
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [phase])
 
-  // keyboard shortcuts (UCAT-style)
   useEffect(() => {
     if (phase !== 'running') return
     const h = (e: KeyboardEvent) => {
@@ -110,13 +141,13 @@ export function SessionRunner({
         else if (k === 'p') { e.preventDefault(); go(-1) }
         else if (k === 'f') { e.preventDefault(); setFlags((f) => ({ ...f, [id]: !f[id] })) }
         else if (k === 'c') { e.preventDefault(); setCalcOpen((v) => !v) }
-        else if (k === 's' || k === 'v' || k === 'a' || k === 'i') { e.preventDefault(); setNavOpen(true) }
+        else if (['s', 'v', 'a', 'i'].includes(k)) { e.preventDefault(); setNavOpen(true) }
         return
       }
-      // A–D select the option (only when calculator is closed)
-      if (!calcOpen && !answers[id]) {
+      const cur = cache[id]
+      if (!calcOpen && cur && !cur.statements && !answers[id]) {
         const idx = ['a', 'b', 'c', 'd', 'e'].indexOf(e.key.toLowerCase())
-        const opt = cache[id]?.options[idx]
+        const opt = cur.options[idx]
         if (opt) setPending((p) => ({ ...p, [id]: opt.id }))
       }
     }
@@ -130,8 +161,11 @@ export function SessionRunner({
     setPhase('running')
   }
 
-  const correctCount = Object.values(answers).filter((a) => a.result.is_correct).length
-  const answeredCount = Object.keys(answers).length
+  function isDone(qid: string) { return !!answers[qid] || !!gridAnswers[qid] }
+  const correctCount =
+    Object.values(answers).filter((a) => a.result.is_correct).length +
+    Object.values(gridAnswers).filter((a) => a.result.is_correct).length
+  const answeredCount = new Set([...Object.keys(answers), ...Object.keys(gridAnswers)]).size
 
   const CounterIcon = () => (
     <svg width="18" height="15" viewBox="0 0 24 20" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="2" width="20" height="4" rx="1" /><rect x="2" y="8" width="20" height="4" rx="1" /><rect x="4" y="14" width="16" height="3" rx="1" /></svg>
@@ -143,9 +177,7 @@ export function SessionRunner({
       <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
         <div className="px-5 py-3 text-white" style={{ background: BAR }}><span className="text-lg font-semibold">{label}</span></div>
         <div className="h-3" style={{ background: SUBBAR }} />
-        <div className="flex-1 overflow-auto p-8 text-[#1b1b1b]">
-          <div className="mx-auto max-w-4xl whitespace-pre-wrap text-[15px] leading-relaxed">{instructions}</div>
-        </div>
+        <div className="flex-1 overflow-auto p-8 text-[#1b1b1b]"><div className="mx-auto max-w-4xl whitespace-pre-wrap text-[15px] leading-relaxed">{instructions}</div></div>
         <div className="flex items-center justify-between text-white" style={{ background: BAR }}>
           <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
           <button onClick={() => setReadyModal(true)} className="px-6 py-3 hover:bg-white/10">Next →</button>
@@ -183,8 +215,8 @@ export function SessionRunner({
           </div>
           <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-2">
             {questionIds.map((qid, idx) => {
-              const a = answers[qid]
-              const cls = !a ? 'bg-gray-100 text-gray-500' : a.result.is_correct ? 'bg-[#e2efe4] text-[#157d72]' : 'bg-[#fdecec] text-[#dc2626]'
+              const res = answers[qid]?.result ?? gridAnswers[qid]?.result
+              const cls = !res ? 'bg-gray-100 text-gray-500' : res.is_correct ? 'bg-[#e2efe4] text-[#157d72]' : 'bg-[#fdecec] text-[#dc2626]'
               return <button key={qid} onClick={() => { setPhase('running'); setI(idx) }} className={`h-10 rounded ${cls} text-sm`}>{idx + 1}</button>
             })}
           </div>
@@ -198,6 +230,40 @@ export function SessionRunner({
   }
 
   // ---------- RUNNING ----------
+  const setGrid = (idx: number, v: YesNo) => setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } }))
+  const cycleGrid = (idx: number) => setGridPending((p) => {
+    const cur = p[id]?.[idx]
+    const next = cur === 'Yes' ? 'No' : cur === 'No' ? undefined : 'Yes'
+    const row = { ...(p[id] ?? {}) }
+    if (next) row[idx] = next; else delete row[idx]
+    return { ...p, [id]: row }
+  })
+
+  const Explanation = (result: Result | GridResult | undefined, video: Video | null | undefined) => result ? (
+    <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
+      <p className={`text-sm font-semibold ${result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{result.is_correct ? 'Correct' : 'Not quite'}</p>
+      {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{result.explanation_text}</div> : null}
+      {video ? (
+        <div className="overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={video.playbackId} tokens={{ playback: video.token }} streamType="on-demand" accentColor="#157d72" /></div>
+      ) : !result.has_video ? null : result.can_watch_video ? (result.video_ready ? null : <p className="text-sm text-gray-500">Video explanation is processing.</p>) : (
+        <div className="rounded border-2 border-[#157d72] bg-[#e2efec] p-5 text-center">
+          <p className="font-semibold text-[#1b2a46]">Video explanation</p>
+          <p className="mt-1 text-sm text-gray-600">Watch this worked through on video with a subscription.</p>
+          <Link href="/pricing" className="mt-3 inline-block rounded-md bg-[#157d72] px-4 py-2 text-sm font-medium text-white">See plans</Link>
+        </div>
+      )}
+    </div>
+  ) : null
+
+  const Table = q?.table ? (
+    <div className="my-4 inline-block overflow-x-auto">
+      <table className="border-collapse text-sm">
+        <thead><tr>{q.table.headers.map((h, k) => <th key={k} className="border border-gray-400 px-4 py-1.5 font-semibold">{h}</th>)}</tr></thead>
+        <tbody>{q.table.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-400 px-4 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  ) : null
+
   const selectedId = answered ? answered.selectedId : pending[id]
   const Options = q ? (
     <div className="flex flex-col">
@@ -218,19 +284,42 @@ export function SessionRunner({
     </div>
   ) : null
 
-  const Explanation = answered ? (
-    <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
-      <p className={`text-sm font-semibold ${answered.result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{answered.result.is_correct ? 'Correct' : 'Not quite'}</p>
-      {answered.result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{answered.result.explanation_text}</div> : null}
-      {answered.video ? (
-        <div className="overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={answered.video.playbackId} tokens={{ playback: answered.video.token }} streamType="on-demand" accentColor="#157d72" /></div>
-      ) : !answered.result.has_video ? null : answered.result.can_watch_video ? (answered.result.video_ready ? null : <p className="text-sm text-gray-500">Video explanation is processing.</p>) : (
-        <div className="rounded border-2 border-[#157d72] bg-[#e2efec] p-5 text-center">
-          <p className="font-semibold text-[#1b2a46]">Video explanation</p>
-          <p className="mt-1 text-sm text-gray-600">Watch this worked through on video with a subscription.</p>
-          <Link href="/pricing" className="mt-3 inline-block rounded-md bg-[#157d72] px-4 py-2 text-sm font-medium text-white">See plans</Link>
+  const Grid = q?.statements ? (
+    <div className="mt-2">
+      <p className="mb-4 text-[15px]">Place ‘Yes’ if the conclusion does follow. Place ‘No’ if the conclusion does not follow.</p>
+      <div className="flex items-start gap-6">
+        <div className="flex flex-1 flex-col gap-3">
+          {q.statements.map((s) => {
+            const chosen = gridAnswered ? undefined : gridPending[id]?.[s.index]
+            const per = gridAnswered?.result.per_statement.find((p) => p.index === s.index)
+            const shown = gridAnswered ? (gridPending[id]?.[s.index] ?? '—') : (chosen ?? '')
+            let boxCls = 'border-gray-400 bg-[#b3aca7] text-white'
+            if (gridAnswered && per) boxCls = per.correct ? 'border-[#157d72] bg-[#e2efec] text-[#157d72]' : 'border-[#dc2626] bg-[#fdecec] text-[#dc2626]'
+            else if (chosen) boxCls = 'border-[#1268ad] bg-[#eef5fb] text-[#1268ad]'
+            return (
+              <div key={s.index} className="flex items-stretch gap-3">
+                <div className="flex flex-1 items-center border-2 border-black px-4 py-3 text-center text-[15px]">{s.text}</div>
+                <div
+                  onClick={() => { if (!gridAnswered) cycleGrid(s.index) }}
+                  onDragOver={(e) => { if (!gridAnswered) e.preventDefault() }}
+                  onDrop={(e) => { if (!gridAnswered) { const v = e.dataTransfer.getData('text/plain') as YesNo; if (v === 'Yes' || v === 'No') setGrid(s.index, v) } }}
+                  className={`grid w-24 flex-none cursor-pointer place-items-center border-2 font-semibold ${boxCls}`}
+                >
+                  {shown}
+                  {gridAnswered && per && !per.correct ? <span className="ml-1 text-[10px] font-normal">(→ {per.correct_answer})</span> : null}
+                </div>
+              </div>
+            )
+          })}
         </div>
-      )}
+        {!gridAnswered ? (
+          <div className="flex flex-col gap-3 bg-gray-200 p-3">
+            {(['Yes', 'No'] as YesNo[]).map((v) => (
+              <div key={v} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', v)} className="grid h-16 w-20 cursor-grab place-items-center border-2 border-black bg-white text-[15px] active:cursor-grabbing">{v}</div>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </div>
   ) : null
 
@@ -243,7 +332,6 @@ export function SessionRunner({
         </div>
       ) : null}
 
-      {/* top bar */}
       <div className="flex items-center justify-between px-5 py-2.5 text-white" style={{ background: BAR }}>
         <span className="text-lg font-semibold">{label}</span>
         <div className="flex items-center gap-5">
@@ -251,7 +339,6 @@ export function SessionRunner({
           <span className="flex items-center gap-2 text-sm tabular-nums"><CounterIcon />{i + 1} of {total}</span>
         </div>
       </div>
-      {/* sub bar */}
       <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
         <div className="flex items-center gap-6">
           <button onClick={explain} className="flex items-center gap-1.5 hover:underline"><span aria-hidden>💡</span>Explain Answer</button>
@@ -260,32 +347,38 @@ export function SessionRunner({
         <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><u>F</u>lag for Review</button>
       </div>
 
-      {/* content */}
       <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
         {q === undefined ? (
           <p className="text-gray-500">Loading…</p>
         ) : q === null ? (
           <p className="text-gray-500">This question isn&rsquo;t available.</p>
+        ) : isGrid ? (
+          <div className="mx-auto max-w-6xl">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+            {Table}
+            {Grid}
+            {Explanation(gridAnswered?.result, gridAnswered?.video)}
+          </div>
         ) : q.passage ? (
           <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
             <div className="whitespace-pre-wrap text-[15px] leading-relaxed md:pr-8">{q.passage}</div>
             <div className="md:pl-8">
               <p className="text-[15px] leading-relaxed">{q.stem}</p>
               <div className="mt-6">{Options}</div>
-              {Explanation}
+              {Explanation(answered?.result, answered?.video)}
             </div>
           </div>
         ) : (
           <div className="mx-auto max-w-3xl">
             {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
             <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+            {Table}
             <div className="mt-5">{Options}</div>
-            {Explanation}
+            {Explanation(answered?.result, answered?.video)}
           </div>
         )}
       </div>
 
-      {/* bottom bar */}
       <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
         <button onClick={() => { if (confirm('End the session now?')) finish() }} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
         <div className="flex">
@@ -303,7 +396,7 @@ export function SessionRunner({
             <div className="flex items-center justify-between px-5 py-3 font-semibold text-white" style={{ background: '#1268ad' }}>Navigator <button onClick={() => setNavOpen(false)}>✕</button></div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2 p-4">
               {questionIds.map((qid, idx) => (
-                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`relative h-11 rounded border text-sm ${answers[qid] ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
+                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`relative h-11 rounded border text-sm ${isDone(qid) ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
                   {flags[qid] ? <span className="absolute right-1 top-0.5 text-[10px] text-[#c0392b]">⚑</span> : null}{idx + 1}
                 </button>
               ))}

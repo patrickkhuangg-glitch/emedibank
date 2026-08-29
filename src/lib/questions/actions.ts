@@ -26,3 +26,14 @@ export async function loadExplanationVideoAction(questionId: string) {
   const user = await getUser()
   return getExplanationPlayback(user?.id, questionId)
 }
+
+export async function submitGridAction(
+  questionId: string,
+  answers: Record<string, 'Yes' | 'No'>,
+  timeSpentSeconds?: number,
+) {
+  const user = await getUser()
+  if (!user) return { denied: true } as const
+  const { submitGridAnswer } = await import('@/lib/access/questions')
+  return submitGridAnswer(user.id, questionId, answers, timeSpentSeconds)
+}

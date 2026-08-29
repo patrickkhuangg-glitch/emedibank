@@ -6,6 +6,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessExam, hasActiveEntitlement } from '@/lib/access'
 import type { QuestionKind } from '@/lib/supabase/types'
 
+type YesNo = 'Yes' | 'No'
+type QData = {
+  passage?: string
+  table?: { headers: string[]; rows: string[][] }
+  statements?: { text: string; correct: YesNo }[]
+}
+
 type QuestionMeta = {
   id: string
   subtest_id: string
@@ -14,7 +21,7 @@ type QuestionMeta = {
   kind: QuestionKind
   topic: string | null
   stem: string
-  passage: string | null
+  data: QData | null
   explanation_text: string | null
   video_status: string
 }
@@ -33,19 +40,15 @@ async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
     .eq('id', q.subtest_id)
     .maybeSingle()
   if (!st) return null
-  const data = q.data as { passage?: string } | null
-  const { data: _drop, ...rest } = q
-  return { ...rest, passage: data?.passage ?? null, exam_id: st.exam_id }
+  return { ...q, data: (q.data as QData | null) ?? null, exam_id: st.exam_id }
 }
 
-/** Can this user attempt the question? (Paid; free access arrives via mocks in P3.) */
 export async function canAttemptQuestion(userId: string | null | undefined, questionId: string) {
   const m = await loadMeta(questionId)
   if (!m || !m.published) return false
   return canAccessExam(userId, m.exam_id)
 }
 
-/** Can this user watch the video explanation? Paid — gated for all. */
 export async function canWatchExplanation(userId: string | null | undefined, questionId: string) {
   const m = await loadMeta(questionId)
   if (!m) return false
@@ -58,6 +61,9 @@ export type SafeQuestion = {
   topic: string | null
   stem: string
   passage: string | null
+  table: { headers: string[]; rows: string[][] } | null
+  // present => 5-statement Yes/No grid (Decision Making syllogisms / interpreting info)
+  statements: { index: number; text: string }[] | null
   options: { id: string; label: string; body: string }[]
 }
 
@@ -70,21 +76,37 @@ export async function getQuestionForAttempt(
   if (!m || !m.published) return { locked: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { locked: true }
 
+  const base = {
+    id: m.id,
+    kind: m.kind,
+    topic: m.topic,
+    stem: m.stem,
+    passage: m.data?.passage ?? null,
+    table: m.data?.table ?? null,
+  }
+
+  if (m.data?.statements?.length) {
+    return {
+      locked: false,
+      question: {
+        ...base,
+        statements: m.data.statements.map((s, index) => ({ index, text: s.text })),
+        options: [],
+      },
+    }
+  }
+
   const supabase = createAdminClient()
   const { data: opts } = await supabase
     .from('question_options')
     .select('id, label, body, sort_order')
     .eq('question_id', questionId)
     .order('sort_order')
-
   return {
     locked: false,
     question: {
-      id: m.id,
-      kind: m.kind,
-      topic: m.topic,
-      stem: m.stem,
-      passage: m.passage,
+      ...base,
+      statements: null,
       options: (opts ?? []).map((o) => ({ id: o.id, label: o.label, body: o.body })),
     },
   }
@@ -99,7 +121,7 @@ export type AnswerResult = {
   video_ready: boolean
 }
 
-/** Grade a submission server-side, record the attempt, and reveal the outcome. */
+/** Grade a single-best-answer submission, record the attempt, reveal the outcome. */
 export async function submitAnswer(
   userId: string,
   questionId: string,
@@ -131,6 +153,55 @@ export async function submitAnswer(
   return {
     is_correct,
     correct_option_id: correct?.id ?? null,
+    explanation_text: m.explanation_text,
+    can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
+    has_video: m.video_status !== 'none',
+    video_ready: m.video_status === 'ready',
+  }
+}
+
+export type GridResult = {
+  is_correct: boolean
+  per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]
+  explanation_text: string | null
+  can_watch_video: boolean
+  has_video: boolean
+  video_ready: boolean
+}
+
+/** Grade a Yes/No grid submission (all statements must match to count correct). */
+export async function submitGridAnswer(
+  userId: string,
+  questionId: string,
+  answers: Record<string, YesNo>,
+  timeSpentSeconds?: number,
+): Promise<GridResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published || !m.data?.statements?.length) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+
+  const per_statement = m.data.statements.map((s, index) => ({
+    index,
+    correct_answer: s.correct,
+    correct: answers[String(index)] === s.correct,
+  }))
+  const is_correct = per_statement.every((p) => p.correct)
+
+  const supabase = createAdminClient()
+  await supabase.from('question_attempts').insert({
+    user_id: userId,
+    question_id: questionId,
+    subtest_id: m.subtest_id,
+    exam_id: m.exam_id,
+    selected_option_id: null,
+    response: answers,
+    is_correct,
+    time_spent_seconds: timeSpentSeconds ?? null,
+  })
+
+  return {
+    is_correct,
+    per_statement,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
     has_video: m.video_status !== 'none',
