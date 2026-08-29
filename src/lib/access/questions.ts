@@ -90,6 +90,7 @@ export type AnswerResult = {
   correct_option_id: string | null
   explanation_text: string | null
   can_watch_video: boolean
+  has_video: boolean
   video_ready: boolean
 }
 
@@ -127,6 +128,7 @@ export async function submitAnswer(
     correct_option_id: correct?.id ?? null,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
+    has_video: m.video_status !== 'none',
     video_ready: m.video_status === 'ready',
   }
 }

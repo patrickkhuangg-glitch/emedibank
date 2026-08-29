@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
@@ -26,11 +27,16 @@ export default async function AdminPage() {
   return (
     <Container className="py-16">
       <div className="mx-auto max-w-3xl space-y-8">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Free-tier control</h1>
-          <p className="mt-1 text-muted">
-            Toggle which subtests are free. Changes take effect immediately for every free user.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Free-tier control</h1>
+            <p className="mt-1 text-muted">
+              Toggle which subtests are free. Changes take effect immediately for every free user.
+            </p>
+          </div>
+          <Link href="/admin/questions" className="whitespace-nowrap rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
+            Manage questions →
+          </Link>
         </div>
 
         {(exams ?? []).map((exam) => {

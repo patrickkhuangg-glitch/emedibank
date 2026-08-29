@@ -11,5 +11,6 @@ export async function createVideoUpload(questionId: string, corsOrigin: string) 
       video_quality: 'basic',
     },
   })
+  if (!upload.url) throw new Error('Mux did not return an upload URL')
   return { uploadId: upload.id, uploadUrl: upload.url }
 }
