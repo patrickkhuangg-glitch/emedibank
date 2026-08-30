@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { resolveSessionQuestionIds } from '@/lib/questions/session'
 import { resolveSetQuestionIds } from '@/lib/practice/sets'
+import { resolveReviewQuestionIds } from '@/lib/dashboard/stats'
 import { SessionRunner } from '@/components/session-runner'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,9 @@ export default async function SessionPage({
   const timed = mode === 'timed' || sp.timed === '1'
 
   const ids =
-    mode === 'sets' || mode === 'timed'
+    mode === 'review'
+      ? await resolveReviewQuestionIds(user.id, exam.id)
+      : mode === 'sets' || mode === 'timed'
       ? await resolveSetQuestionIds(user.id, exam.id, subtestId, tag, mode === 'sets' ? Number(sp.sets ?? 1) : 0)
       : await resolveSessionQuestionIds(user.id, exam.id, {
           subtestIds: (sp.subtests ?? '').split(',').filter(Boolean),

@@ -1,33 +1,59 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { Container } from '@/components/container'
+import { Reveal } from '@/components/reveal'
 
 export default function Home() {
   return (
     <>
       {/* ---------------- Hero ---------------- */}
       <section className="relative overflow-hidden">
-        <Container className="grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-24">
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(21,125,114,0.10), transparent 70%)' }} />
+        <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
-            <p className="text-sm font-medium text-brand">UCAT · GAMSAT · ISAT · Interviews</p>
-            <h1 className="mt-4 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              Practise in the real exam interface.
+            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand" /> UCAT · GAMSAT · ISAT · Interviews
+            </span>
+            <h1 className="mt-5 text-balance font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Practise in the <span className="text-brand">real</span> exam interface.
             </h1>
-            <p className="mt-5 max-w-md text-lg text-muted">
-              Exam-accurate question banks and full timed mocks, with written and video explanations for every answer.
+            <p className="mt-6 max-w-md text-lg text-muted">
+              Exam-accurate question banks and full timed mocks, with written and video explanations for every answer. Now with XP, streaks and a mastery map.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/app" className="eb-press inline-flex items-center gap-1.5 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+              <Link href="/app" className="eb-press group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
                 Open EMediBank <ArrowUpRight />
               </Link>
-              <Link href="/pricing" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-colors hover:bg-surface-muted">
+              <Link href="/pricing" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface-muted">
                 See pricing
               </Link>
             </div>
             <p className="mt-4 text-sm text-muted">Full mock exams are free. No card to start.</p>
           </div>
 
-          <div className="eb-rise" style={{ animationDelay: '120ms' }}>
-            <ExamPreview />
+          <div className="eb-rise" style={{ animationDelay: '140ms' }}>
+            <div className="eb-soft rounded-[2rem] border border-border bg-surface/50 p-2">
+              <ExamPreview />
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* ---------------- Gamified prep ---------------- */}
+      <section id="progress" className="border-t border-border bg-surface/50">
+        <Container className="py-20 sm:py-28">
+          <Reveal>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Your progress, gamified</p>
+            <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">Revision that plays like a game you want to win.</h2>
+            <p className="mt-3 max-w-xl text-muted">Every answer earns XP. Levels, streaks, a mastery map and a weakness heatmap turn dry practice into visible momentum.</p>
+          </Reveal>
+          <div className="mt-10 grid gap-4 md:grid-cols-4">
+            <GameCard delay={0} className="md:col-span-2" title="Earn XP for every answer" body="Faster and more accurate answers earn more, with bonus multipliers for accuracy streaks under time pressure." icon={<BoltIcon />} />
+            <GameCard delay={80} title="Daily streaks" body="Keep a Duolingo-style streak alive, day after day." icon={<FlameIcon />} />
+            <GameCard delay={160} title="Level up each section" body="See where you're a Level 8 and where you're a Level 2." icon={<BarsIcon />} />
+            <GameCard delay={0} title="Mastery map" body="Sub-skills unlock as accuracy climbs." icon={<PathIcon />} />
+            <GameCard delay={80} className="md:col-span-2" title="Weakness heatmap" body="Accuracy and speed by question type, so a weak pattern-recognition topic glows red and you know exactly where to drill." icon={<GridIconSm />} />
+            <GameCard delay={160} title="Spaced review" body="Missed questions return at the perfect moment." icon={<RepeatIcon />} />
           </div>
         </Container>
       </section>
@@ -234,6 +260,26 @@ function CheckDot() {
 function ArrowRight({ className = '' }: { className?: string }) {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand ${className}`} aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
 }
+function GameCard({ title, body, icon, delay = 0, className = '' }: { title: string; body: string; icon: ReactNode; delay?: number; className?: string }) {
+  return (
+    <Reveal delay={delay} className={`h-full ${className}`}>
+      <div className="eb-soft group h-full rounded-3xl border border-border bg-surface p-6 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-muted text-brand transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110">{icon}</span>
+        <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
+        <p className="mt-1.5 text-sm text-muted">{body}</p>
+      </div>
+    </Reveal>
+  )
+}
+
+const LINE = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
+function BoltIcon() { return <svg {...LINE}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg> }
+function FlameIcon() { return <svg {...LINE}><path d="M12 3s5 3.5 5 8.5A5 5 0 0 1 7 12c0-2 1-3 1-3 0 1.5 1 2.5 2 2.5 0-3 2-5.5 2-8.5Z" /></svg> }
+function BarsIcon() { return <svg {...LINE}><path d="M5 20V10M12 20V4M19 20v-7" /></svg> }
+function PathIcon() { return <svg {...LINE}><circle cx="6" cy="18" r="2.5" /><circle cx="18" cy="6" r="2.5" /><path d="M8 16.5 16 7.5" /><circle cx="12" cy="12" r="1" /></svg> }
+function GridIconSm() { return <svg {...LINE}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg> }
+function RepeatIcon() { return <svg {...LINE}><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg> }
+
 function ArrowUpRight() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M7 17 17 7M8 7h9v9" /></svg>
 }
