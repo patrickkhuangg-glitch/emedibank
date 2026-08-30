@@ -398,7 +398,10 @@ export function MockRunner({
 
       <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
         {q === undefined ? (
-          <p className="text-gray-500">Loading…</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-24">
+            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1268ad]/25 border-t-[#1268ad]" />
+            <p className="text-sm text-gray-500">Loading questions…</p>
+          </div>
         ) : q === null ? (
           <p className="text-gray-500">This question isn&rsquo;t available.</p>
         ) : q.statements ? (
