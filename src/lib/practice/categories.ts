@@ -14,9 +14,6 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
     'verbal-reasoning': [
       'Reading Comprehension',
       "True, False, Can't Tell",
-      'Inference',
-      "Author's Argument",
-      'Vocabulary in Context',
     ],
     'decision-making': [
       'Syllogisms',

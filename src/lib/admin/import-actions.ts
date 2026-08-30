@@ -111,7 +111,9 @@ export async function importQuestions(text: string): Promise<ImportResult> {
         topic: cell(row, 'topic') || null,
         explanation_text: cell(row, 'explanation') || null,
         difficulty: (['easy', 'medium', 'hard'].includes(diff) ? diff : null) as 'easy' | 'medium' | 'hard' | null,
-        tags: cell(row, 'tags').split(',').map((t) => t.trim()).filter(Boolean),
+        // Split on ';' (not ',') so category names that contain commas — e.g.
+        // "True, False, Can't Tell" — survive as a single tag.
+        tags: cell(row, 'tags').split(';').map((t) => t.trim()).filter(Boolean),
         published: /^(y|yes|true|1)$/i.test(cell(row, 'published')),
         data: Object.keys(qdata).length ? qdata : null,
       }).select('id').single()
