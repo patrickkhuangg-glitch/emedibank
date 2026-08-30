@@ -69,3 +69,31 @@ h1, h2, h3, h4 {
   font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.01em;
 }
+
+/*
+ * Motion primitives. Restrained on purpose: the signature moment is a progress
+ * fill that grows on load (it communicates state, not decoration). Everything
+ * collapses to a static final frame under reduced-motion.
+ *   .eb-rise    — list rows fade/slide up on load (stagger via inline delay)
+ *   .eb-bar     — a progress fill that grows from the left to its set width
+ *   .eb-expand  — an inline panel easing open when it mounts
+ */
+@keyframes eb-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes eb-bar {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes eb-expand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.eb-rise   { animation: eb-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.eb-bar    { transform-origin: left center; animation: eb-bar 0.85s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.eb-expand { animation: eb-expand 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-rise, .eb-bar, .eb-expand { animation: none !important; }
+}

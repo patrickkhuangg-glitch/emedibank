@@ -29,7 +29,7 @@ export default async function SessionPage({
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-[#eef1f4] p-6 text-center">
         <p className="text-lg font-semibold text-[#1b2a46]">No questions match those filters yet.</p>
-        <Link href={`/practice/${exam.slug}`} className="rounded-lg bg-[#157d72] px-5 py-2.5 text-sm font-medium text-white">Back to builder</Link>
+        <Link href={`/practice/${exam.slug}`} className="rounded-lg bg-[#157d72] px-5 py-2.5 text-sm font-medium text-white">Back to practice</Link>
       </div>
     )
   }

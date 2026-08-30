@@ -25,6 +25,9 @@ export async function SiteHeader() {
               <Link href="/practice" className="px-3 py-2 text-muted transition-colors hover:text-foreground">
                 Practice
               </Link>
+              <Link href="/mock" className="px-3 py-2 text-muted transition-colors hover:text-foreground">
+                Mock exams
+              </Link>
               <Link href="/dashboard" className="px-3 py-2 text-muted transition-colors hover:text-foreground">
                 Dashboard
               </Link>
