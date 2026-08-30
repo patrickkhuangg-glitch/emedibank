@@ -78,7 +78,7 @@ export default async function PricingPage() {
       <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-surface p-6 text-center">
         <h2 className="text-lg font-semibold">Free</h2>
         <p className="mt-1 text-sm text-muted">
-          Sign up and get the free-tier subtests — no card required.
+          Sit full, timed mock exams for free. No card required.
         </p>
         <ButtonLink href="/signup" className="mt-4 w-full">Start free</ButtonLink>
       </div>

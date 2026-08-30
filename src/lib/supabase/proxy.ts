@@ -7,7 +7,7 @@ import { getSupabaseAnonKey, getSupabaseUrl } from './env'
 import type { Database } from './types'
 
 // Paths that require a signed-in user. Free tier still needs an account.
-const PROTECTED_PREFIXES = ['/dashboard', '/account', '/admin', '/exams']
+const PROTECTED_PREFIXES = ['/app', '/dashboard', '/account', '/admin', '/exams', '/practice', '/mock', '/session']
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
