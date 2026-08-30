@@ -99,9 +99,22 @@ h1, h2, h3, h4 {
 .eb-press { transition: transform 0.12s ease; }
 .eb-press:active { transform: scale(0.985); }
 
+/* Skeleton shimmer for loading states — a soft sweep across placeholder blocks
+ * so a click gets an instant response while the server renders. */
+@keyframes eb-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.eb-skeleton {
+  background-image: linear-gradient(90deg, var(--surface-muted) 0%, var(--border) 50%, var(--surface-muted) 100%);
+  background-size: 200% 100%;
+  animation: eb-shimmer 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .eb-rise, .eb-bar, .eb-expand { animation: none !important; }
   .eb-press:active { transform: none; }
+  .eb-skeleton { animation: none; }
 }
 
 /* Paper grain — a faint fixed texture over the warm ground, so surfaces read as
