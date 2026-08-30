@@ -71,7 +71,7 @@ export default async function MockExamPage({ params }: { params: Promise<{ examS
 
             return (
               <li key={m.id} className="eb-rise" style={{ animationDelay: `${idx * 60}ms` }}>
-                <Link href={href} className="group block transition-colors hover:bg-surface-muted">{inner}</Link>
+                <Link href={href} className="eb-press group block transition-colors hover:bg-surface-muted">{inner}</Link>
               </li>
             )
           })}

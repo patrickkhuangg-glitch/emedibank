@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { resolveSessionQuestionIds } from '@/lib/questions/session'
+import { resolveSetQuestionIds } from '@/lib/practice/sets'
 import { SessionRunner } from '@/components/session-runner'
 
 export const dynamic = 'force-dynamic'
@@ -18,12 +19,23 @@ export default async function SessionPage({
   const { data: exam } = await supabase.from('exams').select('id, name, slug').eq('slug', sp.exam ?? '').maybeSingle()
   if (!exam) notFound()
 
-  const ids = await resolveSessionQuestionIds(user.id, exam.id, {
-    subtestIds: (sp.subtests ?? '').split(',').filter(Boolean),
-    tags: (sp.tags ?? '').split(',').filter(Boolean),
-    difficulty: sp.difficulty || null,
-    count: Number(sp.count ?? 10),
-  })
+  // Set-based flow (from "Select timing"): mode=sets runs N question sets untimed;
+  // mode=timed runs the whole category pool, time-boxed. Legacy flow (no mode)
+  // keeps the old count-based resolution.
+  const mode = sp.mode
+  const subtestId = (sp.subtests ?? '').split(',').filter(Boolean)[0] ?? ''
+  const tag = (sp.tags ?? '').split(',').filter(Boolean)[0] ?? ''
+  const timed = mode === 'timed' || sp.timed === '1'
+
+  const ids =
+    mode === 'sets' || mode === 'timed'
+      ? await resolveSetQuestionIds(user.id, exam.id, subtestId, tag, mode === 'sets' ? Number(sp.sets ?? 1) : 0)
+      : await resolveSessionQuestionIds(user.id, exam.id, {
+          subtestIds: (sp.subtests ?? '').split(',').filter(Boolean),
+          tags: (sp.tags ?? '').split(',').filter(Boolean),
+          difficulty: sp.difficulty || null,
+          count: Number(sp.count ?? 10),
+        })
 
   if (ids.length === 0) {
     return (
@@ -40,9 +52,9 @@ This session runs in a full-screen interface that mirrors the real ${exam.name} 
 
 The 'Navigator' at the bottom right lets you move between questions. As you work through each question, click 'Explain Answer' at the top left to check the correct answer and read the rationale.
 
-You can review your answers on the Review Screen at the end — click any question to return to it.
+You can review your answers on the Review Screen at the end. Click any question to return to it.
 
-Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A–D to select an answer.
+Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A-D to select an answer.
 
 Please click the Next (N) button to proceed.`
 
@@ -52,7 +64,7 @@ Please click the Next (N) button to proceed.`
       examSlug={exam.slug}
       instructions={instructions}
       questionIds={ids}
-      timed={sp.timed === '1'}
+      timed={timed}
       minutes={Number(sp.minutes ?? 20)}
     />
   )

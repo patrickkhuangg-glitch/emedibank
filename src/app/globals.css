@@ -94,6 +94,26 @@ h1, h2, h3, h4 {
 .eb-bar    { transform-origin: left center; animation: eb-bar 0.85s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .eb-expand { animation: eb-expand 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* Tactile press: a subtle physical give on tap/click, paired with a haptic buzz
+ * on touch devices (see src/lib/haptics). */
+.eb-press { transition: transform 0.12s ease; }
+.eb-press:active { transform: scale(0.985); }
+
 @media (prefers-reduced-motion: reduce) {
   .eb-rise, .eb-bar, .eb-expand { animation: none !important; }
+  .eb-press:active { transform: none; }
+}
+
+/* Paper grain — a faint fixed texture over the warm ground, so surfaces read as
+ * printed paper rather than flat fill. Static, pointer-transparent, and it sits
+ * below the full-screen exam runner (z 100+) so the test interface stays clean. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
+import { haptic } from '@/lib/haptics'
 import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction } from '@/lib/questions/actions'
 
 type YesNo = 'Yes' | 'No'
@@ -179,6 +180,7 @@ export function SessionRunner({
   }, [phase, id, calcOpen, answers, cache, go])
 
   function begin() {
+    haptic(15)
     rootRef.current?.requestFullscreen?.().catch(() => {})
     setReadyModal(false)
     setPhase('running')
@@ -190,10 +192,6 @@ export function SessionRunner({
     Object.values(gridAnswers).filter((a) => a.result.is_correct).length +
     Object.values(mlAnswers).filter((a) => a.result.is_correct).length
   const answeredCount = new Set([...Object.keys(answers), ...Object.keys(gridAnswers), ...Object.keys(mlAnswers)]).size
-
-  const CounterIcon = () => (
-    <svg width="18" height="15" viewBox="0 0 24 20" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="2" width="20" height="4" rx="1" /><rect x="2" y="8" width="20" height="4" rx="1" /><rect x="4" y="14" width="16" height="3" rx="1" /></svg>
-  )
 
   // ---------- INTRO ----------
   if (phase === 'intro') {
@@ -254,14 +252,14 @@ export function SessionRunner({
   }
 
   // ---------- RUNNING ----------
-  const setGrid = (idx: number, v: YesNo) => setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } }))
-  const cycleGrid = (idx: number) => setGridPending((p) => {
+  const setGrid = (idx: number, v: YesNo) => { haptic(8); setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } })) }
+  const cycleGrid = (idx: number) => { haptic(8); setGridPending((p) => {
     const cur = p[id]?.[idx]
     const next = cur === 'Yes' ? 'No' : cur === 'No' ? undefined : 'Yes'
     const row = { ...(p[id] ?? {}) }
     if (next) row[idx] = next; else delete row[idx]
     return { ...p, [id]: row }
-  })
+  }) }
 
   const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined) => result ? (
     <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
@@ -296,7 +294,7 @@ export function SessionRunner({
         const correct = answered && answered.result.correct_option_id === o.id
         const wrong = answered && sel && !answered.result.is_correct
         return (
-          <button key={o.id} disabled={!!answered} onClick={() => setPending((p) => ({ ...p, [id]: o.id }))} className="flex items-start gap-3 py-2.5 text-left text-[15px]">
+          <button key={o.id} disabled={!!answered} onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }} className="flex items-start gap-3 py-2.5 text-left text-[15px]">
             <span className={`mt-0.5 grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-2 ${correct ? 'border-[#157d72]' : wrong ? 'border-[#dc2626]' : sel ? 'border-[#1268ad]' : 'border-gray-500'}`}>
               {sel ? <span className={`h-2 w-2 rounded-full ${correct ? 'bg-[#157d72]' : wrong ? 'bg-[#dc2626]' : 'bg-[#1268ad]'}`} /> : null}
             </span>
@@ -316,7 +314,7 @@ export function SessionRunner({
           {q.statements.map((s) => {
             const chosen = gridAnswered ? undefined : gridPending[id]?.[s.index]
             const per = gridAnswered?.result.per_statement.find((p) => p.index === s.index)
-            const shown = gridAnswered ? (gridPending[id]?.[s.index] ?? '—') : (chosen ?? '')
+            const shown = gridAnswered ? (gridPending[id]?.[s.index] ?? '-') : (chosen ?? '')
             let boxCls = 'border-gray-400 bg-[#b3aca7] text-white'
             if (gridAnswered && per) boxCls = per.correct ? 'border-[#157d72] bg-[#e2efec] text-[#157d72]' : 'border-[#dc2626] bg-[#fdecec] text-[#dc2626]'
             else if (chosen) boxCls = 'border-[#1268ad] bg-[#eef5fb] text-[#1268ad]'
@@ -347,13 +345,13 @@ export function SessionRunner({
     </div>
   ) : null
 
-  const setML = (slot: 'most' | 'least', idx: number) => setMlPending((p) => {
+  const setML = (slot: 'most' | 'least', idx: number) => { haptic(8); setMlPending((p) => {
     const cur: { most?: number; least?: number } = { ...(p[id] ?? {}) }
     cur[slot] = idx
     if (slot === 'most' && cur.least === idx) delete cur.least
     if (slot === 'least' && cur.most === idx) delete cur.most
     return { ...p, [id]: cur }
-  })
+  }) }
   const clearML = (slot: 'most' | 'least') => setMlPending((p) => { const cur = { ...(p[id] ?? {}) }; delete cur[slot]; return { ...p, [id]: cur } })
 
   const Img = q?.image ? (
@@ -404,7 +402,7 @@ export function SessionRunner({
     <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
       {warn ? (
         <div className="flex items-center justify-between bg-[#dc2626] px-5 py-2 text-sm text-white">
-          <span>You left the test window — in the real exam this isn&rsquo;t allowed.</span>
+          <span>You left the test window. In the real exam this isn&rsquo;t allowed.</span>
           <button onClick={() => setWarn(false)} className="underline">Dismiss</button>
         </div>
       ) : null}
@@ -491,6 +489,12 @@ export function SessionRunner({
         </div>
       ) : null}
     </div>
+  )
+}
+
+function CounterIcon() {
+  return (
+    <svg width="18" height="15" viewBox="0 0 24 20" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="2" width="20" height="4" rx="1" /><rect x="2" y="8" width="20" height="4" rx="1" /><rect x="4" y="14" width="16" height="3" rx="1" /></svg>
   )
 }
 

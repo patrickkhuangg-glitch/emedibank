@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
+import { haptic } from '@/lib/haptics'
 import {
   mockFetchQuestionAction,
   mockGradeSingleAction,
@@ -131,10 +132,12 @@ export function MockRunner({
   const go = useCallback((d: number) => { setI((cur) => Math.min(ids.length - 1, Math.max(0, cur + d))); setMlSelected(null) }, [ids.length])
 
   function begin() {
+    haptic(15)
     rootRef.current?.requestFullscreen?.().catch(() => {})
     setPhase('running')
   }
   function nextSection() {
+    haptic(15)
     const next = sIdx + 1
     setSIdx(next)
     setI(0)
@@ -260,21 +263,21 @@ export function MockRunner({
   }
 
   // ---------- RUNNING ----------
-  const setGrid = (idx: number, v: YesNo) => setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } }))
-  const cycleGrid = (idx: number) => setGridPending((p) => {
+  const setGrid = (idx: number, v: YesNo) => { haptic(8); setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } })) }
+  const cycleGrid = (idx: number) => { haptic(8); setGridPending((p) => {
     const cur = p[id]?.[idx]
     const next = cur === 'Yes' ? 'No' : cur === 'No' ? undefined : 'Yes'
     const row = { ...(p[id] ?? {}) }
     if (next) row[idx] = next; else delete row[idx]
     return { ...p, [id]: row }
-  })
-  const setML = (slot: 'most' | 'least', idx: number) => setMlPending((p) => {
+  }) }
+  const setML = (slot: 'most' | 'least', idx: number) => { haptic(8); setMlPending((p) => {
     const cur: { most?: number; least?: number } = { ...(p[id] ?? {}) }
     cur[slot] = idx
     if (slot === 'most' && cur.least === idx) delete cur.least
     if (slot === 'least' && cur.most === idx) delete cur.most
     return { ...p, [id]: cur }
-  })
+  }) }
   const clearML = (slot: 'most' | 'least') => setMlPending((p) => { const cur = { ...(p[id] ?? {}) }; delete cur[slot]; return { ...p, [id]: cur } })
 
   const Img = q?.image ? (
@@ -295,7 +298,7 @@ export function MockRunner({
       {q.options.map((o) => {
         const sel = mcqPending[id] === o.id
         return (
-          <button key={o.id} onClick={() => setMcqPending((p) => ({ ...p, [id]: o.id }))} className="flex items-start gap-3 py-2.5 text-left text-[15px]">
+          <button key={o.id} onClick={() => { haptic(8); setMcqPending((p) => ({ ...p, [id]: o.id })) }} className="flex items-start gap-3 py-2.5 text-left text-[15px]">
             <span className={`mt-0.5 grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-2 ${sel ? 'border-[#1268ad]' : 'border-gray-500'}`}>
               {sel ? <span className="h-2 w-2 rounded-full bg-[#1268ad]" /> : null}
             </span>

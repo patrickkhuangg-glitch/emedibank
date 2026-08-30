@@ -57,7 +57,7 @@ export default async function PracticeExamPage({ params }: { params: Promise<{ e
                   <li key={s.id} className="eb-rise" style={{ animationDelay: `${idx * 60}ms` }}>
                     <Link
                       href={href}
-                      className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted"
+                      className="eb-press group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted"
                     >
                       <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand transition-transform duration-300 group-hover:scale-105">
                         <BookIcon />
