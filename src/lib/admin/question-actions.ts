@@ -5,6 +5,7 @@ import { getProfile } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { createVideoUpload } from '@/lib/mux/upload'
 import { getOrigin } from '@/lib/site'
+import type { QFilter } from './question-filter'
 
 async function requireAdmin() {
   const p = await getProfile()
@@ -76,18 +77,64 @@ export async function createQuestion(input: QuestionInput) {
   revalidatePath('/admin/questions')
 }
 
-export async function togglePublishAction(formData: FormData) {
-  await requireAdmin()
+// ---- Bulk operations (used by the admin list; also cover single-item actions) ----
+
+/** Resolve every question id matching a filter (used for "select all matching"). */
+async function matchingIds(f: QFilter): Promise<string[]> {
   const supabase = await createClient()
-  await supabase.from('questions').update({ published: formData.get('next') === 'true' }).eq('id', String(formData.get('id')))
+  let sel = supabase.from('questions').select('id')
+  if (f.subtestId) sel = sel.eq('subtest_id', f.subtestId)
+  else if (f.examId) {
+    const { data: subs } = await supabase.from('subtests').select('id').eq('exam_id', f.examId)
+    sel = sel.in('subtest_id', (subs ?? []).map((s) => s.id))
+  }
+  if (f.status === 'published') sel = sel.eq('published', true)
+  else if (f.status === 'draft') sel = sel.eq('published', false)
+  if (f.search.trim()) sel = sel.ilike('stem', `%${f.search.trim()}%`)
+  const { data } = await sel
+  return (data ?? []).map((r) => r.id)
+}
+
+export async function bulkDeleteIds(ids: string[]) {
+  await requireAdmin()
+  if (!ids.length) return
+  const supabase = await createClient()
+  const { error } = await supabase.from('questions').delete().in('id', ids)
+  if (error) throw error
   revalidatePath('/admin/questions')
 }
 
-export async function deleteQuestionAction(formData: FormData) {
+export async function bulkSetPublishedIds(ids: string[], published: boolean) {
   await requireAdmin()
+  if (!ids.length) return
   const supabase = await createClient()
-  await supabase.from('questions').delete().eq('id', String(formData.get('id')))
+  const { error } = await supabase.from('questions').update({ published }).in('id', ids)
+  if (error) throw error
   revalidatePath('/admin/questions')
+}
+
+export async function bulkDeleteMatching(f: QFilter): Promise<number> {
+  await requireAdmin()
+  const ids = await matchingIds(f)
+  if (ids.length) {
+    const supabase = await createClient()
+    const { error } = await supabase.from('questions').delete().in('id', ids)
+    if (error) throw error
+    revalidatePath('/admin/questions')
+  }
+  return ids.length
+}
+
+export async function bulkSetPublishedMatching(f: QFilter, published: boolean): Promise<number> {
+  await requireAdmin()
+  const ids = await matchingIds(f)
+  if (ids.length) {
+    const supabase = await createClient()
+    const { error } = await supabase.from('questions').update({ published }).in('id', ids)
+    if (error) throw error
+    revalidatePath('/admin/questions')
+  }
+  return ids.length
 }
 
 export async function createVideoUploadAction(questionId: string): Promise<{ uploadUrl: string } | { error: string }> {
