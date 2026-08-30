@@ -5,7 +5,7 @@ import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import { haptic } from '@/lib/haptics'
-import { fetchQuestionAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction } from '@/lib/questions/actions'
+import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
 
 type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
@@ -56,9 +56,14 @@ export function SessionRunner({
   const total = questionIds.length
   const rootRef = useRef<HTMLDivElement>(null)
 
-  const [phase, setPhase] = useState<'intro' | 'running' | 'done'>('intro')
+  const [phase, setPhase] = useState<'intro' | 'running' | 'summary' | 'review'>('intro')
   const [readyModal, setReadyModal] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const [grading, setGrading] = useState(false)
   const [i, setI] = useState(0)
+  const [reviewList, setReviewList] = useState<number[]>([])
+  const [reviewPos, setReviewPos] = useState(0)
+  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set())
   const [cache, setCache] = useState<Record<string, SafeQuestion | null>>({})
   const [pending, setPending] = useState<Record<string, string>>({})
   const [answers, setAnswers] = useState<Record<string, Answered>>({})
@@ -67,14 +72,16 @@ export function SessionRunner({
   const [mlPending, setMlPending] = useState<Record<string, { most?: number; least?: number }>>({})
   const [mlAnswers, setMlAnswers] = useState<Record<string, MLAnswered>>({})
   const [mlSelected, setMlSelected] = useState<number | null>(null)
+  const [prevIdx, setPrevIdx] = useState(0)
   const [flags, setFlags] = useState<Record<string, boolean>>({})
   const [calcOpen, setCalcOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [remaining, setRemaining] = useState(minutes * 60)
-  const [leftCount, setLeftCount] = useState(0)
   const [warn, setWarn] = useState(false)
 
-  const id = questionIds[i]
+  const reviewing = phase === 'review'
+  const activeIndex = reviewing ? (reviewList[reviewPos] ?? 0) : i
+  const id = questionIds[activeIndex]
   const q = cache[id]
   const isGrid = !!q?.statements
   const isML = !!q?.mostLeast
@@ -82,76 +89,80 @@ export function SessionRunner({
   const gridAnswered = gridAnswers[id]
   const mlAnswered = mlAnswers[id]
 
-  const ensure = useCallback(async (qid: string) => {
-    if (qid in cache) return
-    const r = await fetchQuestionAction(qid)
-    setCache((c) => ({ ...c, [qid]: r.locked ? null : (r.question as SafeQuestion) }))
-  }, [cache])
-  useEffect(() => { if (phase === 'running') ensure(id) }, [id, phase, ensure])
-  useEffect(() => { setMlSelected(null) }, [i])
+  // Clear a half-made Most/Least selection when the question changes (render-time
+  // reset — no effect needed).
+  if (prevIdx !== activeIndex) { setPrevIdx(activeIndex); setMlSelected(null) }
 
-  const finish = useCallback(() => {
-    setPhase('done')
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-  }, [])
-
-  const explain = useCallback(async () => {
-    const cur = cache[id]
-    if (!cur) return
-    if (cur.statements) {
-      if (gridAnswers[id]) return
-      const ans = gridPending[id] ?? {}
-      const asStr: Record<string, YesNo> = {}
-      for (const k of Object.keys(ans)) asStr[k] = ans[Number(k)]
-      const r = await submitGridAction(id, asStr)
-      if ('denied' in r) return
-      let video: Video | null = null
-      if (r.can_watch_video && r.video_ready) {
-        const v = await loadExplanationVideoAction(id)
-        if (!('denied' in v)) video = v
-      }
-      setGridAnswers((a) => ({ ...a, [id]: { result: r, video } }))
-      return
-    }
-    if (cur.mostLeast) {
-      if (mlAnswers[id]) return
-      const ch = mlPending[id]
-      if (ch?.most == null || ch?.least == null) return
-      const r = await submitMostLeastAction(id, { most: ch.most, least: ch.least })
-      if ('denied' in r) return
-      let video: Video | null = null
-      if (r.can_watch_video && r.video_ready) {
-        const v = await loadExplanationVideoAction(id)
-        if (!('denied' in v)) video = v
-      }
-      setMlAnswers((a) => ({ ...a, [id]: { result: r, video } }))
-      return
-    }
-    if (answers[id]) return
-    const sel = pending[id]
-    if (!sel) return
-    const r = await answerQuestionAction(id, sel)
-    if ('denied' in r) return
-    let video: Video | null = null
-    if (r.can_watch_video && r.video_ready) {
-      const v = await loadExplanationVideoAction(id)
-      if (!('denied' in v)) video = v
-    }
-    setAnswers((a) => ({ ...a, [id]: { selectedId: sel, result: r, video } }))
-  }, [cache, id, gridAnswers, gridPending, mlAnswers, mlPending, answers, pending])
+  // Load the whole session in one round-trip once running begins, so moving
+  // between questions is instant (no per-Next server call).
+  useEffect(() => {
+    if (phase !== 'running' || loaded) return
+    let alive = true
+    fetchQuestionsAction(questionIds).then((map) => {
+      if (alive) { setCache(map as Record<string, SafeQuestion | null>); setLoaded(true) }
+    })
+    return () => { alive = false }
+  }, [phase, loaded, questionIds])
 
   const go = useCallback((d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))), [total])
+  const reviewGo = (d: number) => setReviewPos((p) => Math.min(reviewList.length - 1, Math.max(0, p + d)))
+  function startReview(list: number[], pos: number) {
+    if (list.length === 0) return
+    setReviewList(list); setReviewPos(pos); setPhase('review')
+  }
 
+  // Grade every answered question at the end, then show the results screen.
+  const submitAll = useCallback(async () => {
+    setGrading(true)
+    const nextA: Record<string, Answered> = {}
+    const nextG: Record<string, GridAnswered> = {}
+    const nextM: Record<string, MLAnswered> = {}
+    await Promise.all(
+      questionIds.map(async (qid) => {
+        const cur = cache[qid]
+        if (!cur) return
+        if (cur.statements) {
+          const ans = gridPending[qid] ?? {}
+          if (Object.keys(ans).length === 0) return
+          const asStr: Record<string, YesNo> = {}
+          for (const k of Object.keys(ans)) asStr[k] = ans[Number(k)]
+          const r = await submitGridAction(qid, asStr)
+          if (!('denied' in r)) nextG[qid] = { result: r, video: null }
+        } else if (cur.mostLeast) {
+          const ch = mlPending[qid]
+          if (ch?.most == null || ch?.least == null) return
+          const r = await submitMostLeastAction(qid, { most: ch.most, least: ch.least })
+          if (!('denied' in r)) nextM[qid] = { result: r, video: null }
+        } else {
+          const sel = pending[qid]
+          if (!sel) return
+          const r = await answerQuestionAction(qid, sel)
+          if (!('denied' in r)) nextA[qid] = { selectedId: sel, result: r, video: null }
+        }
+      }),
+    )
+    setAnswers((a) => ({ ...a, ...nextA }))
+    setGridAnswers((a) => ({ ...a, ...nextG }))
+    setMlAnswers((a) => ({ ...a, ...nextM }))
+    setAnsweredIds(new Set([...Object.keys(nextA), ...Object.keys(nextG), ...Object.keys(nextM)]))
+    setGrading(false)
+    setPhase('summary')
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+  }, [questionIds, cache, gridPending, mlPending, pending])
+
+  // Timer + a ref so its expiry always calls the latest submitAll.
+  const submitRef = useRef(submitAll)
+  useEffect(() => { submitRef.current = submitAll }, [submitAll])
   useEffect(() => {
     if (phase !== 'running' || !timed) return
-    if (remaining <= 0) { finish(); return }
+    if (remaining <= 0) { submitRef.current(); return }
     const t = setTimeout(() => setRemaining((r) => r - 1), 1000)
     return () => clearTimeout(t)
-  }, [phase, timed, remaining, finish])
+  }, [phase, timed, remaining])
 
   useEffect(() => {
     if (phase !== 'running') return
-    const onVis = () => { if (document.hidden) { setLeftCount((n) => n + 1); setWarn(true) } }
+    const onVis = () => { if (document.hidden) setWarn(true) }
     document.addEventListener('visibilitychange', onVis)
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [phase])
@@ -169,7 +180,7 @@ export function SessionRunner({
         return
       }
       const cur = cache[id]
-      if (!calcOpen && cur && !cur.statements && !cur.mostLeast && !answers[id]) {
+      if (!calcOpen && cur && !cur.statements && !cur.mostLeast) {
         const idx = ['a', 'b', 'c', 'd', 'e'].indexOf(e.key.toLowerCase())
         const opt = cur.options[idx]
         if (opt) setPending((p) => ({ ...p, [id]: opt.id }))
@@ -177,7 +188,39 @@ export function SessionRunner({
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [phase, id, calcOpen, answers, cache, go])
+  }, [phase, id, calcOpen, cache, go])
+
+  // In review, reveal the solution for a question the student left unanswered
+  // (no attempt recorded — this is a read-only "see the answer" call).
+  useEffect(() => {
+    if (!reviewing || answeredIds.has(id) || answers[id] || gridAnswers[id] || mlAnswers[id]) return
+    let alive = true
+    revealAnswerAction(id).then((r) => {
+      if (!alive || 'denied' in r) return
+      if (r.kind === 'grid') setGridAnswers((s) => ({ ...s, [id]: { result: r.result, video: null } }))
+      else if (r.kind === 'most_least') setMlAnswers((s) => ({ ...s, [id]: { result: r.result, video: null } }))
+      else setAnswers((s) => ({ ...s, [id]: { selectedId: '', result: r.result, video: null } }))
+    })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewing, id, answeredIds])
+
+  // In review, lazily fetch the signed video for a paid, ready explanation.
+  useEffect(() => {
+    if (!reviewing) return
+    const a = answers[id]; const g = gridAnswers[id]; const m = mlAnswers[id]
+    const res = a?.result ?? g?.result ?? m?.result
+    const hasVideo = a?.video ?? g?.video ?? m?.video
+    if (!res || hasVideo || !res.can_watch_video || !res.video_ready) return
+    let alive = true
+    loadExplanationVideoAction(id).then((v) => {
+      if (!alive || 'denied' in v) return
+      if (a) setAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
+      else if (g) setGridAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
+      else if (m) setMlAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
+    })
+    return () => { alive = false }
+  }, [reviewing, id, answers, gridAnswers, mlAnswers])
 
   function begin() {
     haptic(15)
@@ -185,14 +228,14 @@ export function SessionRunner({
     setReadyModal(false)
     setPhase('running')
   }
+  function endExam() {
+    if (confirm('Finish and see your results now? Unanswered questions stay blank.')) submitAll()
+  }
 
-  function isDone(qid: string) { return !!answers[qid] || !!gridAnswers[qid] || !!mlAnswers[qid] }
-  const correctCount =
-    Object.values(answers).filter((a) => a.result.is_correct).length +
-    Object.values(gridAnswers).filter((a) => a.result.is_correct).length +
-    Object.values(mlAnswers).filter((a) => a.result.is_correct).length
-  const answeredCount = new Set([...Object.keys(answers), ...Object.keys(gridAnswers), ...Object.keys(mlAnswers)]).size
-
+  function hasPending(qid: string) {
+    const g = gridPending[qid]; const m = mlPending[qid]
+    return !!pending[qid] || (!!g && Object.keys(g).length > 0) || (!!m && m.most != null && m.least != null)
+  }
   // ---------- INTRO ----------
   if (phase === 'intro') {
     return (
@@ -223,35 +266,53 @@ export function SessionRunner({
     )
   }
 
-  // ---------- DONE ----------
-  if (phase === 'done') {
+  // ---------- SUMMARY (post-score review list) ----------
+  if (phase === 'summary') {
+    const statusOf = (qid: string): 'Correct' | 'Incorrect' | 'Unseen' => {
+      if (!answeredIds.has(qid)) return 'Unseen'
+      const res = answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
+      return res?.is_correct ? 'Correct' : 'Incorrect'
+    }
+    const allIdx = questionIds.map((_, idx) => idx)
+    const incorrectIdx = allIdx.filter((idx) => statusOf(questionIds[idx]) !== 'Correct')
+    const flaggedIdx = allIdx.filter((idx) => flags[questionIds[idx]])
+    const incorrectCount = incorrectIdx.length
+
     return (
-      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-auto bg-[#eef1f4] p-6" style={{ fontFamily: ARIAL }}>
-        <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-8">
-          <h1 className="text-2xl font-semibold text-[#1b2a46]">Review screen</h1>
-          <p className="mt-2 text-gray-600">{label}</p>
-          <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-            <Stat label="Score" value={`${correctCount}/${total}`} />
-            <Stat label="Answered" value={`${answeredCount}/${total}`} />
-            <Stat label="Left screen" value={String(leftCount)} />
-          </div>
-          <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-2">
-            {questionIds.map((qid, idx) => {
-              const res = answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
-              const cls = !res ? 'bg-gray-100 text-gray-500' : res.is_correct ? 'bg-[#e2efe4] text-[#157d72]' : 'bg-[#fdecec] text-[#dc2626]'
-              return <button key={qid} onClick={() => { setPhase('running'); setI(idx) }} className={`h-10 rounded ${cls} text-sm`}>{idx + 1}</button>
-            })}
-          </div>
-          <div className="mt-8 flex gap-3">
-            <button onClick={() => router.push(`/practice/${examSlug}`)} className="rounded-lg bg-[#157d72] px-5 py-2.5 text-sm font-medium text-white">New session</button>
-            <Link href="/dashboard" className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium">Dashboard</Link>
+      <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
+        <div className="px-5 py-3 text-white" style={{ background: BAR }}><span className="text-lg font-semibold">{label} Question Bank</span></div>
+        <div className="flex items-center gap-2 px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}><span aria-hidden>🗎</span> Instructions</div>
+        <p className="py-3 text-center text-[15px] text-[#1b1b1b]">Review Postscore: see which items are incorrect and return to them to see the solution</p>
+        <div className="flex items-center justify-between px-5 py-2 font-semibold text-white" style={{ background: '#2f74b8' }}>
+          <span>Question Bank Section 1</span>
+          <span>( {total} Questions , {incorrectCount} Incorrect )</span>
+        </div>
+        <div className="flex-1 overflow-auto">
+          {questionIds.map((qid, idx) => {
+            const s = statusOf(qid)
+            return (
+              <button key={qid} onClick={() => startReview(allIdx, idx)} className="flex w-full items-center gap-3 border-b border-gray-200 px-5 py-2.5 text-left text-[15px] text-[#1268ad] hover:bg-[#f4f8fc]">
+                <PencilIcon />
+                <span className="flex-1">Question {idx + 1}</span>
+                {flags[qid] ? <span className="text-[#c0392b]" title="Flagged">⚑</span> : null}
+                <span className={`w-28 text-right font-medium ${s === 'Correct' ? 'text-[#157d72]' : 'text-[#c0392b]'}`}>{s}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
+          <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-5 py-3 hover:bg-white/10">⤶ End Review</button>
+          <div className="flex">
+            <button onClick={() => startReview(allIdx, 0)} className="flex items-center gap-1.5 border-l border-white/25 px-5 py-3 hover:bg-white/10"><span aria-hidden>✎</span>Review All</button>
+            <button disabled={incorrectIdx.length === 0} onClick={() => startReview(incorrectIdx, 0)} className="flex items-center gap-1.5 border-l border-white/25 px-5 py-3 hover:bg-white/10 disabled:opacity-40"><span aria-hidden>✕</span>Review Incorrect</button>
+            <button disabled={flaggedIdx.length === 0} onClick={() => startReview(flaggedIdx, 0)} className="flex items-center gap-1.5 border-l border-white/25 px-5 py-3 hover:bg-white/10 disabled:opacity-40"><span aria-hidden>⚑</span>Review Flagged</button>
           </div>
         </div>
       </div>
     )
   }
 
-  // ---------- RUNNING ----------
+  // ---------- RUNNING / REVIEW ----------
   const setGrid = (idx: number, v: YesNo) => { haptic(8); setGridPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), [idx]: v } })) }
   const cycleGrid = (idx: number) => { haptic(8); setGridPending((p) => {
     const cur = p[id]?.[idx]
@@ -261,9 +322,9 @@ export function SessionRunner({
     return { ...p, [id]: row }
   }) }
 
-  const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined) => result ? (
+  const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined, wasAnswered: boolean) => result ? (
     <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
-      <p className={`text-sm font-semibold ${result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{result.is_correct ? 'Correct' : 'Not quite'}</p>
+      <p className={`text-sm font-semibold ${!wasAnswered ? 'text-[#6b7280]' : result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{!wasAnswered ? 'Not answered' : result.is_correct ? 'Correct' : 'Not quite'}</p>
       {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{result.explanation_text}</div> : null}
       {video ? (
         <div className="overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={video.playbackId} tokens={{ playback: video.token }} streamType="on-demand" accentColor="#157d72" /></div>
@@ -363,7 +424,7 @@ export function SessionRunner({
     <div className="mt-6">
       <div className="flex flex-col gap-3">
         {(['most', 'least'] as const).map((slot) => {
-          const label = slot === 'most' ? 'Most Appropriate' : 'Least Appropriate'
+          const label2 = slot === 'most' ? 'Most Appropriate' : 'Least Appropriate'
           const idx = mlPending[id]?.[slot]
           const action = idx != null ? q.mostLeast!.actions.find((a) => a.index === idx) : undefined
           const ok = mlAnswered ? (slot === 'most' ? mlAnswered.result.most_correct : mlAnswered.result.least_correct) : null
@@ -372,7 +433,7 @@ export function SessionRunner({
           else if (action) boxCls = 'border-[#1268ad] bg-[#eef5fb] text-[#1268ad]'
           return (
             <div key={slot} className="flex items-stretch gap-3">
-              <div className="grid w-40 flex-none place-items-center border-2 border-black px-2 py-3 text-center text-[15px]">{label}</div>
+              <div className="grid w-40 flex-none place-items-center border-2 border-black px-2 py-3 text-center text-[15px]">{label2}</div>
               <div
                 onClick={() => { if (!mlAnswered) { if (mlSelected != null) { setML(slot, mlSelected); setMlSelected(null) } else if (action) clearML(slot) } }}
                 onDragOver={(e) => { if (!mlAnswered) e.preventDefault() }}
@@ -398,9 +459,50 @@ export function SessionRunner({
     </div>
   ) : null
 
+  const Content = (
+    <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
+      {!loaded && q === undefined ? (
+        <p className="text-gray-500">Loading questions…</p>
+      ) : q === undefined ? (
+        <p className="text-gray-500">Loading…</p>
+      ) : q === null ? (
+        <p className="text-gray-500">This question isn&rsquo;t available.</p>
+      ) : isGrid ? (
+        <div className="mx-auto max-w-6xl">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+          {Img}{Table}{Grid}
+          {Explanation(gridAnswered?.result, gridAnswered?.video, answeredIds.has(id))}
+        </div>
+      ) : isML ? (
+        <div className="mx-auto max-w-4xl">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+          {Img}{ML}
+          {Explanation(mlAnswered?.result, mlAnswered?.video, answeredIds.has(id))}
+        </div>
+      ) : q.passage ? (
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
+          <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Img}</div>
+          <div className="md:pl-8">
+            <p className="text-[15px] leading-relaxed">{q.stem}</p>
+            <div className="mt-6">{Options}</div>
+            {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto max-w-3xl">
+          {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
+          <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+          {Img}{Table}
+          <div className="mt-5">{Options}</div>
+          {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
-      {warn ? (
+      {warn && !reviewing ? (
         <div className="flex items-center justify-between bg-[#dc2626] px-5 py-2 text-sm text-white">
           <span>You left the test window. In the real exam this isn&rsquo;t allowed.</span>
           <button onClick={() => setWarn(false)} className="underline">Dismiss</button>
@@ -408,79 +510,64 @@ export function SessionRunner({
       ) : null}
 
       <div className="flex items-center justify-between px-5 py-2.5 text-white" style={{ background: BAR }}>
-        <span className="text-lg font-semibold">{label}</span>
+        <span className="text-lg font-semibold">{reviewing ? `${label} · Review` : label}</span>
         <div className="flex items-center gap-5">
-          {timed ? <span className={`text-sm tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
-          <span className="flex items-center gap-2 text-sm tabular-nums"><CounterIcon />{i + 1} of {total}</span>
+          {timed && !reviewing ? <span className={`text-sm tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
+          <span className="flex items-center gap-2 text-sm tabular-nums"><CounterIcon />{activeIndex + 1} of {total}</span>
         </div>
       </div>
-      <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
-        <div className="flex items-center gap-6">
-          <button onClick={explain} className="flex items-center gap-1.5 hover:underline"><span aria-hidden>💡</span>Explain Answer</button>
+
+      {reviewing ? (
+        <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
+          <button onClick={() => setPhase('summary')} className="hover:underline">← Back to results</button>
+          <span>{!answeredIds.has(id) ? 'Not answered' : (answered?.result.is_correct ?? gridAnswered?.result.is_correct ?? mlAnswered?.result.is_correct) ? 'Correct' : 'Incorrect'}</span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
           <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><span>Calculator</span></button>
+          <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><span>Flag for Review</span></button>
         </div>
-        <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><span>Flag for Review</span></button>
-      </div>
+      )}
 
-      <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
-        {q === undefined ? (
-          <p className="text-gray-500">Loading…</p>
-        ) : q === null ? (
-          <p className="text-gray-500">This question isn&rsquo;t available.</p>
-        ) : isGrid ? (
-          <div className="mx-auto max-w-6xl">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-            {Img}
-            {Table}
-            {Grid}
-            {Explanation(gridAnswered?.result, gridAnswered?.video)}
-          </div>
-        ) : isML ? (
-          <div className="mx-auto max-w-4xl">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-            {Img}
-            {ML}
-            {Explanation(mlAnswered?.result, mlAnswered?.video)}
-          </div>
-        ) : q.passage ? (
-          <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
-            <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Img}</div>
-            <div className="md:pl-8">
-              <p className="text-[15px] leading-relaxed">{q.stem}</p>
-              <div className="mt-6">{Options}</div>
-              {Explanation(answered?.result, answered?.video)}
-            </div>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-3xl">
-            {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
-            <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-            {Img}
-            {Table}
-            <div className="mt-5">{Options}</div>
-            {Explanation(answered?.result, answered?.video)}
-          </div>
-        )}
-      </div>
+      {Content}
 
-      <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
-        <button onClick={() => { if (confirm('End the session now?')) finish() }} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
-        <div className="flex">
-          {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
-          <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-5 py-3">✧ Navigator</button>
-          {i >= total - 1 ? <button onClick={finish} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
+      {reviewing ? (
+        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
+          <button onClick={() => setPhase('summary')} className="px-5 py-3 hover:bg-white/10">⤶ Back to results</button>
+          <div className="flex">
+            {reviewPos > 0 ? <button onClick={() => reviewGo(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
+            {reviewPos < reviewList.length - 1 ? <button onClick={() => reviewGo(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button> : null}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
+          <button onClick={endExam} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
+          <div className="flex">
+            {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
+            <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-5 py-3">✧ Navigator</button>
+            {i >= total - 1 ? <button onClick={submitAll} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
+          </div>
+        </div>
+      )}
 
-      {calcOpen ? <TI108Calculator onClose={() => setCalcOpen(false)} /> : null}
+      {calcOpen && !reviewing ? <TI108Calculator onClose={() => setCalcOpen(false)} /> : null}
 
-      {navOpen ? (
+      {grading ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 text-white">
+          <div className="flex items-center gap-3 rounded-lg bg-[#1268ad] px-6 py-4">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            Marking your answers…
+          </div>
+        </div>
+      ) : null}
+
+      {navOpen && !reviewing ? (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40" onClick={(e) => { if (e.target === e.currentTarget) setNavOpen(false) }}>
           <div className="max-h-[80vh] w-[min(520px,92vw)] overflow-auto rounded-lg bg-white">
             <div className="flex items-center justify-between px-5 py-3 font-semibold text-white" style={{ background: '#1268ad' }}>Navigator <button onClick={() => setNavOpen(false)}>✕</button></div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2 p-4">
               {questionIds.map((qid, idx) => (
-                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`relative h-11 rounded border text-sm ${isDone(qid) ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
+                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`relative h-11 rounded border text-sm ${hasPending(qid) ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
                   {flags[qid] ? <span className="absolute right-1 top-0.5 text-[10px] text-[#c0392b]">⚑</span> : null}{idx + 1}
                 </button>
               ))}
@@ -498,11 +585,10 @@ function CounterIcon() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function PencilIcon() {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <div className="text-2xl font-semibold tabular-nums text-[#1b2a46]">{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-wide text-gray-500">{label}</div>
-    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1268ad" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="flex-none" aria-hidden>
+      <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
   )
 }

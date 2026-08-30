@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import { haptic } from '@/lib/haptics'
 import {
-  mockFetchQuestionAction,
+  mockFetchQuestionsAction,
   mockGradeSingleAction,
   mockGradeGridAction,
   mockGradeMostLeastAction,
@@ -64,13 +64,17 @@ export function MockRunner({
   const id = ids[i]
   const q = cache[id]
 
-  const ensure = useCallback(async (qid: string) => {
-    if (!qid || qid in cache) return
-    const r = await mockFetchQuestionAction(token, qid)
-    setCache((c) => ({ ...c, [qid]: r.locked ? null : (r.question as SafeQuestion) }))
-  }, [cache, token])
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- on-demand question fetch
-  useEffect(() => { if (phase === 'running') ensure(id) }, [id, phase, ensure])
+  // Bulk-load the whole section in one round-trip when it starts, so moving
+  // between its questions is instant (no per-Next server call).
+  useEffect(() => {
+    if (phase !== 'running' || ids.length === 0) return
+    let alive = true
+    mockFetchQuestionsAction(token, ids).then((map) => {
+      if (alive) setCache((c) => ({ ...c, ...(map as Record<string, SafeQuestion | null>) }))
+    })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload per section start
+  }, [phase, sIdx, token])
 
   // Grade every answered question in a section, silently (no reveal mid-exam).
   const gradeSection = useCallback(async (index: number) => {

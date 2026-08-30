@@ -40,6 +40,20 @@ export async function mockFetchQuestionAction(
   return { locked: false, question: await buildSafeQuestion(v.meta) }
 }
 
+/** Bulk sanitized fetch for a mock section — one round-trip, each still verified. */
+export async function mockFetchQuestionsAction(
+  token: string,
+  ids: string[],
+): Promise<Record<string, SafeQuestion | null>> {
+  const entries = await Promise.all(
+    ids.map(async (qid) => {
+      const v = await verify(token, qid)
+      return [qid, v ? await buildSafeQuestion(v.meta) : null] as const
+    }),
+  )
+  return Object.fromEntries(entries)
+}
+
 export async function mockGradeSingleAction(
   token: string,
   questionId: string,

@@ -50,9 +50,9 @@ export default async function SessionPage({
 
 This session runs in a full-screen interface that mirrors the real ${exam.name} test.
 
-The 'Navigator' at the bottom right lets you move between questions. As you work through each question, click 'Explain Answer' at the top left to check the correct answer and read the rationale.
+The 'Navigator' at the bottom right lets you move between questions, and you can flag any question for review.
 
-You can review your answers on the Review Screen at the end. Click any question to return to it.
+Your answers are saved as you go. Nothing is marked until the end: select 'Finish' (or let the timer run out) to see your score, then select any question to review it with the answer explained.
 
 Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A-D to select an answer.
 

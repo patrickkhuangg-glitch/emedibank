@@ -115,6 +115,21 @@ export async function getQuestionForAttempt(
   return { locked: false, question: await buildSafeQuestion(m) }
 }
 
+/** Bulk sanitized fetch — one round-trip for a whole session so navigation is
+ *  instant. Each question is still entitlement-gated; locked ones map to null. */
+export async function getQuestionsForAttempt(
+  userId: string | null | undefined,
+  ids: string[],
+): Promise<Record<string, SafeQuestion | null>> {
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      const r = await getQuestionForAttempt(userId, id)
+      return [id, r.locked ? null : r.question] as const
+    }),
+  )
+  return Object.fromEntries(entries)
+}
+
 export type AnswerResult = {
   is_correct: boolean
   correct_option_id: string | null
@@ -321,4 +336,43 @@ export async function submitMostLeastAnswer(
   if (!m || !m.published || !m.data?.mostLeast) return { denied: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
   return gradeMostLeast(userId, m, choice, timeSpentSeconds)
+}
+
+export type RevealResult =
+  | { kind: 'mcq'; result: AnswerResult }
+  | { kind: 'grid'; result: GridResult }
+  | { kind: 'most_least'; result: MostLeastResult }
+
+/** The solution to a question WITHOUT recording an attempt — for reviewing items
+ *  the student left unanswered. Gated by exam access. */
+export async function revealSolution(
+  userId: string | null | undefined,
+  questionId: string,
+): Promise<RevealResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+  const common = {
+    explanation_text: m.explanation_text,
+    can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
+    has_video: m.video_status !== 'none',
+    video_ready: m.video_status === 'ready',
+  }
+
+  if (m.data?.statements?.length) {
+    return {
+      kind: 'grid',
+      result: { is_correct: false, per_statement: m.data.statements.map((s, index) => ({ index, correct: false, correct_answer: s.correct })), ...common },
+    }
+  }
+  if (m.data?.mostLeast) {
+    return {
+      kind: 'most_least',
+      result: { is_correct: false, correct_most: m.data.mostLeast.correctMost, correct_least: m.data.mostLeast.correctLeast, most_correct: false, least_correct: false, ...common },
+    }
+  }
+  const supabase = createAdminClient()
+  const { data: opts } = await supabase.from('question_options').select('id, is_correct').eq('question_id', m.id)
+  const correct = (opts ?? []).find((o) => o.is_correct)
+  return { kind: 'mcq', result: { is_correct: false, correct_option_id: correct?.id ?? null, ...common } }
 }

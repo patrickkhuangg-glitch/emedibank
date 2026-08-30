@@ -3,6 +3,7 @@
 import { getUser } from '@/lib/auth/dal'
 import {
   getQuestionForAttempt,
+  getQuestionsForAttempt,
   submitAnswer,
   getExplanationPlayback,
 } from '@/lib/access/questions'
@@ -10,6 +11,11 @@ import {
 export async function fetchQuestionAction(questionId: string) {
   const user = await getUser()
   return getQuestionForAttempt(user?.id, questionId)
+}
+
+export async function fetchQuestionsAction(ids: string[]) {
+  const user = await getUser()
+  return getQuestionsForAttempt(user?.id, ids)
 }
 
 export async function answerQuestionAction(
@@ -25,6 +31,12 @@ export async function answerQuestionAction(
 export async function loadExplanationVideoAction(questionId: string) {
   const user = await getUser()
   return getExplanationPlayback(user?.id, questionId)
+}
+
+export async function revealAnswerAction(questionId: string) {
+  const user = await getUser()
+  const { revealSolution } = await import('@/lib/access/questions')
+  return revealSolution(user?.id, questionId)
 }
 
 export async function submitGridAction(
