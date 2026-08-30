@@ -68,10 +68,10 @@ export default async function PricingPage() {
   return (
     <Container className="py-16">
       <div className="mx-auto max-w-3xl text-center">
-        <h1 className="text-4xl font-semibold tracking-tight">Simple, exam-based pricing</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">Everything, priced by the week</h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
-          Start free on every exam. Subscribe to unlock a full exam, or get everything with
-          all-access. Monthly or yearly, 7-day free trial, cancel anytime.
+          Start free with full mock exams. Unlock a whole exam, or get all-access for the lowest
+          cost per exam. Every plan is a 7-day free trial, and you can cancel anytime.
         </p>
       </div>
 

@@ -213,8 +213,8 @@ export function SessionRunner({
                 <p className="text-[15px]">If you are ready to begin the exam, select the Yes button. Otherwise, select the No button to return to the previous screen.</p>
               </div>
               <div className="flex justify-center gap-4 pb-6">
-                <button onClick={begin} className="min-w-[72px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10"><u>Y</u>es</button>
-                <button onClick={() => setReadyModal(false)} className="min-w-[72px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10"><u>N</u>o</button>
+                <button onClick={begin} className="min-w-[72px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10">Yes</button>
+                <button onClick={() => setReadyModal(false)} className="min-w-[72px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10">No</button>
               </div>
             </div>
           </div>
@@ -417,9 +417,9 @@ export function SessionRunner({
       <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
         <div className="flex items-center gap-6">
           <button onClick={explain} className="flex items-center gap-1.5 hover:underline"><span aria-hidden>💡</span>Explain Answer</button>
-          <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><u>C</u>alculator</button>
+          <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><span>Calculator</span></button>
         </div>
-        <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><u>F</u>lag for Review</button>
+        <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><span>Flag for Review</span></button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
