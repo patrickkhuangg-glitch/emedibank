@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
+import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
 import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
 
@@ -76,6 +77,7 @@ export function SessionRunner({
   const [flags, setFlags] = useState<Record<string, boolean>>({})
   const [calcOpen, setCalcOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [confirmFinish, setConfirmFinish] = useState(false)
   const [remaining, setRemaining] = useState(minutes * 60)
   const [warn, setWarn] = useState(false)
 
@@ -228,10 +230,6 @@ export function SessionRunner({
     setReadyModal(false)
     setPhase('running')
   }
-  function endExam() {
-    if (confirm('Finish and see your results now? Unanswered questions stay blank.')) submitAll()
-  }
-
   function hasPending(qid: string) {
     const g = gridPending[qid]; const m = mlPending[qid]
     return !!pending[qid] || (!!g && Object.keys(g).length > 0) || (!!m && m.most != null && m.least != null)
@@ -541,16 +539,32 @@ export function SessionRunner({
         </div>
       ) : (
         <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
-          <button onClick={endExam} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
+          <button onClick={() => setConfirmFinish(true)} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
           <div className="flex">
             {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
             <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-5 py-3">✧ Navigator</button>
-            {i >= total - 1 ? <button onClick={submitAll} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
+            {i >= total - 1 ? <button onClick={() => setConfirmFinish(true)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
           </div>
         </div>
       )}
 
       {calcOpen && !reviewing ? <TI108Calculator onClose={() => setCalcOpen(false)} /> : null}
+
+      {confirmFinish && !reviewing ? (
+        <ExamConfirm
+          title="Finish and submit?"
+          message={(() => {
+            const un = questionIds.filter((qid) => !hasPending(qid)).length
+            return un > 0
+              ? `You have ${un} unanswered question${un === 1 ? '' : 's'}. Once you finish, your answers are marked and you can no longer change them.`
+              : 'Once you finish, your answers are marked and you can no longer change them.'
+          })()}
+          confirmLabel="Yes, finish"
+          cancelLabel="No, keep going"
+          onConfirm={() => { setConfirmFinish(false); submitAll() }}
+          onCancel={() => setConfirmFinish(false)}
+        />
+      ) : null}
 
       {grading ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 text-white">

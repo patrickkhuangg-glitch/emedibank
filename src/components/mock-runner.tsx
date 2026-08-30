@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
+import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
 import {
   mockFetchQuestionsAction,
@@ -55,6 +56,7 @@ export function MockRunner({
   const [graded, setGraded] = useState<Record<string, Graded>>({})
   const [calcOpen, setCalcOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [confirmEnd, setConfirmEnd] = useState(false)
   const [remaining, setRemaining] = useState((sections[0]?.minutes ?? 0) * 60)
   const [reviewQid, setReviewQid] = useState<string | null>(null)
   const [grading, setGrading] = useState(false)
@@ -418,17 +420,34 @@ export function MockRunner({
       </div>
 
       <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
-        <button onClick={() => { if (confirm(`End ${section.name} now? You can't return to this section.`)) endSection() }} className="px-5 py-3 hover:bg-white/10" disabled={grading}>
+        <button onClick={() => setConfirmEnd(true)} className="px-5 py-3 hover:bg-white/10" disabled={grading}>
           ⤶ End section
         </button>
         <div className="flex">
           {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
           <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-5 py-3">✧ Navigator</button>
           {lastQuestion
-            ? <button onClick={() => { if (confirm(`End ${section.name} now? You can't return to this section.`)) endSection() }} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]" disabled={grading}>{grading ? 'Saving…' : 'End section →'}</button>
+            ? <button onClick={() => setConfirmEnd(true)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]" disabled={grading}>{grading ? 'Saving…' : 'End section →'}</button>
             : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
         </div>
       </div>
+
+      {confirmEnd ? (
+        <ExamConfirm
+          title={sIdx < sections.length - 1 ? `End ${section.name}?` : 'End the exam?'}
+          message={(() => {
+            const un = ids.filter((qid) => !isAnswered(qid)).length
+            const base = sIdx < sections.length - 1
+              ? `You cannot return to this section once it ends.`
+              : `This finishes the exam and marks your answers.`
+            return un > 0 ? `You have ${un} unanswered question${un === 1 ? '' : 's'}. ${base}` : base
+          })()}
+          confirmLabel={sIdx < sections.length - 1 ? 'End section' : 'Finish exam'}
+          cancelLabel="Keep going"
+          onConfirm={() => { setConfirmEnd(false); endSection() }}
+          onCancel={() => setConfirmEnd(false)}
+        />
+      ) : null}
 
       {calcOpen ? <TI108Calculator onClose={() => setCalcOpen(false)} /> : null}
 
