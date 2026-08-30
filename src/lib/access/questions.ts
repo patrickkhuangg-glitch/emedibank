@@ -7,7 +7,7 @@ import { canAccessExam, hasActiveEntitlement } from '@/lib/access'
 import type { QuestionKind } from '@/lib/supabase/types'
 
 type YesNo = 'Yes' | 'No'
-type QData = {
+export type QData = {
   passage?: string
   image?: string
   table?: { headers: string[]; rows: string[][] }
@@ -15,7 +15,7 @@ type QData = {
   mostLeast?: { actions: { text: string }[]; correctMost: number; correctLeast: number }
 }
 
-type QuestionMeta = {
+export type QuestionMeta = {
   id: string
   subtest_id: string
   stimulus_id: string | null
@@ -29,7 +29,7 @@ type QuestionMeta = {
   video_status: string
 }
 
-async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
+export async function loadMeta(questionId: string): Promise<QuestionMeta | null> {
   const supabase = createAdminClient()
   const { data: q } = await supabase.from('questions').select('*').eq('id', questionId).maybeSingle()
   if (!q) return null
@@ -69,15 +69,9 @@ export type SafeQuestion = {
   options: { id: string; label: string; body: string }[]
 }
 
-/** Sanitized question for the runner — no correct flags, no explanation, no video. */
-export async function getQuestionForAttempt(
-  userId: string | null | undefined,
-  questionId: string,
-): Promise<{ locked: true } | { locked: false; question: SafeQuestion }> {
-  const m = await loadMeta(questionId)
-  if (!m || !m.published) return { locked: true }
-  if (!(await canAccessExam(userId, m.exam_id))) return { locked: true }
-
+/** Build the sanitized question payload — no correct flags, no explanation, no
+ *  video. Pure of any access gate; callers must decide who may see it. */
+export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> {
   let sd: QData | null = null
   if (m.stimulus_id) {
     const sup = createAdminClient()
@@ -95,44 +89,30 @@ export async function getQuestionForAttempt(
   }
 
   if (m.data?.statements?.length) {
-    return {
-      locked: false,
-      question: {
-        ...base,
-        statements: m.data.statements.map((s, index) => ({ index, text: s.text })),
-        mostLeast: null,
-        options: [],
-      },
-    }
+    return { ...base, statements: m.data.statements.map((s, index) => ({ index, text: s.text })), mostLeast: null, options: [] }
   }
-
   if (m.data?.mostLeast?.actions?.length) {
-    return {
-      locked: false,
-      question: {
-        ...base,
-        statements: null,
-        mostLeast: { actions: m.data.mostLeast.actions.map((a, index) => ({ index, text: a.text })) },
-        options: [],
-      },
-    }
+    return { ...base, statements: null, mostLeast: { actions: m.data.mostLeast.actions.map((a, index) => ({ index, text: a.text })) }, options: [] }
   }
 
   const supabase = createAdminClient()
   const { data: opts } = await supabase
     .from('question_options')
     .select('id, label, body, sort_order')
-    .eq('question_id', questionId)
+    .eq('question_id', m.id)
     .order('sort_order')
-  return {
-    locked: false,
-    question: {
-      ...base,
-      statements: null,
-      mostLeast: null,
-      options: (opts ?? []).map((o) => ({ id: o.id, label: o.label, body: o.body })),
-    },
-  }
+  return { ...base, statements: null, mostLeast: null, options: (opts ?? []).map((o) => ({ id: o.id, label: o.label, body: o.body })) }
+}
+
+/** Sanitized question for the practice runner — gated by exam access. */
+export async function getQuestionForAttempt(
+  userId: string | null | undefined,
+  questionId: string,
+): Promise<{ locked: true } | { locked: false; question: SafeQuestion }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published) return { locked: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { locked: true }
+  return { locked: false, question: await buildSafeQuestion(m) }
 }
 
 export type AnswerResult = {
@@ -144,28 +124,25 @@ export type AnswerResult = {
   video_ready: boolean
 }
 
-/** Grade a single-best-answer submission, record the attempt, reveal the outcome. */
-export async function submitAnswer(
+/** Grade a single-best-answer submission, record the attempt, reveal the outcome.
+ *  Pure of any access gate — callers gate before calling. */
+export async function gradeSingle(
   userId: string,
-  questionId: string,
+  m: QuestionMeta,
   selectedOptionId: string,
   timeSpentSeconds?: number,
-): Promise<AnswerResult | { denied: true }> {
-  const m = await loadMeta(questionId)
-  if (!m || !m.published) return { denied: true }
-  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
-
+): Promise<AnswerResult> {
   const supabase = createAdminClient()
   const { data: opts } = await supabase
     .from('question_options')
     .select('id, is_correct')
-    .eq('question_id', questionId)
+    .eq('question_id', m.id)
   const correct = (opts ?? []).find((o) => o.is_correct)
   const is_correct = !!correct && correct.id === selectedOptionId
 
   await supabase.from('question_attempts').insert({
     user_id: userId,
-    question_id: questionId,
+    question_id: m.id,
     subtest_id: m.subtest_id,
     exam_id: m.exam_id,
     selected_option_id: selectedOptionId,
@@ -183,6 +160,19 @@ export async function submitAnswer(
   }
 }
 
+/** Gated single-best-answer submission for the practice runner. */
+export async function submitAnswer(
+  userId: string,
+  questionId: string,
+  selectedOptionId: string,
+  timeSpentSeconds?: number,
+): Promise<AnswerResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+  return gradeSingle(userId, m, selectedOptionId, timeSpentSeconds)
+}
+
 export type GridResult = {
   is_correct: boolean
   per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]
@@ -192,18 +182,15 @@ export type GridResult = {
   video_ready: boolean
 }
 
-/** Grade a Yes/No grid submission (all statements must match to count correct). */
-export async function submitGridAnswer(
+/** Grade a Yes/No grid submission (all statements must match to count correct).
+ *  Pure of any access gate — callers gate before calling. */
+export async function gradeGrid(
   userId: string,
-  questionId: string,
+  m: QuestionMeta,
   answers: Record<string, YesNo>,
   timeSpentSeconds?: number,
-): Promise<GridResult | { denied: true }> {
-  const m = await loadMeta(questionId)
-  if (!m || !m.published || !m.data?.statements?.length) return { denied: true }
-  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
-
-  const per_statement = m.data.statements.map((s, index) => ({
+): Promise<GridResult> {
+  const per_statement = (m.data?.statements ?? []).map((s, index) => ({
     index,
     correct_answer: s.correct,
     correct: answers[String(index)] === s.correct,
@@ -213,7 +200,7 @@ export async function submitGridAnswer(
   const supabase = createAdminClient()
   await supabase.from('question_attempts').insert({
     user_id: userId,
-    question_id: questionId,
+    question_id: m.id,
     subtest_id: m.subtest_id,
     exam_id: m.exam_id,
     selected_option_id: null,
@@ -230,6 +217,19 @@ export async function submitGridAnswer(
     has_video: m.video_status !== 'none',
     video_ready: m.video_status === 'ready',
   }
+}
+
+/** Gated Yes/No grid submission for the practice runner. */
+export async function submitGridAnswer(
+  userId: string,
+  questionId: string,
+  answers: Record<string, YesNo>,
+  timeSpentSeconds?: number,
+): Promise<GridResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published || !m.data?.statements?.length) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+  return gradeGrid(userId, m, answers, timeSpentSeconds)
 }
 
 /**
@@ -272,18 +272,15 @@ export type MostLeastResult = {
   video_ready: boolean
 }
 
-/** Grade an SJT most/least submission — both must match to count correct. */
-export async function submitMostLeastAnswer(
+/** Grade an SJT most/least submission — both must match to count correct.
+ *  Pure of any access gate — callers gate before calling. */
+export async function gradeMostLeast(
   userId: string,
-  questionId: string,
+  m: QuestionMeta,
   choice: { most: number; least: number },
   timeSpentSeconds?: number,
-): Promise<MostLeastResult | { denied: true }> {
-  const m = await loadMeta(questionId)
-  if (!m || !m.published || !m.data?.mostLeast) return { denied: true }
-  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
-
-  const { correctMost, correctLeast } = m.data.mostLeast
+): Promise<MostLeastResult> {
+  const { correctMost, correctLeast } = m.data!.mostLeast!
   const most_correct = choice.most === correctMost
   const least_correct = choice.least === correctLeast
   const is_correct = most_correct && least_correct
@@ -291,7 +288,7 @@ export async function submitMostLeastAnswer(
   const supabase = createAdminClient()
   await supabase.from('question_attempts').insert({
     user_id: userId,
-    question_id: questionId,
+    question_id: m.id,
     subtest_id: m.subtest_id,
     exam_id: m.exam_id,
     selected_option_id: null,
@@ -311,4 +308,17 @@ export async function submitMostLeastAnswer(
     has_video: m.video_status !== 'none',
     video_ready: m.video_status === 'ready',
   }
+}
+
+/** Gated SJT most/least submission for the practice runner. */
+export async function submitMostLeastAnswer(
+  userId: string,
+  questionId: string,
+  choice: { most: number; least: number },
+  timeSpentSeconds?: number,
+): Promise<MostLeastResult | { denied: true }> {
+  const m = await loadMeta(questionId)
+  if (!m || !m.published || !m.data?.mostLeast) return { denied: true }
+  if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+  return gradeMostLeast(userId, m, choice, timeSpentSeconds)
 }
