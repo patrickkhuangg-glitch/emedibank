@@ -9,11 +9,23 @@
 -- An admin can then read answer keys (question_options), manage/delete questions,
 -- and toggle subtests.is_free to bypass the paywall.
 --
--- Fix: strip UPDATE on the `role` column from the public roles. Profile edits
--- (e.g. full_name) still work; `role` is now writable only by the service role
--- (seeding / admin tooling), which bypasses column grants and RLS.
+-- WHY THE FIRST ATTEMPT DID NOT WORK
+-- ----------------------------------
+-- A *column-level* `REVOKE UPDATE (role)` CANNOT subtract from a *table-level*
+-- `GRANT UPDATE`. Supabase grants anon/authenticated table-wide UPDATE by default
+-- and relies on RLS for row gating, so revoking just the `role` column was a no-op:
+-- the table-wide grant still covered every column, escalation still worked.
+--
+-- CORRECT FIX
+-- -----------
+-- Drop the table-wide UPDATE grant, then re-grant UPDATE on ONLY the safe column.
+-- `profiles` has four columns: id, full_name, role, created_at — the sole column a
+-- user should ever change is `full_name`. `role` (and id/created_at) become
+-- writable only by the service role, which bypasses column grants and RLS
+-- (seeding / admin tooling still works).
 
-revoke update (role) on public.profiles from anon, authenticated;
+revoke update on public.profiles from anon, authenticated;
+grant  update (full_name) on public.profiles to authenticated;
 
--- (Optional hardening) also block the column from any future default grant:
--- alter default privileges in schema public revoke update on tables from anon, authenticated;
+-- Defense in depth: block any future default grant from re-widening UPDATE.
+alter default privileges in schema public revoke update on tables from anon, authenticated;
