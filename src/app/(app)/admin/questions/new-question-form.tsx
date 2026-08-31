@@ -55,7 +55,9 @@ export function NewQuestionForm({ subtests }: { subtests: { id: string; name: st
       await createQuestion({
         subtestId, type,
         topic, difficulty, stem, passage, imageUrl, explanation, published,
-        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        // Split on ';' (not ',') so a category that contains commas — e.g.
+        // "True, False, Can't Tell" — survives as a single tag, matching the importer.
+        tags: tags.split(';').map((t) => t.trim()).filter(Boolean),
         options, table: parseTable(), statements, actions, correctMost, correctLeast,
       })
       setMsg('Question created.')
@@ -98,7 +100,7 @@ export function NewQuestionForm({ subtests }: { subtests: { id: string; name: st
           <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className={input}><option value="">—</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select>
         </label>
       </div>
-      <label className="block text-sm"><span className={label}>Tags (comma-separated — e.g. Syllogisms)</span><input value={tags} onChange={(e) => setTags(e.target.value)} className={input} placeholder="e.g. ratios, unit-conversion" /></label>
+      <label className="block text-sm"><span className={label}>Tags (semicolon-separated — e.g. Reading Comprehension; True, False, Can&rsquo;t Tell)</span><input value={tags} onChange={(e) => setTags(e.target.value)} className={input} placeholder="e.g. Reading Comprehension" /></label>
 
       {type === 'passage' ? (
         <label className="block text-sm"><span className={label}>Passage / scenario (left column)</span><textarea value={passage} onChange={(e) => setPassage(e.target.value)} rows={5} className={input} /></label>

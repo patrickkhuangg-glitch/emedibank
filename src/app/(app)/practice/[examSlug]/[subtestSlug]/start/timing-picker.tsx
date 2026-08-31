@@ -2,25 +2,33 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { haptic } from '@/lib/haptics'
-import { TIMED_PRESETS, SET_COUNTS } from '@/lib/practice/timing'
+import { TIMED_PRESETS, SET_COUNTS, setsForMinutes } from '@/lib/practice/timing'
 
 export function TimingPicker({
   examSlug,
   subtestId,
   categoryKey,
   sectionMinutes,
+  minutesPerSet,
   availableSets,
 }: {
   examSlug: string
   subtestId: string
   categoryKey: string
   sectionMinutes: number | null
+  minutesPerSet: number
   availableSets: number
 }) {
   const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
   const [customOpen, setCustomOpen] = useState(false)
   const [customMin, setCustomMin] = useState(20)
+
+  // A timed session holds whole question sets sized to the clock (e.g. Verbal
+  // Reasoning = 2 min per 4-question set, so 10 min = 5 sets), capped at what
+  // the section/category actually has.
+  const setsFor = (minutes: number) =>
+    Math.min(Math.max(1, availableSets), setsForMinutes(minutes, minutesPerSet))
 
   function base() {
     const p = new URLSearchParams()
@@ -35,6 +43,7 @@ export function TimingPicker({
     const p = base()
     p.set('mode', 'timed')
     p.set('minutes', String(minutes))
+    p.set('sets', String(setsFor(minutes)))
     router.push('/session?' + p.toString())
   }
   function startSets(n: number) {
@@ -69,7 +78,10 @@ export function TimingPicker({
             <div key={t.key} className="eb-rise" style={{ animationDelay: `${idx * 45}ms` }}>
               <button onClick={() => startTimed(t.minutes, t.key)} className={rowCls(selected === t.key)}>
                 <IconTile active={selected === t.key}><ClockIcon /></IconTile>
-                <span className="flex-1 font-medium">{t.label}</span>
+                <span className="flex-1">
+                  <span className="block font-medium">{t.label}</span>
+                  <span className="block text-xs text-muted">{setsFor(t.minutes)} question set{setsFor(t.minutes) > 1 ? 's' : ''}</span>
+                </span>
                 {t.full ? <span className="rounded-full bg-brand-muted px-2.5 py-0.5 text-[11px] font-medium text-brand">Full section</span> : null}
                 <Arrow />
               </button>

@@ -7,6 +7,7 @@ import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
 import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
+import { recordPracticeSessionAction } from '@/lib/practice/session-actions'
 
 type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
@@ -45,6 +46,9 @@ export function SessionRunner({
   questionIds,
   timed,
   minutes,
+  subtestId = null,
+  tag = null,
+  mode = 'sets',
 }: {
   label: string
   examSlug: string
@@ -52,10 +56,14 @@ export function SessionRunner({
   questionIds: string[]
   timed: boolean
   minutes: number
+  subtestId?: string | null
+  tag?: string | null
+  mode?: string
 }) {
   const router = useRouter()
   const total = questionIds.length
   const rootRef = useRef<HTMLDivElement>(null)
+  const startedAtRef = useRef<number>(0)
 
   const [phase, setPhase] = useState<'intro' | 'running' | 'summary' | 'review'>('intro')
   const [readyModal, setReadyModal] = useState(false)
@@ -150,7 +158,25 @@ export function SessionRunner({
     setGrading(false)
     setPhase('summary')
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-  }, [questionIds, cache, gridPending, mlPending, pending])
+
+    // Log a session roll-up for the practice History tab (best-effort).
+    const results = [
+      ...Object.values(nextA).map((x) => x.result.is_correct),
+      ...Object.values(nextG).map((x) => x.result.is_correct),
+      ...Object.values(nextM).map((x) => x.result.is_correct),
+    ]
+    if (results.length > 0) {
+      void recordPracticeSessionAction({
+        examSlug,
+        subtestId,
+        tag,
+        mode,
+        total: results.length,
+        correct: results.filter(Boolean).length,
+        timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
+      })
+    }
+  }, [questionIds, cache, gridPending, mlPending, pending, examSlug, subtestId, tag, mode])
 
   // Timer + a ref so its expiry always calls the latest submitAll.
   const submitRef = useRef(submitAll)
@@ -228,6 +254,7 @@ export function SessionRunner({
     haptic(15)
     rootRef.current?.requestFullscreen?.().catch(() => {})
     setReadyModal(false)
+    startedAtRef.current = Date.now()
     setPhase('running')
   }
   function hasPending(qid: string) {

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { getSectionStats } from '@/lib/practice/stats'
 import { countSets } from '@/lib/practice/sets'
-import { sectionMinutes } from '@/lib/practice/timing'
+import { sectionMinutes, minutesPerSet } from '@/lib/practice/timing'
 import { PerformanceCard } from '@/components/practice/performance-card'
 import { TimingPicker } from './timing-picker'
 
@@ -63,6 +63,7 @@ export default async function TimingPage({
             subtestId={subtest.id}
             categoryKey={cat}
             sectionMinutes={sectionMinutes(exam.slug, subtest.slug)}
+            minutesPerSet={minutesPerSet(exam.slug, subtest.slug)}
             availableSets={availableSets}
           />
         </main>

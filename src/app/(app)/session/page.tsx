@@ -35,7 +35,12 @@ export default async function SessionPage({
     mode === 'review'
       ? await resolveReviewQuestionIds(user.id, exam.id)
       : mode === 'sets' || mode === 'timed'
-      ? await resolveSetQuestionIds(user.id, exam.id, subtestId, tag, mode === 'sets' ? Number(sp.sets ?? 1) : 0)
+      ? // Both flows run whole sets; timed also carries a `sets` count sized to the
+        // clock (2 min/set). Fall back to 0 = every set for older timed links.
+        await resolveSetQuestionIds(
+          user.id, exam.id, subtestId, tag,
+          mode === 'sets' ? Number(sp.sets ?? 1) : Number(sp.sets ?? 0),
+        )
       : await resolveSessionQuestionIds(user.id, exam.id, {
           subtestIds: (sp.subtests ?? '').split(',').filter(Boolean),
           tags: tag ? [tag] : [],
@@ -72,6 +77,9 @@ Please click the Next (N) button to proceed.`
       questionIds={ids}
       timed={timed}
       minutes={Number(sp.minutes ?? 20)}
+      subtestId={subtestId || null}
+      tag={tag || null}
+      mode={mode || 'sets'}
     />
   )
 }

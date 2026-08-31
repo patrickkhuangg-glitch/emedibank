@@ -390,6 +390,53 @@ export type Database = {
           },
         ]
       }
+      practice_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          exam_id: string
+          subtest_id: string | null
+          tag: string | null
+          mode: string
+          total: number
+          correct: number
+          time_spent_seconds: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          exam_id: string
+          subtest_id?: string | null
+          tag?: string | null
+          mode?: string
+          total: number
+          correct: number
+          time_spent_seconds?: number | null
+          created_at?: string
+        }
+        Update: {
+          tag?: string | null
+          mode?: string
+          total?: number
+          correct?: number
+          time_spent_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'practice_sessions_exam_id_fkey'
+            columns: ['exam_id']
+            referencedRelation: 'exams'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'practice_sessions_subtest_id_fkey'
+            columns: ['subtest_id']
+            referencedRelation: 'subtests'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<never, never>
     Functions: {
