@@ -4,7 +4,7 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Profile } from '@/lib/supabase/types'
+import type { Profile, InterfaceMode } from '@/lib/supabase/types'
 
 /** The current authenticated user, or null. Cached per request. */
 export const getUser = cache(async () => {
@@ -42,6 +42,13 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
 export async function isAdmin(): Promise<boolean> {
   const profile = await getProfile()
   return profile?.role === 'admin'
+}
+
+/** The current user's interface style. Defaults to 'playful' for signed-out users
+ *  and gracefully before the interface_mode column exists. */
+export async function getInterfaceMode(): Promise<InterfaceMode> {
+  const profile = await getProfile()
+  return profile?.interface_mode ?? 'playful'
 }
 
 /** Require an admin; redirect non-admins to the dashboard. */

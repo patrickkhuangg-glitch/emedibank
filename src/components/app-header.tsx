@@ -13,7 +13,7 @@ export async function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur">
       <Container className="flex h-16 items-center justify-between gap-3">
-        <ExamSwitcher current={current} exams={exams} />
+        <ExamSwitcher current={current} exams={exams} variant={profile?.interface_mode ?? 'playful'} />
         <SiteNav isAdmin={profile?.role === 'admin'} currentExamSlug={current?.slug ?? null} />
       </Container>
     </header>

@@ -3,7 +3,7 @@ import type { SectionStat } from '@/lib/practice/stats'
 /**
  * Sidebar performance chart — per-section accuracy, your score against the pooled
  * platform average. Mirrors the layout of the reference practice dashboard in the
- * EMediBank brand (teal = you, warm-gray = the cohort).
+ * Studocyte brand (violet = you, muted ink = the cohort).
  */
 export function PerformanceCard({ stats }: { stats: SectionStat[] }) {
   return (
@@ -15,7 +15,7 @@ export function PerformanceCard({ stats }: { stats: SectionStat[] }) {
           <span className="rounded-full bg-surface-muted px-2.5 py-1 text-muted">All sections</span>
         </div>
       </div>
-      <p className="mt-1 text-xs text-muted">Your accuracy against the EMediBank average.</p>
+      <p className="mt-1 text-xs text-muted">Your accuracy against the Studocyte average.</p>
 
       <div className="mt-5 space-y-4">
         {stats.map((s, idx) => (
@@ -44,7 +44,7 @@ export function PerformanceCard({ stats }: { stats: SectionStat[] }) {
           <span className="h-2.5 w-2.5 rounded-sm bg-brand" /> Your score
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm bg-[color:var(--muted)]/40" /> Avg. EMediBank student
+          <span className="h-2.5 w-2.5 rounded-sm bg-[color:var(--muted)]/40" /> Avg. Studocyte student
         </span>
       </div>
     </section>

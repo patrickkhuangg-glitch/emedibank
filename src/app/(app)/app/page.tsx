@@ -16,6 +16,7 @@ export default async function ExamPickerPage() {
   return (
     <ExamPicker
       first={profile?.full_name?.split(' ')[0] ?? null}
+      variant={profile?.interface_mode ?? 'playful'}
       exams={exams.map((e, i) => ({ id: e.id, slug: e.slug, name: e.name, entitled: entitled[i] }))}
     />
   )

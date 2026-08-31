@@ -4,6 +4,7 @@ import { selectExamAction } from '@/lib/exam/actions'
 import { haptic } from '@/lib/haptics'
 import { Wordmark } from '@/components/ui/wordmark'
 import { Spinner } from '@/components/spinner'
+import type { InterfaceMode } from '@/lib/supabase/types'
 
 const BLURB: Record<string, string> = {
   ucat: 'University Clinical Aptitude Test',
@@ -15,7 +16,7 @@ type Exam = { id: string; slug: string; name: string; entitled: boolean }
 
 /** Full-screen first-run greeting. Covers the whole LMS, then fades out cleanly
  *  once an exam is chosen before the destination loads underneath. */
-export function ExamPicker({ first, exams }: { first: string | null; exams: Exam[] }) {
+export function ExamPicker({ first, exams, variant = 'playful' }: { first: string | null; exams: Exam[]; variant?: InterfaceMode }) {
   const [greeting, setGreeting] = useState('Welcome back')
   const [leaving, setLeaving] = useState<string | null>(null)
   const [, start] = useTransition()
@@ -39,10 +40,10 @@ export function ExamPicker({ first, exams }: { first: string | null; exams: Exam
     <div
       className={`fixed inset-0 z-[70] overflow-auto bg-background transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${leaving ? 'scale-[0.98] opacity-0' : 'scale-100 opacity-100'}`}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60rem 32rem at 50% -12%, rgba(21,125,114,0.10), transparent 70%)' }} />
+      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60rem 32rem at 50% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
       <div className="relative mx-auto flex min-h-[100dvh] max-w-3xl flex-col justify-center px-6 py-16">
         <div className="eb-rise">
-          <Wordmark className="text-lg" />
+          <Wordmark className="text-lg" variant={variant} />
           <h1 className="mt-6 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
             {greeting}{first ? `, ${first}` : ''}.
           </h1>

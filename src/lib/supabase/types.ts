@@ -12,6 +12,7 @@ export type EntitlementSource = 'subscription' | 'bundle' | 'comp'
 export type QuestionKind = 'single_best_answer'
 export type VideoStatus = 'none' | 'processing' | 'ready'
 export type Difficulty = 'easy' | 'medium' | 'hard'
+export type InterfaceMode = 'playful' | 'clean'
 
 export type Database = {
   public: {
@@ -49,6 +50,7 @@ export type Database = {
           full_name: string | null
           role: UserRole
           stripe_customer_id: string | null
+          interface_mode: InterfaceMode
           created_at: string
         }
         Insert: {
@@ -56,6 +58,7 @@ export type Database = {
           full_name?: string | null
           role?: UserRole
           stripe_customer_id?: string | null
+          interface_mode?: InterfaceMode
           created_at?: string
         }
         Update: {
@@ -63,6 +66,7 @@ export type Database = {
           full_name?: string | null
           role?: UserRole
           stripe_customer_id?: string | null
+          interface_mode?: InterfaceMode
           created_at?: string
         }
         Relationships: [
