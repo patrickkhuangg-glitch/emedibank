@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/alert'
 import { requireUser, getProfile } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { BillingButton } from './billing-button'
+import { InterfaceModeToggle } from './interface-mode-toggle'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Account & billing' }
@@ -92,6 +93,14 @@ export default async function AccountPage({
             <ButtonLink href="/pricing" className="mt-4">See plans</ButtonLink>
           </section>
         )}
+
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Interface style</h2>
+          <p className="mt-1 text-sm text-muted">How Studocyte looks while you&rsquo;re signed in. Colours and layout stay the same either way.</p>
+          <div className="mt-3">
+            <InterfaceModeToggle current={profile?.interface_mode ?? 'playful'} />
+          </div>
+        </section>
 
         <p className="text-sm text-muted">
           <Link href="/update-password" className="hover:text-foreground">Change password</Link>

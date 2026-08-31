@@ -3,11 +3,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { selectExamAction } from '@/lib/exam/actions'
 import { haptic } from '@/lib/haptics'
+import { StudocyteMark } from '@/components/ui/studocyte-mark'
 import type { ExamLite } from '@/lib/exam/current'
+import type { InterfaceMode } from '@/lib/supabase/types'
 
 /** Top-left LMS control: the current exam, with a dropdown to switch or reopen
- *  the picker. Switching submits a server action that re-scopes the session. */
-export function ExamSwitcher({ current, exams }: { current: ExamLite | null; exams: ExamLite[] }) {
+ *  the picker. Switching submits a server action that re-scopes the session.
+ *  The leading mark follows the account interface_mode (playful / clean). */
+export function ExamSwitcher({ current, exams, variant = 'playful' }: { current: ExamLite | null; exams: ExamLite[]; variant?: InterfaceMode }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="relative">
@@ -16,7 +19,9 @@ export function ExamSwitcher({ current, exams }: { current: ExamLite | null; exa
         aria-expanded={open}
         className="group flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 transition-colors hover:bg-surface-muted active:scale-[0.98]"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink font-display text-sm font-bold text-ink-foreground">M</span>
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-ink-foreground">
+          <StudocyteMark variant={variant} size={22} title="Studocyte" />
+        </span>
         <span className="font-display text-sm font-semibold">{current ? current.name : 'Choose exam'}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden><path d="m6 9 6 6 6-6" /></svg>
       </button>
