@@ -25,7 +25,10 @@ export default async function SessionPage({
   // keeps the old count-based resolution.
   const mode = sp.mode
   const subtestId = (sp.subtests ?? '').split(',').filter(Boolean)[0] ?? ''
-  const tag = (sp.tags ?? '').split(',').filter(Boolean)[0] ?? ''
+  // A category tag can itself contain commas (e.g. "True, False, Can't Tell"), so the
+  // `tags` param carries ONE category value verbatim — never split it on commas, or
+  // such tags get truncated to "True" and match zero questions.
+  const tag = (sp.tags ?? '').trim()
   const timed = mode === 'timed' || sp.timed === '1'
 
   const ids =
@@ -35,7 +38,7 @@ export default async function SessionPage({
       ? await resolveSetQuestionIds(user.id, exam.id, subtestId, tag, mode === 'sets' ? Number(sp.sets ?? 1) : 0)
       : await resolveSessionQuestionIds(user.id, exam.id, {
           subtestIds: (sp.subtests ?? '').split(',').filter(Boolean),
-          tags: (sp.tags ?? '').split(',').filter(Boolean),
+          tags: tag ? [tag] : [],
           difficulty: sp.difficulty || null,
           count: Number(sp.count ?? 10),
         })
