@@ -78,3 +78,38 @@ export async function canAccessExam(
 ): Promise<boolean> {
   return hasActiveEntitlement(userId, examId)
 }
+
+export type SectionAccess = {
+  id: string
+  slug: string
+  name: string
+  isFree: boolean
+  locked: boolean
+}
+
+/**
+ * Per-section access for an exam, for lock indicators. A section is locked only
+ * when it is not free AND the user lacks an active entitlement — the same rule
+ * canAccessSubtest enforces. Entitlement is checked once for the whole exam.
+ */
+export async function getSectionAccess(
+  userId: string | null | undefined,
+  examId: string,
+): Promise<SectionAccess[]> {
+  const supabase = createAdminClient()
+  const [{ data: subs }, entitled] = await Promise.all([
+    supabase
+      .from('subtests')
+      .select('id, slug, name, is_free, sort_order')
+      .eq('exam_id', examId)
+      .order('sort_order'),
+    hasActiveEntitlement(userId, examId),
+  ])
+  return (subs ?? []).map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    name: s.name,
+    isFree: s.is_free,
+    locked: !s.is_free && !entitled,
+  }))
+}

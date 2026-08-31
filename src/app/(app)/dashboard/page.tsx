@@ -5,6 +5,7 @@ import { Container } from '@/components/container'
 import { requireUser, getProfile } from '@/lib/auth/dal'
 import { getCurrentExam, listExams } from '@/lib/exam/current'
 import { getDashboard, mostRecentExamId, type HeatCell, type MasterySection } from '@/lib/dashboard/stats'
+import { getSectionAccess } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Dashboard' }
@@ -33,7 +34,12 @@ export default async function DashboardPage() {
     )
   }
 
-  const d = await getDashboard(user.id, exam.slug, exam.id)
+  const [d, sectionAccess] = await Promise.all([
+    getDashboard(user.id, exam.slug, exam.id),
+    getSectionAccess(user.id, exam.id),
+  ])
+  const statBySub = new Map(d.sections.map((s) => [s.id, s]))
+  const anyLocked = sectionAccess.some((s) => s.locked)
 
   return (
     <Container className="py-10 sm:py-14">
@@ -94,25 +100,51 @@ export default async function DashboardPage() {
           <p className="mt-3 text-xs text-muted">A rough guide from recent accuracy. It tightens as you practise more.</p>
         </section>
 
-        {/* Section levels */}
+        {/* Section levels + access */}
         <section className={`${CARD} eb-rise p-6 lg:col-span-7`} style={delay(190)}>
-          <p className={EYEBROW}>Levels by section</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className={EYEBROW}>Levels by section</p>
+            {anyLocked ? (
+              <Link href="/pricing" className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted transition-colors hover:text-brand">
+                <LockGlyph /> Locked — unlock all
+              </Link>
+            ) : null}
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {d.sections.map((s) => (
-              <div key={s.id} className="rounded-2xl border border-border bg-background/40 p-4">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-medium">{s.name}</span>
-                  <span className="font-display text-lg font-semibold text-brand">Lv {s.level}</span>
-                </div>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
-                  <div className="eb-bar h-full rounded-full bg-brand" style={{ width: `${Math.round((s.attempted ? s.into : 0) * 100)}%` }} />
-                </div>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
-                  <span>{s.accuracy != null ? `${s.accuracy}% acc` : 'Not started'}</span>
-                  {s.streak > 0 ? <span className="font-medium text-[#c47a1e]">🔥 {s.streak} in a row</span> : <span>{s.attempted} done</span>}
-                </div>
-              </div>
-            ))}
+            {sectionAccess.map((sa) => {
+              const s = statBySub.get(sa.id)
+              const level = s?.level ?? 0
+              const fill = s && s.attempted ? s.into : 0
+              const href = sa.locked ? '/pricing' : `/practice/${exam.slug}/${sa.slug}`
+              return (
+                <Link
+                  key={sa.id}
+                  href={href}
+                  className={`eb-press group block rounded-2xl border border-border bg-background/40 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 ${sa.locked ? 'opacity-80 hover:opacity-100' : ''}`}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+                      <span className="truncate">{sa.name}</span>
+                      {sa.locked ? <LockPill /> : sa.isFree ? <FreePill /> : null}
+                    </span>
+                    <span className={`font-display text-lg font-semibold ${sa.locked ? 'text-muted' : 'text-brand'}`}>Lv {level}</span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                    <div className={`eb-bar h-full rounded-full ${sa.locked ? 'bg-muted/40' : 'bg-brand'}`} style={{ width: `${Math.round(fill * 100)}%` }} />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
+                    {sa.locked ? (
+                      <span className="font-medium text-brand">Unlock to practise →</span>
+                    ) : (
+                      <>
+                        <span>{s?.accuracy != null ? `${s.accuracy}% acc` : 'Not started'}</span>
+                        {s && s.streak > 0 ? <span className="font-medium text-[#c47a1e]">🔥 {s.streak} in a row</span> : <span>{s?.attempted ?? 0} done</span>}
+                      </>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
 
@@ -274,6 +306,31 @@ function Mastery({ sections }: { sections: MasterySection[] }) {
         </div>
       ))}
     </div>
+  )
+}
+
+function LockGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  )
+}
+
+function LockPill() {
+  return (
+    <span className="inline-flex flex-none items-center gap-1 rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted" title="Locked — unlock with a plan">
+      <LockGlyph /> Locked
+    </span>
+  )
+}
+
+function FreePill() {
+  return (
+    <span className="flex-none rounded-full bg-success-muted px-1.5 py-0.5 text-[10px] font-medium text-success" title="Free — open on any plan">
+      Free
+    </span>
   )
 }
 
