@@ -22,8 +22,9 @@ export function ExamPicker({ first, exams }: { first: string | null; exams: Exam
 
   useEffect(() => {
     const h = new Date().getHours()
+    // Varies by the viewer's local hour (0-4 counts as evening, not morning).
     // eslint-disable-next-line react-hooks/set-state-in-effect -- greeting needs the client's local time
-    setGreeting(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
+    setGreeting(h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening')
   }, [])
 
   function pick(slug: string) {

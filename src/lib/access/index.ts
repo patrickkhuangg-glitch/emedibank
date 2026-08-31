@@ -13,17 +13,21 @@
 // every free user instantly). Paid access is read from the derived entitlements
 // table, which the Stripe webhook keeps in sync.
 import 'server-only'
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * True if the user holds an active (unexpired) entitlement for the exam.
  * Entitlements are derived from subscriptions by the webhook; a row is only
  * "active" while it exists and has not passed its expires_at.
+ *
+ * Wrapped in React cache() so repeated checks for the same (user, exam) within a
+ * single request (grading a session, rendering a gated page) hit the DB once.
  */
-export async function hasActiveEntitlement(
+export const hasActiveEntitlement = cache(async (
   userId: string | null | undefined,
   examId: string,
-): Promise<boolean> {
+): Promise<boolean> => {
   if (!userId) return false
 
   const supabase = createAdminClient()
@@ -39,7 +43,7 @@ export async function hasActiveEntitlement(
 
   if (error) throw error
   return (data?.length ?? 0) > 0
-}
+})
 
 /**
  * The core gate. Free subtests are open to any signed-up user (route protection

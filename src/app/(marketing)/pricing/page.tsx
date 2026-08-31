@@ -1,11 +1,36 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import { Container } from '@/components/container'
 import { ButtonLink } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe/client'
 import { PAID_EXAM_SLUGS } from '@/lib/stripe/pricing'
 import { PricingCards, type Plan } from './pricing-cards'
+
+type Amounts = Record<string, { month: number | null; year: number | null }>
+
+// Stripe price amounts change rarely; cache across requests so the pricing page
+// doesn't make a live Stripe API call (the slowest thing on it) on every load.
+const cachedAmounts = unstable_cache(
+  async (): Promise<Amounts> => {
+    const stripe = getStripe()
+    const prices = await stripe.prices.list({ active: true, limit: 100 })
+    const amounts: Amounts = {}
+    for (const price of prices.data) {
+      const prodId = typeof price.product === 'string' ? price.product : price.product.id
+      const interval = price.recurring?.interval
+      const entry = amounts[prodId] ?? { month: null, year: null }
+      if (interval === 'month') entry.month = price.unit_amount
+      else if (interval === 'year') entry.year = price.unit_amount
+      else continue
+      amounts[prodId] = entry
+    }
+    return amounts
+  },
+  ['stripe-price-amounts'],
+  { revalidate: 600, tags: ['stripe-prices'] },
+)
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -32,19 +57,8 @@ async function loadPlansUnsafe(): Promise<Plan[]> {
 
   const examSlugById = new Map((exams ?? []).map((e) => [e.id, e.slug]))
 
-  // Gather monthly/yearly amounts per Stripe product in one call.
-  const stripe = getStripe()
-  const prices = await stripe.prices.list({ active: true, limit: 100 })
-  const amounts = new Map<string, { month: number | null; year: number | null }>()
-  for (const price of prices.data) {
-    const prodId = typeof price.product === 'string' ? price.product : price.product.id
-    const interval = price.recurring?.interval
-    const entry = amounts.get(prodId) ?? { month: null, year: null }
-    if (interval === 'month') entry.month = price.unit_amount
-    else if (interval === 'year') entry.year = price.unit_amount
-    else continue
-    amounts.set(prodId, entry)
-  }
+  // Monthly/yearly amounts per Stripe product (cached — see cachedAmounts).
+  const amounts = await cachedAmounts()
 
   const order = (p: (typeof products)[number]) => {
     if (p.kind === 'bundle') return 99
@@ -57,7 +71,7 @@ async function loadPlansUnsafe(): Promise<Plan[]> {
     .filter((p) => p.stripe_product_id)
     .sort((a, b) => order(a) - order(b))
     .map((p) => {
-      const amt = amounts.get(p.stripe_product_id as string) ?? { month: null, year: null }
+      const amt = amounts[p.stripe_product_id as string] ?? { month: null, year: null }
       return { productId: p.id, name: p.name, kind: p.kind, month: amt.month, year: amt.year }
     })
 }

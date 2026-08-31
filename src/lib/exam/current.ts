@@ -1,5 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
+import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // The exam a student picked "for this session" (Open EMediBank -> exam picker).
@@ -14,17 +15,22 @@ export async function getCurrentExamSlug(): Promise<string | null> {
   return c.get(EXAM_COOKIE)?.value ?? null
 }
 
-/** Active MCQ exams (UCAT/GAMSAT/ISAT), ordered for display. */
-export async function listExams(): Promise<ExamLite[]> {
-  const supabase = createAdminClient()
-  const { data } = await supabase
-    .from('exams')
-    .select('id, slug, name')
-    .eq('active', true)
-    .eq('kind', 'mcq')
-    .order('created_at')
-  return data ?? []
-}
+/** Active MCQ exams (UCAT/GAMSAT/ISAT), ordered for display. Cached across
+ *  requests — exams change rarely, and this is queried on nearly every LMS page. */
+export const listExams = unstable_cache(
+  async (): Promise<ExamLite[]> => {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('exams')
+      .select('id, slug, name')
+      .eq('active', true)
+      .eq('kind', 'mcq')
+      .order('created_at')
+    return data ?? []
+  },
+  ['exams-list'],
+  { revalidate: 300, tags: ['exams'] },
+)
 
 /** The current exam resolved to a full row, if the cookie points at a real exam. */
 export async function getCurrentExam(): Promise<ExamLite | null> {
