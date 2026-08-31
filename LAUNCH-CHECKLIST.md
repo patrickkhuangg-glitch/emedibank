@@ -44,13 +44,13 @@ verified; the rest are outstanding.
 - [ ] Interactive skill tree (mastery map is read-only today).
 
 ## Security (from the pre-launch review)
-- [ ] **APPLY NOW — run `supabase/migrations/0008_lock_profile_role.sql`** in the
-      Supabase SQL editor. Fixes a confirmed privilege-escalation hole (a signed-in
-      user could self-promote to `admin` via the public key). Highest priority.
-      NOTE: the first version of this migration (a column-level `REVOKE UPDATE
-      (role)`) was a no-op against Supabase's table-wide UPDATE grant and re-testing
-      showed escalation still worked. The corrected migration revokes table-level
-      UPDATE and re-grants UPDATE on only `full_name`. Re-run the corrected file.
+- [x] **DONE — ran `supabase/migrations/0008_lock_profile_role.sql`** (2026-08-31).
+      Closed a confirmed privilege-escalation hole (a signed-in user could
+      self-promote to `admin` via the public key). Verified: escalation now fails
+      with `42501 permission denied`; role stays `student`; legitimate `full_name`
+      edits still succeed. NOTE: the first version (a column-level `REVOKE UPDATE
+      (role)`) was a no-op against Supabase's table-wide UPDATE grant; the shipped
+      fix revokes table-level UPDATE and re-grants UPDATE on only `full_name`.
 - [x] `server-only` guard added to the service-role client; baseline security
       headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
       Permissions-Policy) added in `next.config.ts`.
