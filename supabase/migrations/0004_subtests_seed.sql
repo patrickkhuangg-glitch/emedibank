@@ -17,9 +17,9 @@ join (values
   ('ucat',   'Decision Making',        'decision-making',        2),
   ('ucat',   'Quantitative Reasoning', 'quantitative-reasoning', 3),
   ('ucat',   'Situational Judgement',  'situational-judgement',  4),
-  ('gamsat', 'Section 1',              'section-1',              1),
-  ('gamsat', 'Section 2',              'section-2',              2),
-  ('gamsat', 'Section 3',              'section-3',              3),
+  ('gamsat', 'Section I: Humanities & Social Sciences',   'humanities-social-sciences',  1),
+  ('gamsat', 'Section II: Written Communication',         'written-communication',       2),
+  ('gamsat', 'Section III: Biological & Physical Sciences','biological-physical-sciences',3),
   ('isat',   'Critical Reasoning',     'critical-reasoning',     1),
   ('isat',   'Quantitative Reasoning', 'quantitative-reasoning', 2)
 ) as v(exam_slug, name, slug, sort_order) on v.exam_slug = e.slug
