@@ -43,6 +43,17 @@ verified; the rest are outstanding.
 - [ ] Streak-freeze / repair tokens (dashboard already has the UI slot).
 - [ ] Interactive skill tree (mastery map is read-only today).
 
+## Security (from the pre-launch review)
+- [ ] **APPLY NOW — run `supabase/migrations/0008_lock_profile_role.sql`** in the
+      Supabase SQL editor. Fixes a confirmed privilege-escalation hole (a signed-in
+      user could self-promote to `admin` via the public key). Highest priority.
+- [x] `server-only` guard added to the service-role client; baseline security
+      headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+      Permissions-Policy) added in `next.config.ts`.
+- [ ] Add a tuned **Content-Security-Policy** (left out for now to avoid breaking
+      Mux/Supabase and inline styles).
+- [ ] After launch, review Supabase Auth rate-limits / email-confirmation settings.
+
 ## Pre-flight
 - [ ] Remove leftover comp entitlements / test data from the DB.
 - [ ] Confirm Supabase auth redirect URLs + email templates point at the prod domain.
