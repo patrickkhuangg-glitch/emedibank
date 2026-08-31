@@ -1,32 +1,41 @@
 import type { Metadata } from 'next'
-import { Sora, Manrope } from 'next/font/google'
+import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 
-const sora = Sora({
-  variable: '--font-sora',
+// Display — confident, slightly unconventional headlines. Variable font: the full
+// 200–800 weight range loads, so no explicit weight list.
+const bricolage = Bricolage_Grotesque({
+  variable: '--font-bricolage',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
 })
 
-const manrope = Manrope({
-  variable: '--font-manrope',
+// Body — calm at length, friendly enough to open at 11pm.
+const hanken = Hanken_Grotesk({
+  variable: '--font-hanken',
   subsets: ['latin'],
+})
+
+// Specimen-label voice — data, timers, XP.
+const plexMono = IBM_Plex_Mono({
+  variable: '--font-plex',
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'EMediBank — Medical admissions question bank',
-    template: '%s · EMediBank',
+    default: 'Studocyte — Build your exam immunity',
+    template: '%s · Studocyte',
   },
   description:
-    'Practise UCAT, GAMSAT and ISAT questions with written and video explanations. Part of EMeducate.',
+    'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written and video explanations for every answer. Part of EMeducate.',
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${manrope.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${hanken.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

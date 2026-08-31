@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// The exam a student picked "for this session" (Open EMediBank -> exam picker).
+// The exam a student picked "for this session" (Open Studocyte -> exam picker).
 // A cookie, not a DB field: it only scopes the UI (which exam Practice/Mock
 // target), never access — access still runs through the entitlement layer.
 export const EXAM_COOKIE = 'eb_exam'

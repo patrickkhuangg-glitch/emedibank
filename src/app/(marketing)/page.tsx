@@ -8,21 +8,21 @@ export default function Home() {
     <>
       {/* ---------------- Hero ---------------- */}
       <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(21,125,114,0.10), transparent 70%)' }} />
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
         <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
             <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" /> UCAT · GAMSAT · ISAT · Interviews
+              <span className="h-1.5 w-1.5 rounded-full bg-mint" /> UCAT · GAMSAT · ISAT · Interviews
             </span>
-            <h1 className="mt-5 text-balance font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-              Practise in the <span className="text-brand">real</span> exam interface.
+            <h1 className="mt-5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Build real exam <span className="text-mint">immunity</span>.
             </h1>
             <p className="mt-6 max-w-md text-lg text-muted">
-              Exam-accurate question banks and full timed mocks, with written and video explanations for every answer. Now with XP, streaks and a mastery map.
+              Exam-accurate question banks and full timed mocks, with written and video explanations for every answer. Face each exam as a pathogen, fight it, and build the immunity that makes you exam-ready.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/app" className="eb-press group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
-                Open EMediBank <ArrowUpRight />
+                Open Studocyte <ArrowUpRight />
               </Link>
               <Link href="/pricing" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface-muted">
                 See pricing
@@ -32,9 +32,7 @@ export default function Home() {
           </div>
 
           <div className="eb-rise" style={{ animationDelay: '140ms' }}>
-            <div className="eb-soft rounded-[2rem] border border-border bg-surface/50 p-2">
-              <ExamPreview />
-            </div>
+            <StudyCellHero />
           </div>
         </Container>
       </section>
@@ -61,13 +59,13 @@ export default function Home() {
       {/* ---------------- Exams ---------------- */}
       <section id="exams" className="border-t border-border bg-surface/50">
         <Container className="py-16 sm:py-20">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">One platform, every admissions exam.</h2>
-          <p className="mt-2 max-w-xl text-muted">Pick an exam and you drop straight into its question bank and mocks. Switch whenever you like.</p>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Four exams, four pathogens.</h2>
+          <p className="mt-2 max-w-xl text-muted">Each assessment becomes a pathogen with its own colour and personality. Pick one and you drop straight into its question bank and mocks — switch whenever you like.</p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <ExamCard name="UCAT" blurb="University Clinical Aptitude Test. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement." />
-            <ExamCard name="GAMSAT" blurb="Graduate Medical School Admissions Test across the three reasoning sections." />
-            <ExamCard name="ISAT" blurb="International Student Admissions Test for undergraduate medicine and dentistry." />
-            <ExamCard name="Interviews" blurb="MMI and panel interview preparation." soon />
+            <ExamCard name="UCAT" pathogen="Tachynon" accent="#F0503C" blurb="University Clinical Aptitude Test. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement." />
+            <ExamCard name="GAMSAT" pathogen="Cerebrus" accent="#D9911F" blurb="Graduate Medical School Admissions Test across the three reasoning sections." />
+            <ExamCard name="ISAT" pathogen="Enigmoeba" accent="#2789CE" blurb="International Student Admissions Test for undergraduate medicine and dentistry." />
+            <ExamCard name="Interviews" pathogen="Flummox" accent="#DE4E8A" blurb="MMI and panel interview preparation." soon />
           </div>
         </Container>
       </section>
@@ -118,7 +116,7 @@ export default function Home() {
             <Feature className="md:col-span-2" title="Every answer, worked through" body="Written rationales on every question, plus video explanations that show exactly how to reach the answer under time." />
             <Feature title="Real interactions" body="Yes/No grids, drag-and-drop, most/least appropriate. Not everything is multiple choice." />
             <Feature title="Timed full mocks, free" body="Sit complete, section-timed exams at no cost. Upgrade for the full bank and video." />
-            <Feature className="md:col-span-2" title="See where you stand" body="Every attempt is tracked, so your accuracy per section shows against the EMediBank cohort average." />
+            <Feature className="md:col-span-2" title="See where you stand" body="Every attempt is tracked, so your accuracy per section shows against the Studocyte cohort average." />
           </div>
         </Container>
       </section>
@@ -150,7 +148,7 @@ export default function Home() {
             <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Start with a free mock today.</h2>
             <p className="mx-auto mt-3 max-w-md text-ink-foreground/70">Pick your exam and practise in the interface you will actually sit.</p>
             <Link href="/app" className="eb-press mt-7 inline-flex items-center gap-1.5 rounded-full bg-brand px-6 py-3 font-semibold text-brand-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-              Open EMediBank <ArrowUpRight />
+              Open Studocyte <ArrowUpRight />
             </Link>
           </div>
         </Container>
@@ -173,12 +171,20 @@ const FAQS = [
   { q: 'Does it match the real test?', a: 'The runner replicates the layout, fonts, timing and question types of the real interface, including a kiosk mode and on-screen calculator.' },
 ]
 
-function ExamCard({ name, blurb, soon }: { name: string; blurb: string; soon?: boolean }) {
+function ExamCard({ name, blurb, pathogen, accent, soon }: { name: string; blurb: string; pathogen: string; accent: string; soon?: boolean }) {
   const inner = (
     <>
       <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 flex-none place-items-center rounded-lg font-display text-sm font-bold ${soon ? 'bg-surface-muted text-muted' : 'bg-brand-muted text-brand'}`}>{name.slice(0, 1)}</span>
-        <span className="font-display text-lg font-semibold">{name}</span>
+        <span
+          className={`grid h-10 w-10 flex-none place-items-center rounded-lg font-display text-sm font-bold ${soon ? 'bg-surface-muted text-muted' : ''}`}
+          style={soon ? undefined : { backgroundColor: `color-mix(in srgb, ${accent} 14%, transparent)`, color: accent }}
+        >
+          {name.slice(0, 1)}
+        </span>
+        <div className="min-w-0">
+          <span className="font-display text-lg font-semibold">{name}</span>
+          <span className="ml-2 font-mono text-[11px] uppercase tracking-wide" style={{ color: soon ? 'var(--muted)' : accent }}>{pathogen}</span>
+        </div>
         {soon ? <span className="ml-auto rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-medium text-muted">Coming soon</span> : <ArrowRight className="ml-auto" />}
       </div>
       <p className="mt-3 text-sm text-muted">{blurb}</p>
@@ -201,36 +207,73 @@ function Feature({ title, body, className = '' }: { title: string; body: string;
   )
 }
 
-/* ---- The signature: a real mini exam-interface preview ---- */
-function ExamPreview() {
+/* ---- The signature: the study cell in its microscope field ---- */
+function StudyCellHero() {
   return (
-    <div className="mx-auto max-w-md overflow-hidden rounded-2xl border border-[#0a5286] shadow-xl" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-      <div className="flex items-center justify-between px-4 py-2.5 text-white" style={{ background: 'linear-gradient(#1a78bf,#1268ad)' }}>
-        <span className="text-sm font-semibold">Verbal Reasoning</span>
-        <span className="text-xs tabular-nums">09:41 · 1 of 4</span>
+    <div
+      className="eb-soft relative overflow-hidden rounded-[2rem] border border-border p-6 sm:p-8"
+      style={{ background: 'radial-gradient(120% 90% at 50% 0%, #241C3D, #130F20 72%)' }}
+    >
+      {/* field grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-50"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundSize: '34px 34px',
+          maskImage: 'radial-gradient(120% 90% at 50% 10%, #000, transparent 72%)',
+          WebkitMaskImage: 'radial-gradient(120% 90% at 50% 10%, #000, transparent 72%)',
+        }}
+      />
+      <div className="relative mx-auto grid aspect-square max-w-sm place-items-center">
+        <div aria-hidden className="absolute inset-[6%] rounded-full" style={{ border: '1px dashed rgba(255,255,255,0.22)' }} />
+        <div aria-hidden className="absolute inset-[18%] rounded-full" style={{ border: '1px solid rgba(255,255,255,0.10)' }} />
+        <div aria-hidden className="absolute inset-[30%] rounded-full" style={{ border: '1px solid rgba(65,211,192,0.40)' }} />
+        <div aria-hidden className="absolute inset-[20%] rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(65,211,192,0.34), transparent 68%)' }} />
+        <svg className="eb-float relative w-[62%]" viewBox="0 0 220 230" role="img" aria-label="Studocyte, the study-cell mascot">
+          <defs>
+            <radialGradient id="cellBody" cx="42%" cy="34%" r="72%">
+              <stop offset="0%" stopColor="#6BEAD8" />
+              <stop offset="60%" stopColor="#2ECBB6" />
+              <stop offset="100%" stopColor="#17A493" />
+            </radialGradient>
+          </defs>
+          <path d="M84 196 q-4 20 -14 22" stroke="#17A493" strokeWidth="12" fill="none" strokeLinecap="round" />
+          <path d="M132 196 q6 20 16 20" stroke="#17A493" strokeWidth="12" fill="none" strokeLinecap="round" />
+          <path d="M92 34 q-6 -22 -18 -28" stroke="#17A493" strokeWidth="7" fill="none" strokeLinecap="round" />
+          <circle cx="72" cy="5" r="8" fill="#6BEAD8" />
+          <path d="M128 32 q8 -20 22 -22" stroke="#17A493" strokeWidth="7" fill="none" strokeLinecap="round" />
+          <circle cx="152" cy="9" r="7" fill="#6BEAD8" />
+          <path d="M110 24 C150 22 176 44 180 78 C184 108 178 128 172 150 C164 180 140 196 110 196 C80 196 56 180 48 150 C42 128 36 108 40 78 C44 44 70 26 110 24 Z" fill="url(#cellBody)" />
+          <path d="M110 24 C150 22 176 44 180 78 C184 108 178 128 172 150 C164 180 140 196 110 196 C80 196 56 180 48 150 C42 128 36 108 40 78 C44 44 70 26 110 24 Z" fill="none" stroke="#0E8677" strokeWidth="6" />
+          <path d="M110 40 C142 40 162 58 165 84 C168 108 160 150 140 168 C124 182 96 182 80 168 C60 150 54 108 57 84 C60 58 78 40 110 40 Z" fill="none" stroke="#59D8C6" strokeWidth="3" opacity="0.55" />
+          <circle cx="146" cy="150" r="16" fill="#0E8677" opacity="0.22" />
+          <circle cx="70" cy="86" r="7" fill="#0E8677" opacity="0.16" />
+          <g transform="rotate(-11 66 132)">
+            <rect x="18" y="112" width="46" height="34" rx="6" fill="#FFFFFF" stroke="#0E8677" strokeWidth="4" />
+            <line x1="26" y1="123" x2="56" y2="123" stroke="#6A45C9" strokeWidth="4" strokeLinecap="round" />
+            <line x1="26" y1="133" x2="48" y2="133" stroke="#C9BEEF" strokeWidth="4" strokeLinecap="round" />
+          </g>
+          <path d="M64 138 q-14 -4 -18 -14" stroke="#17A493" strokeWidth="11" fill="none" strokeLinecap="round" />
+          <path d="M158 132 q16 -2 22 -14" stroke="#17A493" strokeWidth="11" fill="none" strokeLinecap="round" />
+          <ellipse cx="90" cy="104" rx="15" ry="17" fill="#fff" />
+          <ellipse cx="132" cy="104" rx="15" ry="17" fill="#fff" />
+          <circle cx="93" cy="108" r="7.5" fill="#1F1B30" />
+          <circle cx="135" cy="108" r="7.5" fill="#1F1B30" />
+          <circle cx="90" cy="104" r="2.6" fill="#fff" />
+          <circle cx="132" cy="104" r="2.6" fill="#fff" />
+          <path d="M76 86 q14 -7 26 -1" stroke="#0E8677" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M120 85 q12 -6 24 1" stroke="#0E8677" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <ellipse cx="70" cy="128" rx="9" ry="6" fill="#FF9D8A" opacity="0.55" />
+          <ellipse cx="150" cy="128" rx="9" ry="6" fill="#FF9D8A" opacity="0.55" />
+          <path d="M96 132 q15 15 30 0" stroke="#1F1B30" strokeWidth="5.5" fill="none" strokeLinecap="round" />
+          <path d="M176 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#F0B24C" />
+        </svg>
       </div>
-      <div className="flex items-center gap-5 px-4 py-1.5 text-xs text-white" style={{ background: '#4e82c4' }}>
-        <span>Explain Answer</span><span>Calculator</span><span className="ml-auto">Flag</span>
-      </div>
-      <div className="bg-white p-4 text-[#1b1b1b]">
-        <p className="text-[13px] leading-relaxed text-gray-700">
-          A clinic schedules patients in fixed 15-minute slots from 9am. If three slots are held for emergencies each morning, and the clinic runs until 1pm...
-        </p>
-        <p className="mt-3 text-sm font-medium">How many routine patients can be booked before midday?</p>
-        <div className="mt-3 space-y-2 text-sm">
-          {[['A', '9', false], ['B', '12', true], ['C', '15', false], ['D', '16', false]].map(([l, t, sel]) => (
-            <div key={l as string} className="flex items-center gap-2.5">
-              <span className={`grid h-4 w-4 flex-none place-items-center rounded-full border-2 ${sel ? 'border-[#1268ad]' : 'border-gray-400'}`}>{sel ? <span className="h-1.5 w-1.5 rounded-full bg-[#1268ad]" /> : null}</span>
-              <span className="font-medium">{l as string}.</span>
-              <span>{t as string}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center justify-between px-4 py-2 text-xs text-white" style={{ background: 'linear-gradient(#1268ad,#0c5f9c)' }}>
-        <span>End Exam</span>
-        <span className="flex gap-4"><span className="text-[#ffd21e]">Previous</span><span>Navigator</span><span className="text-[#ffd21e]">Next</span></span>
-      </div>
+      {/* floating specimen chips */}
+      <span className="absolute left-5 top-6 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 font-mono text-[11px] font-medium text-[#8FEEE1] backdrop-blur-sm">82% immunity</span>
+      <span className="absolute bottom-6 right-5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 font-mono text-[11px] font-medium text-[#C9B6FF] backdrop-blur-sm">Level 6 · +14 XP</span>
     </div>
   )
 }

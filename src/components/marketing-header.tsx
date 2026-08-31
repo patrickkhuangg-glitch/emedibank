@@ -4,12 +4,12 @@ import { Container } from './container'
 import { Wordmark } from './ui/wordmark'
 
 // Public site chrome. Pure-CSS hover/focus dropdowns (no client JS) keep it a
-// server component. "Open EMediBank" enters the LMS at the exam picker.
+// server component. "Open Studocyte" enters the LMS at the exam picker.
 export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur">
       <Container className="flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center" aria-label="EMediBank home">
+        <Link href="/" className="flex items-center" aria-label="Studocyte home">
           <Wordmark className="text-xl" />
         </Link>
 
@@ -47,7 +47,7 @@ export function MarketingHeader() {
             href="/app"
             className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-95"
           >
-            Open EMediBank <ArrowUpRight />
+            Open Studocyte <ArrowUpRight />
           </Link>
         </div>
       </Container>
