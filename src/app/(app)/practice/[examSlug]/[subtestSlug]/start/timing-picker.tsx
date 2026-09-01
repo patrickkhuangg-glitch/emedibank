@@ -2,20 +2,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { haptic } from '@/lib/haptics'
-import { TIMED_PRESETS, SET_COUNTS, setsForMinutes } from '@/lib/practice/timing'
+import { SET_COUNTS, setsForMinutes } from '@/lib/practice/timing'
+
+type TimedOption = { minutes: number; questions: number | null; full: boolean }
 
 export function TimingPicker({
   examSlug,
   subtestId,
   categoryKey,
-  sectionMinutes,
+  timedOptions,
   minutesPerSet,
   availableSets,
 }: {
   examSlug: string
   subtestId: string
   categoryKey: string
-  sectionMinutes: number | null
+  timedOptions: TimedOption[]
   minutesPerSet: number
   availableSets: number
 }) {
@@ -55,12 +57,15 @@ export function TimingPicker({
     router.push('/session?' + p.toString())
   }
 
-  const timed = [
-    ...TIMED_PRESETS.map((m) => ({ key: `t-${m}`, minutes: m, label: `${m} minutes`, full: false })),
-    ...(sectionMinutes && !TIMED_PRESETS.includes(sectionMinutes)
-      ? [{ key: `t-${sectionMinutes}`, minutes: sectionMinutes, label: `${sectionMinutes} minutes`, full: true }]
-      : []),
-  ]
+  const timed = timedOptions.map((o) => ({
+    key: `t-${o.minutes}`,
+    minutes: o.minutes,
+    label: `${o.minutes} minutes`,
+    // When the section is proportioned by pace, label the amount in questions;
+    // otherwise fall back to the number of whole sets the clock loads.
+    detail: o.questions != null ? `≈ ${o.questions} questions` : `${setsFor(o.minutes)} question set${setsFor(o.minutes) > 1 ? 's' : ''}`,
+    full: o.full,
+  }))
   const setCounts = SET_COUNTS.filter((n) => n <= Math.max(1, availableSets))
 
   const rowCls = (active: boolean) =>
@@ -80,7 +85,7 @@ export function TimingPicker({
                 <IconTile active={selected === t.key}><ClockIcon /></IconTile>
                 <span className="flex-1">
                   <span className="block font-medium">{t.label}</span>
-                  <span className="block text-xs text-muted">{setsFor(t.minutes)} question set{setsFor(t.minutes) > 1 ? 's' : ''}</span>
+                  <span className="block text-xs text-muted">{t.detail}</span>
                 </span>
                 {t.full ? <span className="rounded-full bg-brand-muted px-2.5 py-0.5 text-[11px] font-medium text-brand">Full section</span> : null}
                 <Arrow />

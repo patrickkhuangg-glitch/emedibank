@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { getSectionStats } from '@/lib/practice/stats'
 import { countSets } from '@/lib/practice/sets'
-import { sectionMinutes, minutesPerSet } from '@/lib/practice/timing'
+import { sectionMinutes, minutesPerSet, timedPresets, questionsForMinutes } from '@/lib/practice/timing'
 import { PerformanceCard } from '@/components/practice/performance-card'
 import { TimingPicker } from './timing-picker'
 
@@ -44,6 +44,17 @@ export default async function TimingPage({
   ])
   const categoryLabel = cat || `All ${subtest.name}`
 
+  // Timed options: per-section presets, each labelled by its approximate question
+  // count where the section is proportioned that way, plus the full section.
+  const presets = timedPresets(exam.slug, subtest.slug)
+  const secMin = sectionMinutes(exam.slug, subtest.slug)
+  const timedOptions = [
+    ...presets.map((m) => ({ minutes: m, questions: questionsForMinutes(exam.slug, subtest.slug, m), full: false })),
+    ...(secMin && !presets.includes(secMin)
+      ? [{ minutes: secMin, questions: questionsForMinutes(exam.slug, subtest.slug, secMin), full: true }]
+      : []),
+  ]
+
   return (
     <Container className="py-10">
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -62,7 +73,7 @@ export default async function TimingPage({
             examSlug={exam.slug}
             subtestId={subtest.id}
             categoryKey={cat}
-            sectionMinutes={sectionMinutes(exam.slug, subtest.slug)}
+            timedOptions={timedOptions}
             minutesPerSet={minutesPerSet(exam.slug, subtest.slug)}
             availableSets={availableSets}
           />

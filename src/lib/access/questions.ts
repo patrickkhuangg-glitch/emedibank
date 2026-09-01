@@ -18,6 +18,7 @@ export type QData = {
 export type QuestionMeta = {
   id: string
   subtest_id: string
+  subtest_slug: string
   stimulus_id: string | null
   exam_id: string
   published: boolean
@@ -35,11 +36,28 @@ export async function loadMeta(questionId: string): Promise<QuestionMeta | null>
   if (!q) return null
   const { data: st } = await supabase
     .from('subtests')
-    .select('exam_id')
+    .select('exam_id, slug')
     .eq('id', q.subtest_id)
     .maybeSingle()
   if (!st) return null
-  return { ...q, stimulus_id: q.stimulus_id ?? null, data: (q.data as QData | null) ?? null, exam_id: st.exam_id }
+  return { ...q, stimulus_id: q.stimulus_id ?? null, data: (q.data as QData | null) ?? null, exam_id: st.exam_id, subtest_slug: st.slug }
+}
+
+// SJT (Importance / Appropriateness) awards half a mark for an answer one step off
+// on the SAME side of the 4-point scale — A<->B or C<->D — but nothing for crossing
+// the midpoint (B<->C) or any larger gap. Every other question is all-or-nothing.
+// Assumes options are labelled A..D top-to-bottom of the scale (the import order).
+export function markScore(
+  m: Pick<QuestionMeta, 'subtest_slug'>,
+  correctLabel: string | undefined,
+  selectedLabel: string | undefined,
+  isCorrect: boolean,
+): number {
+  if (isCorrect) return 1
+  if (m.subtest_slug !== 'situational-judgement' || !correctLabel || !selectedLabel) return 0
+  const pair = new Set([correctLabel.toUpperCase(), selectedLabel.toUpperCase()])
+  if ((pair.has('A') && pair.has('B')) || (pair.has('C') && pair.has('D'))) return 0.5
+  return 0
 }
 
 export async function canAttemptQuestion(userId: string | null | undefined, questionId: string) {
@@ -132,6 +150,7 @@ export async function getQuestionsForAttempt(
 
 export type AnswerResult = {
   is_correct: boolean
+  score: number
   correct_option_id: string | null
   explanation_text: string | null
   can_watch_video: boolean
@@ -150,10 +169,12 @@ export async function gradeSingle(
   const supabase = createAdminClient()
   const { data: opts } = await supabase
     .from('question_options')
-    .select('id, is_correct')
+    .select('id, is_correct, label')
     .eq('question_id', m.id)
   const correct = (opts ?? []).find((o) => o.is_correct)
+  const selected = (opts ?? []).find((o) => o.id === selectedOptionId)
   const is_correct = !!correct && correct.id === selectedOptionId
+  const score = markScore(m, correct?.label, selected?.label, is_correct)
 
   await supabase.from('question_attempts').insert({
     user_id: userId,
@@ -167,6 +188,7 @@ export async function gradeSingle(
 
   return {
     is_correct,
+    score,
     correct_option_id: correct?.id ?? null,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
@@ -190,6 +212,7 @@ export async function submitAnswer(
 
 export type GridResult = {
   is_correct: boolean
+  score: number
   per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]
   explanation_text: string | null
   can_watch_video: boolean
@@ -226,6 +249,7 @@ export async function gradeGrid(
 
   return {
     is_correct,
+    score: is_correct ? 1 : 0,
     per_statement,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
@@ -277,6 +301,7 @@ export async function getExplanationPlayback(
 
 export type MostLeastResult = {
   is_correct: boolean
+  score: number
   correct_most: number
   correct_least: number
   most_correct: boolean
@@ -314,6 +339,7 @@ export async function gradeMostLeast(
 
   return {
     is_correct,
+    score: is_correct ? 1 : 0,
     correct_most: correctMost,
     correct_least: correctLeast,
     most_correct,
@@ -362,17 +388,17 @@ export async function revealSolution(
   if (m.data?.statements?.length) {
     return {
       kind: 'grid',
-      result: { is_correct: false, per_statement: m.data.statements.map((s, index) => ({ index, correct: false, correct_answer: s.correct })), ...common },
+      result: { is_correct: false, score: 0, per_statement: m.data.statements.map((s, index) => ({ index, correct: false, correct_answer: s.correct })), ...common },
     }
   }
   if (m.data?.mostLeast) {
     return {
       kind: 'most_least',
-      result: { is_correct: false, correct_most: m.data.mostLeast.correctMost, correct_least: m.data.mostLeast.correctLeast, most_correct: false, least_correct: false, ...common },
+      result: { is_correct: false, score: 0, correct_most: m.data.mostLeast.correctMost, correct_least: m.data.mostLeast.correctLeast, most_correct: false, least_correct: false, ...common },
     }
   }
   const supabase = createAdminClient()
   const { data: opts } = await supabase.from('question_options').select('id, is_correct').eq('question_id', m.id)
   const correct = (opts ?? []).find((o) => o.is_correct)
-  return { kind: 'mcq', result: { is_correct: false, correct_option_id: correct?.id ?? null, ...common } }
+  return { kind: 'mcq', result: { is_correct: false, score: 0, correct_option_id: correct?.id ?? null, ...common } }
 }

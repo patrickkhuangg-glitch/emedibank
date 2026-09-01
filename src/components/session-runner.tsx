@@ -21,12 +21,12 @@ type SafeQuestion = {
   mostLeast: { actions: { index: number; text: string }[] } | null
   options: { id: string; label: string; body: string }[]
 }
-type Result = { is_correct: boolean; correct_option_id: string | null; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
-type GridResult = { is_correct: boolean; per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
+type Result = { is_correct: boolean; score: number; correct_option_id: string | null; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
+type GridResult = { is_correct: boolean; score: number; per_statement: { index: number; correct: boolean; correct_answer: YesNo }[]; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
 type Video = { playbackId: string; token: string }
 type Answered = { selectedId: string; result: Result; video: Video | null }
 type GridAnswered = { result: GridResult; video: Video | null }
-type MostLeastResult = { is_correct: boolean; correct_most: number; correct_least: number; most_correct: boolean; least_correct: boolean; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
+type MostLeastResult = { is_correct: boolean; score: number; correct_most: number; correct_least: number; most_correct: boolean; least_correct: boolean; explanation_text: string | null; can_watch_video: boolean; has_video: boolean; video_ready: boolean }
 type MLAnswered = { result: MostLeastResult; video: Video | null }
 
 const ARIAL = 'Arial, Helvetica, sans-serif'
@@ -159,20 +159,22 @@ export function SessionRunner({
     setPhase('summary')
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
 
-    // Log a session roll-up for the practice History tab (best-effort).
-    const results = [
-      ...Object.values(nextA).map((x) => x.result.is_correct),
-      ...Object.values(nextG).map((x) => x.result.is_correct),
-      ...Object.values(nextM).map((x) => x.result.is_correct),
+    // Log a session roll-up for the practice History tab (best-effort). Score is
+    // the sum of per-question marks, so SJT half-marks carry into the total.
+    const resultObjs = [
+      ...Object.values(nextA).map((x) => x.result),
+      ...Object.values(nextG).map((x) => x.result),
+      ...Object.values(nextM).map((x) => x.result),
     ]
-    if (results.length > 0) {
+    if (resultObjs.length > 0) {
+      const scoreSum = resultObjs.reduce((s, r) => s + (r.score ?? (r.is_correct ? 1 : 0)), 0)
       void recordPracticeSessionAction({
         examSlug,
         subtestId,
         tag,
         mode,
-        total: results.length,
-        correct: results.filter(Boolean).length,
+        total: resultObjs.length,
+        correct: scoreSum,
         timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
       })
     }
@@ -293,21 +295,34 @@ export function SessionRunner({
 
   // ---------- SUMMARY (post-score review list) ----------
   if (phase === 'summary') {
-    const statusOf = (qid: string): 'Correct' | 'Incorrect' | 'Unseen' => {
+    const resultOf = (qid: string) => answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
+    const statusOf = (qid: string): 'Correct' | 'Partial' | 'Incorrect' | 'Unseen' => {
       if (!answeredIds.has(qid)) return 'Unseen'
-      const res = answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
-      return res?.is_correct ? 'Correct' : 'Incorrect'
+      const res = resultOf(qid)
+      if (!res) return 'Unseen'
+      if (res.score >= 1) return 'Correct'
+      if (res.score > 0) return 'Partial'
+      return 'Incorrect'
     }
     const allIdx = questionIds.map((_, idx) => idx)
     const incorrectIdx = allIdx.filter((idx) => statusOf(questionIds[idx]) !== 'Correct')
     const flaggedIdx = allIdx.filter((idx) => flags[questionIds[idx]])
     const incorrectCount = incorrectIdx.length
+    const answeredCount = questionIds.filter((qid) => answeredIds.has(qid)).length
+    const markSum = questionIds.reduce((s, qid) => s + (answeredIds.has(qid) ? (resultOf(qid)?.score ?? 0) : 0), 0)
+    const hasPartial = questionIds.some((qid) => statusOf(qid) === 'Partial')
+    const fmtMark = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
     return (
       <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
         <div className="px-5 py-3 text-white" style={{ background: BAR }}><span className="text-lg font-semibold">{label} Question Bank</span></div>
         <div className="flex items-center gap-2 px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}><span aria-hidden>🗎</span> Instructions</div>
-        <p className="py-3 text-center text-[15px] text-[#1b1b1b]">Review Postscore: see which items are incorrect and return to them to see the solution</p>
+        <p className="pt-3 text-center text-[15px] text-[#1b1b1b]">Review Postscore: see which items are incorrect and return to them to see the solution</p>
+        {answeredCount > 0 ? (
+          <p className="pb-3 pt-1 text-center text-[15px] font-semibold text-[#1b2a46]">
+            Your score: {fmtMark(markSum)} / {answeredCount} · {Math.round((markSum / answeredCount) * 100)}%{hasPartial ? '  (half marks applied)' : ''}
+          </p>
+        ) : null}
         <div className="flex items-center justify-between px-5 py-2 font-semibold text-white" style={{ background: '#2f74b8' }}>
           <span>Question Bank Section 1</span>
           <span>( {total} Questions , {incorrectCount} Incorrect )</span>
@@ -320,7 +335,7 @@ export function SessionRunner({
                 <PencilIcon />
                 <span className="flex-1">Question {idx + 1}</span>
                 {flags[qid] ? <span className="text-[#c0392b]" title="Flagged">⚑</span> : null}
-                <span className={`w-28 text-right font-medium ${s === 'Correct' ? 'text-[#157d72]' : 'text-[#c0392b]'}`}>{s}</span>
+                <span className={`w-28 text-right font-medium ${s === 'Correct' ? 'text-[#157d72]' : s === 'Partial' ? 'text-[#b0761f]' : s === 'Unseen' ? 'text-[#6b7280]' : 'text-[#c0392b]'}`}>{s === 'Partial' ? 'Partial (½)' : s}</span>
               </button>
             )
           })}
@@ -349,7 +364,7 @@ export function SessionRunner({
 
   const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined, wasAnswered: boolean) => result ? (
     <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
-      <p className={`text-sm font-semibold ${!wasAnswered ? 'text-[#6b7280]' : result.is_correct ? 'text-[#157d72]' : 'text-[#dc2626]'}`}>{!wasAnswered ? 'Not answered' : result.is_correct ? 'Correct' : 'Not quite'}</p>
+      <p className={`text-sm font-semibold ${!wasAnswered ? 'text-[#6b7280]' : result.score >= 1 ? 'text-[#157d72]' : result.score > 0 ? 'text-[#b0761f]' : 'text-[#dc2626]'}`}>{!wasAnswered ? 'Not answered' : result.score >= 1 ? 'Correct' : result.score > 0 ? 'Partial credit (½ mark)' : 'Not quite'}</p>
       {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{result.explanation_text}</div> : null}
       {video ? (
         <div className="overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={video.playbackId} tokens={{ playback: video.token }} streamType="on-demand" accentColor="#157d72" /></div>
@@ -548,7 +563,11 @@ export function SessionRunner({
       {reviewing ? (
         <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
           <button onClick={() => setPhase('summary')} className="hover:underline">← Back to results</button>
-          <span>{!answeredIds.has(id) ? 'Not answered' : (answered?.result.is_correct ?? gridAnswered?.result.is_correct ?? mlAnswered?.result.is_correct) ? 'Correct' : 'Incorrect'}</span>
+          <span>{(() => {
+            if (!answeredIds.has(id)) return 'Not answered'
+            const sc = answered?.result.score ?? gridAnswered?.result.score ?? mlAnswered?.result.score ?? 0
+            return sc >= 1 ? 'Correct' : sc > 0 ? 'Partial credit' : 'Incorrect'
+          })()}</span>
         </div>
       ) : (
         <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
