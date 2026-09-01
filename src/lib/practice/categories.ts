@@ -35,12 +35,9 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
       'Algebra',
     ],
     'situational-judgement': [
-      'Integrity',
-      'Professionalism',
-      'Teamwork',
-      'Patient Safety',
-      'Coping with Pressure',
-      'Communication',
+      'Appropriateness',
+      'Importance',
+      'Most vs Least Important',
     ],
   },
 }
