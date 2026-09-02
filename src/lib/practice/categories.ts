@@ -40,6 +40,13 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
       'Most vs Least Important',
     ],
   },
+  gamsat: {
+    // Section III subject → topic. One flat level for now; 'Genetics' is the
+    // Biology sub-topic seeded first.
+    'biological-physical-sciences': [
+      'Genetics',
+    ],
+  },
 }
 
 /** Ordered canonical categories for a section, or null if none are defined. */

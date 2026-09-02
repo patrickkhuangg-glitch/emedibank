@@ -7,10 +7,12 @@ import { canAccessExam, hasActiveEntitlement } from '@/lib/access'
 import type { QuestionKind } from '@/lib/supabase/types'
 
 type YesNo = 'Yes' | 'No'
+type Table = { headers: string[]; rows: string[][] }
 export type QData = {
   passage?: string
   image?: string
-  table?: { headers: string[]; rows: string[][] }
+  table?: Table
+  tables?: Table[]
   statements?: { text: string; correct: YesNo }[]
   mostLeast?: { actions: { text: string }[]; correctMost: number; correctLeast: number }
 }
@@ -80,6 +82,7 @@ export type SafeQuestion = {
   passage: string | null
   image: string | null
   table: { headers: string[]; rows: string[][] } | null
+  tables: { headers: string[]; rows: string[][] }[]
   // present => 5-statement Yes/No grid (Decision Making syllogisms / interpreting info)
   statements: { index: number; text: string }[] | null
   // present => SJT most/least appropriate drag-and-drop
@@ -96,6 +99,9 @@ export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> 
     const { data: stim } = await sup.from('stimuli').select('data').eq('id', m.stimulus_id).maybeSingle()
     sd = (stim?.data as QData | null) ?? null
   }
+  // A stimulus/question may carry several data tables (common in Section III
+  // science units); keep `table` as the first for older single-table callers.
+  const tbls: Table[] = sd?.tables ?? m.data?.tables ?? (sd?.table ? [sd.table] : m.data?.table ? [m.data.table] : [])
   const base = {
     id: m.id,
     kind: m.kind,
@@ -103,7 +109,8 @@ export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> 
     stem: m.stem,
     passage: sd?.passage ?? m.data?.passage ?? null,
     image: sd?.image ?? m.data?.image ?? null,
-    table: sd?.table ?? m.data?.table ?? null,
+    table: tbls[0] ?? null,
+    tables: tbls,
   }
 
   if (m.data?.statements?.length) {

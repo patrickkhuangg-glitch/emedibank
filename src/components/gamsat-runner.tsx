@@ -21,6 +21,7 @@ type SafeQuestion = {
   passage: string | null
   image: string | null
   table: { headers: string[]; rows: string[][] } | null
+  tables: { headers: string[]; rows: string[][] }[]
   statements: { index: number; text: string }[] | null
   mostLeast: { actions: { index: number; text: string }[] } | null
   options: { id: string; label: string; body: string }[]
@@ -260,14 +261,14 @@ export function GamsatRunner({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={q.image} alt="Stimulus figure" className="my-3 max-w-full rounded border border-gray-200" />
       ) : null}
-      {q.table ? (
-        <div className="my-3 overflow-x-auto">
+      {(q.tables ?? []).map((t, ti) => (
+        <div key={ti} className="my-3 overflow-x-auto">
           <table className="border-collapse text-[13.5px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            <thead><tr>{q.table.headers.map((h, k) => <th key={k} className="border border-gray-300 bg-gray-50 px-3 py-1.5 font-bold">{h}</th>)}</tr></thead>
-            <tbody>{q.table.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-300 px-3 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
+            <thead><tr>{t.headers.map((h, k) => <th key={k} className="border border-gray-300 bg-gray-50 px-3 py-1.5 font-bold">{h}</th>)}</tr></thead>
+            <tbody>{t.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-300 px-3 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
           </table>
         </div>
-      ) : null}
+      ))}
     </div>
   ) : null
 

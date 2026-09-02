@@ -84,7 +84,9 @@ export async function importQuestions(text: string): Promise<ImportResult> {
           const sdata: Record<string, unknown> = {}
           if (cell(row, 'passage')) sdata.passage = cell(row, 'passage')
           if (cell(row, 'image_url')) sdata.image = cell(row, 'image_url')
-          const t = parseTableCell(cell(row, 'table')); if (t) sdata.table = t
+          // One or more tables — separate multiple tables in the cell with "~~".
+          const stbls = cell(row, 'table').split('~~').map((s) => parseTableCell(s)).filter(Boolean)
+          if (stbls.length) sdata.tables = stbls
           const { data: stim, error } = await supabase.from('stimuli').insert({ subtest_id: subtestId, title: stimKey, data: Object.keys(sdata).length ? sdata : null }).select('id').single()
           if (error) throw error
           stimulusId = stim.id; stimulusCache.set(stimKey, stimulusId); stimuli++
@@ -95,7 +97,8 @@ export async function importQuestions(text: string): Promise<ImportResult> {
       if (!stimulusId) {
         if (type === 'passage' && cell(row, 'passage')) qdata.passage = cell(row, 'passage')
         if (cell(row, 'image_url')) qdata.image = cell(row, 'image_url')
-        const t = parseTableCell(cell(row, 'table')); if (t) qdata.table = t
+        const qtbls = cell(row, 'table').split('~~').map((s) => parseTableCell(s)).filter(Boolean)
+        if (qtbls.length) qdata.tables = qtbls
       }
       if (type === 'grid') qdata.statements = parseStatements(cell(row, 'statements'))
       if (type === 'most_least') {
