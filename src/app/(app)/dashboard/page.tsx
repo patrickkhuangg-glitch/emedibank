@@ -6,6 +6,8 @@ import { requireUser, getProfile } from '@/lib/auth/dal'
 import { getCurrentExam, listExams } from '@/lib/exam/current'
 import { getDashboard, mostRecentExamId, type HeatCell, type MasterySection } from '@/lib/dashboard/stats'
 import { getSectionAccess } from '@/lib/access'
+import { Cyto } from '@/components/ui/cyto'
+import { cytoMood, CYTO_CAPTION } from '@/lib/mascot/mood'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Dashboard' }
@@ -40,14 +42,19 @@ export default async function DashboardPage() {
   ])
   const statBySub = new Map(d.sections.map((s) => [s.id, s]))
   const anyLocked = sectionAccess.some((s) => s.locked)
+  const mood = cytoMood({ accuracy: d.accuracy, dailyStreak: d.dailyStreak, hasData: d.hasData })
 
   return (
     <Container className="py-10 sm:py-14">
       {/* header */}
-      <div className="eb-rise flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className={EYEBROW}>{exam.name} · your progress</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Hi {first}.</h1>
+      <div className="eb-rise flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Cyto mood={mood} size={88} title={`Cyto — ${mood}`} className="flex-none" />
+          <div>
+            <p className={EYEBROW}>{exam.name} · your progress</p>
+            <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Hi {first}.</h1>
+            <p className="mt-1 text-sm text-muted">{CYTO_CAPTION[mood]}</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Link href={`/practice/${exam.slug}`} className="eb-press group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
