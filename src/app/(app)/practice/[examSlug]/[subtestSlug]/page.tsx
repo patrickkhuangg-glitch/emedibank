@@ -5,6 +5,7 @@ import { Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
+import { isEssaySection } from '@/lib/essays/config'
 import { getSectionStats, getCategoryStats } from '@/lib/practice/stats'
 import { PerformanceCard } from '@/components/practice/performance-card'
 
@@ -26,6 +27,8 @@ export default async function CategoryPage({
 }) {
   const user = await requireUser()
   const { examSlug, subtestSlug } = await params
+  // Essay sections (GAMSAT Section II) have no MCQ categories — send them to the writer.
+  if (isEssaySection(examSlug, subtestSlug)) redirect(`/essays/${examSlug}/${subtestSlug}`)
   const supabase = await createClient()
 
   const { data: exam } = await supabase.from('exams').select('id, name, slug').eq('slug', examSlug).maybeSingle()

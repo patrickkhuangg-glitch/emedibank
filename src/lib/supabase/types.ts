@@ -441,6 +441,97 @@ export type Database = {
           },
         ]
       }
+      essay_prompts: {
+        Row: {
+          id: string
+          subtest_id: string
+          task: string
+          theme: string
+          instructions: string
+          quotes: unknown
+          suggested_minutes: number
+          is_free: boolean
+          published: boolean
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          subtest_id: string
+          task?: string
+          theme: string
+          instructions?: string
+          quotes?: unknown
+          suggested_minutes?: number
+          is_free?: boolean
+          published?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          task?: string
+          theme?: string
+          instructions?: string
+          quotes?: unknown
+          suggested_minutes?: number
+          is_free?: boolean
+          published?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'essay_prompts_subtest_id_fkey'
+            columns: ['subtest_id']
+            referencedRelation: 'subtests'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      essay_responses: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          body: string
+          word_count: number
+          timed: boolean
+          duration_minutes: number | null
+          time_spent_seconds: number
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          body?: string
+          word_count?: number
+          timed?: boolean
+          duration_minutes?: number | null
+          time_spent_seconds?: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          word_count?: number
+          timed?: boolean
+          duration_minutes?: number | null
+          time_spent_seconds?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'essay_responses_prompt_id_fkey'
+            columns: ['prompt_id']
+            referencedRelation: 'essay_prompts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<never, never>
     Functions: {
@@ -473,3 +564,5 @@ export type Question = Database['public']['Tables']['questions']['Row']
 export type QuestionOption = Database['public']['Tables']['question_options']['Row']
 export type QuestionAttempt = Database['public']['Tables']['question_attempts']['Row']
 export type Stimulus = Database['public']['Tables']['stimuli']['Row']
+export type EssayPrompt = Database['public']['Tables']['essay_prompts']['Row']
+export type EssayResponse = Database['public']['Tables']['essay_responses']['Row']

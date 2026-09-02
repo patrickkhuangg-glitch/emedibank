@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { getSectionStats, type SectionStat } from '@/lib/practice/stats'
 import { getPracticeSessions, type PracticeSession } from '@/lib/practice/sessions'
+import { isEssaySection } from '@/lib/essays/config'
 import { PerformanceCard } from '@/components/practice/performance-card'
 import { UpgradePrompt } from '@/components/ui/upgrade-prompt'
 import { PracticeTabs } from './practice-tabs'
@@ -70,24 +71,33 @@ function SectionList({ examSlug, stats, entitled }: { examSlug: string; stats: S
         <li className="px-5 py-6 text-sm text-muted">No sections yet for this exam.</li>
       ) : (
         stats.map((s, idx) => {
-          const href = entitled ? `/practice/${examSlug}/${s.slug}` : '/pricing'
+          const essay = isEssaySection(examSlug, s.slug)
+          const href = !entitled ? '/pricing' : essay ? `/essays/${examSlug}/${s.slug}` : `/practice/${examSlug}/${s.slug}`
           const pct = s.total ? Math.round((s.attempted / s.total) * 100) : 0
           return (
             <li key={s.id} className="eb-rise" style={{ animationDelay: `${idx * 60}ms` }}>
               <Link href={href} className="eb-press group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted">
                 <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand transition-transform duration-300 group-hover:scale-105">
-                  <BookIcon />
+                  {essay ? <PenIcon /> : <BookIcon />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{s.name}</span>
                     {!entitled ? <LockIcon /> : null}
                   </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-                    <div className="eb-bar h-full rounded-full bg-brand" style={{ width: `${pct}%`, animationDelay: `${idx * 60 + 140}ms` }} />
-                  </div>
+                  {essay ? (
+                    <p className="mt-1 text-xs text-muted">Essay writing — timed &amp; untimed</p>
+                  ) : (
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                      <div className="eb-bar h-full rounded-full bg-brand" style={{ width: `${pct}%`, animationDelay: `${idx * 60 + 140}ms` }} />
+                    </div>
+                  )}
                 </div>
-                <span className="hidden flex-none tabular-nums text-sm text-muted sm:block">{s.attempted} / {s.total} completed</span>
+                {essay ? (
+                  <span className="hidden flex-none rounded-full bg-brand-muted px-2.5 py-1 text-[11px] font-medium text-brand sm:block">Essays</span>
+                ) : (
+                  <span className="hidden flex-none tabular-nums text-sm text-muted sm:block">{s.attempted} / {s.total} completed</span>
+                )}
                 <ChevronIcon />
               </Link>
             </li>
@@ -162,6 +172,15 @@ function BookIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z" />
       <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z" />
+    </svg>
+  )
+}
+
+function PenIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </svg>
   )
 }
