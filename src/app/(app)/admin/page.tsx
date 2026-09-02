@@ -34,9 +34,14 @@ export default async function AdminPage() {
               Toggle which subtests are free. Changes take effect immediately for every free user.
             </p>
           </div>
-          <Link href="/admin/questions" className="whitespace-nowrap rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
-            Manage questions →
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/essays" className="whitespace-nowrap rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
+              Essay marking →
+            </Link>
+            <Link href="/admin/questions" className="whitespace-nowrap rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
+              Manage questions →
+            </Link>
+          </div>
         </div>
 
         {(exams ?? []).map((exam) => {

@@ -3,20 +3,22 @@ import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { isEssaySection } from '@/lib/essays/config'
-import { getEssayPrompt, getEssayResponse, getEssayCredits } from '@/lib/essays/data'
+import { getRandomPromptByTask, getEssayCredits } from '@/lib/essays/data'
 import { EssayRunner } from '@/components/essay-runner'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EssayWriterPage({
+// Concealed-topic sitting: the student commits to a task and gets a random
+// published prompt, its theme hidden until they begin.
+export default async function RandomEssayPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ examSlug: string; subtestSlug: string; promptId: string }>
+  params: Promise<{ examSlug: string; subtestSlug: string }>
   searchParams: Promise<Record<string, string | undefined>>
 }) {
   const user = await requireUser()
-  const { examSlug, subtestSlug, promptId } = await params
+  const { examSlug, subtestSlug } = await params
   if (!isEssaySection(examSlug, subtestSlug)) redirect(`/practice/${examSlug}/${subtestSlug}`)
 
   const supabase = await createClient()
@@ -24,27 +26,14 @@ export default async function EssayWriterPage({
   if (!exam) notFound()
   if (!(await canAccessExam(user.id, exam.id))) redirect(`/practice/${exam.slug}`)
 
-  const prompt = await getEssayPrompt(promptId)
-  if (!prompt) notFound()
+  const { data: subtest } = await supabase
+    .from('subtests').select('id, slug').eq('exam_id', exam.id).eq('slug', subtestSlug).maybeSingle()
+  if (!subtest) notFound()
 
-  // Optional resume/review of an existing essay (RLS scopes to the user's rows).
-  const resumeId = (await searchParams).resume
-  let resume = null
-  if (resumeId) {
-    const r = await getEssayResponse(resumeId)
-    if (r && r.promptId === promptId) {
-      resume = {
-        id: r.id,
-        body: r.body,
-        timed: r.timed,
-        durationMinutes: r.durationMinutes,
-        timeSpentSeconds: r.timeSpentSeconds,
-        status: r.status,
-        markingStatus: r.markingStatus,
-        tutorFeedback: r.tutorFeedback,
-      }
-    }
-  }
+  const task = ((await searchParams).task ?? 'A').toUpperCase() === 'B' ? 'B' : 'A'
+  const prompt = await getRandomPromptByTask(subtest.id, task)
+  // No prompts of that task yet — send them back to choose.
+  if (!prompt) redirect(`/essays/${exam.slug}/${subtest.slug}`)
 
   const credits = await getEssayCredits()
 
@@ -53,8 +42,8 @@ export default async function EssayWriterPage({
       label="Section II: Written Communication"
       examSlug={exam.slug}
       prompt={prompt}
-      resume={resume}
       credits={credits}
+      concealTopic
     />
   )
 }

@@ -51,6 +51,7 @@ export type Database = {
           role: UserRole
           stripe_customer_id: string | null
           interface_mode: InterfaceMode
+          essay_credits: number
           created_at: string
         }
         Insert: {
@@ -59,6 +60,7 @@ export type Database = {
           role?: UserRole
           stripe_customer_id?: string | null
           interface_mode?: InterfaceMode
+          essay_credits?: number
           created_at?: string
         }
         Update: {
@@ -67,6 +69,7 @@ export type Database = {
           role?: UserRole
           stripe_customer_id?: string | null
           interface_mode?: InterfaceMode
+          essay_credits?: number
           created_at?: string
         }
         Relationships: [
@@ -498,6 +501,11 @@ export type Database = {
           duration_minutes: number | null
           time_spent_seconds: number
           status: string
+          marking_status: string | null
+          tutor_feedback: string | null
+          credits_spent: number
+          submitted_for_marking_at: string | null
+          marked_at: string | null
           created_at: string
           updated_at: string
         }
@@ -511,6 +519,11 @@ export type Database = {
           duration_minutes?: number | null
           time_spent_seconds?: number
           status?: string
+          marking_status?: string | null
+          tutor_feedback?: string | null
+          credits_spent?: number
+          submitted_for_marking_at?: string | null
+          marked_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -521,6 +534,11 @@ export type Database = {
           duration_minutes?: number | null
           time_spent_seconds?: number
           status?: string
+          marking_status?: string | null
+          tutor_feedback?: string | null
+          credits_spent?: number
+          submitted_for_marking_at?: string | null
+          marked_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -532,11 +550,52 @@ export type Database = {
           },
         ]
       }
+      essay_markings: {
+        Row: {
+          id: string
+          response_id: string
+          ai_feedback: string | null
+          draft_feedback: string | null
+          status: string
+          marked_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          response_id: string
+          ai_feedback?: string | null
+          draft_feedback?: string | null
+          status?: string
+          marked_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_feedback?: string | null
+          draft_feedback?: string | null
+          status?: string
+          marked_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'essay_markings_response_id_fkey'
+            columns: ['response_id']
+            referencedRelation: 'essay_responses'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<never, never>
     Functions: {
       is_admin: {
         Args: { uid: string }
+        Returns: boolean
+      }
+      spend_essay_credits: {
+        Args: { p_amount: number }
         Returns: boolean
       }
     }
@@ -566,3 +625,4 @@ export type QuestionAttempt = Database['public']['Tables']['question_attempts'][
 export type Stimulus = Database['public']['Tables']['stimuli']['Row']
 export type EssayPrompt = Database['public']['Tables']['essay_prompts']['Row']
 export type EssayResponse = Database['public']['Tables']['essay_responses']['Row']
+export type EssayMarking = Database['public']['Tables']['essay_markings']['Row']

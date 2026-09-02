@@ -68,6 +68,14 @@ export default async function AccountPage({
           </div>
         </section>
 
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Essay marking credits</h2>
+          <div className="mt-3 flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
+            <span className="text-sm text-muted">Used for GAMSAT Section II tutor marking (2 credits per essay).</span>
+            <span className="rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.essay_credits ?? 0} credits</span>
+          </div>
+        </section>
+
         {(subscriptions ?? []).length > 0 ? (
           <section>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Subscriptions</h2>

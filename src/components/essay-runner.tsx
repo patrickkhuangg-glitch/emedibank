@@ -1,10 +1,9 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
-import { countWords, type EssayQuote } from '@/lib/essays/config'
-import { startEssayAction, saveEssayDraftAction, submitEssayAction } from '@/lib/essays/actions'
+import { countWords, MARK_COST, type EssayQuote } from '@/lib/essays/config'
+import { startEssayAction, saveEssayDraftAction, submitEssayAction, requestMarkingAction } from '@/lib/essays/actions'
 
 // GAMSAT Section II (Written Communication) writer. Same teal chrome as the
 // passage runner (gamsat-runner.tsx), but instead of MCQs the student reads a
@@ -26,6 +25,7 @@ type PromptView = {
   quotes: EssayQuote[]
   suggestedMinutes: number
 }
+type MarkingStatus = 'none' | 'pending' | 'approved'
 type Resume = {
   id: string
   body: string
@@ -33,6 +33,8 @@ type Resume = {
   durationMinutes: number | null
   timeSpentSeconds: number
   status: 'draft' | 'submitted'
+  markingStatus: MarkingStatus
+  tutorFeedback: string | null
 } | null
 
 function mmss(sec: number) {
@@ -46,14 +48,24 @@ export function EssayRunner({
   examSlug,
   prompt,
   resume = null,
+  credits: initialCredits = 0,
+  concealTopic = false,
 }: {
   label: string
   examSlug: string
   prompt: PromptView
   resume?: Resume
+  credits?: number
+  concealTopic?: boolean
 }) {
   const router = useRouter()
   const backHref = `/essays/${examSlug}/written-communication`
+  const [credits, setCredits] = useState(initialCredits)
+  const [markingStatus, setMarkingStatus] = useState<MarkingStatus>(resume?.markingStatus ?? 'none')
+  const [tutorFeedback] = useState<string | null>(resume?.tutorFeedback ?? null)
+  const [markMsg, setMarkMsg] = useState<string | null>(null)
+  const [markBusy, setMarkBusy] = useState(false)
+  const [finishOpen, setFinishOpen] = useState(false)
 
   // Resuming a *submitted* essay opens straight into read-only review.
   const initialPhase: 'intro' | 'writing' | 'done' =
@@ -71,7 +83,6 @@ export function EssayRunner({
   const [body, setBody] = useState(resume?.body ?? '')
   const [starting, setStarting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [confirmFinish, setConfirmFinish] = useState(false)
 
   // Time bookkeeping. baseSeconds = time carried over from an earlier draft session.
   const baseSeconds = useRef(resume?.timeSpentSeconds ?? 0)
@@ -157,19 +168,36 @@ export function EssayRunner({
     setPhase('writing')
   }
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (forMarking: boolean) => {
     if (!responseId || submitting) return
     setSubmitting(true)
     baseSeconds.current = totalSeconds()
     startedAt.current = 0
-    await submitEssayAction(responseId, bodyRef.current, baseSeconds.current)
+    const r = await submitEssayAction(responseId, bodyRef.current, baseSeconds.current, forMarking)
     setElapsed(baseSeconds.current)
+    if (forMarking && r.marked) {
+      setMarkingStatus('pending')
+      setCredits((c) => Math.max(0, c - MARK_COST))
+    } else if (forMarking && r.reason === 'no_credits') {
+      setMarkMsg('Not enough credits — your essay was submitted without marking.')
+    }
     setSubmitting(false)
-    setConfirmFinish(false)
+    setFinishOpen(false)
     setPhase('done')
     haptic(20)
   }, [responseId, submitting, totalSeconds])
-  useEffect(() => { submitRef.current = () => { void submit() } }, [submit])
+  useEffect(() => { submitRef.current = () => { void submit(false) } }, [submit])
+
+  async function requestMarking() {
+    if (!responseId || markBusy || markingStatus !== 'none') return
+    if (credits < MARK_COST) { setMarkMsg('Not enough credits to submit for marking.'); return }
+    setMarkBusy(true)
+    const r = await requestMarkingAction(responseId)
+    setMarkBusy(false)
+    if (r.marked) { setMarkingStatus('pending'); setCredits((c) => Math.max(0, c - MARK_COST)); setMarkMsg(null) }
+    else if (r.reason === 'no_credits') setMarkMsg('Not enough credits to submit for marking.')
+    else if (r.reason === 'already') setMarkingStatus('pending')
+  }
 
   function onChangeBody(v: string) {
     setBody(v)
@@ -189,10 +217,19 @@ export function EssayRunner({
         <div className="flex-1 overflow-auto px-6 py-8">
           <div className="mx-auto max-w-2xl">
             <span className="inline-block rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-wide" style={{ background: '#eaf7fb', color: '#127a8f' }}>
-              Task {prompt.task}
+              Task {prompt.task}{concealTopic ? ' · Random' : ''}
             </span>
-            <h1 className="mt-3 text-[26px] font-bold leading-tight" style={{ color: '#1b2a46' }}>{prompt.theme}</h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-gray-700">{prompt.instructions}</p>
+            {concealTopic ? (
+              <>
+                <h1 className="mt-3 text-[26px] font-bold leading-tight" style={{ color: '#1b2a46' }}>A random Task {prompt.task} topic</h1>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">You won’t see the theme until you begin — just like the real sitting. Choose your conditions, then start writing to reveal the quotes.</p>
+              </>
+            ) : (
+              <>
+                <h1 className="mt-3 text-[26px] font-bold leading-tight" style={{ color: '#1b2a46' }}>{prompt.theme}</h1>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">{prompt.instructions}</p>
+              </>
+            )}
 
             <div className="mt-6 rounded-lg border border-gray-200 bg-[#fafbfc] p-5">
               <p className="text-[13px] font-bold uppercase tracking-wide text-gray-500">Conditions</p>
@@ -261,10 +298,26 @@ export function EssayRunner({
             <span className="text-[14px] text-gray-600">{words} word{words === 1 ? '' : 's'}</span>
             <span className="text-[14px] text-gray-600">{timed ? `Timed · ${minutes} min` : 'Untimed'}</span>
             <span className="text-[14px] text-gray-600">Time spent {mmss(elapsed)}</span>
+            {markingStatus === 'approved' ? <span className="rounded-full bg-[#e6f5ee] px-2.5 py-0.5 text-[12px] font-semibold text-[#157d72]">Marked</span>
+              : markingStatus === 'pending' ? <span className="rounded-full bg-[#fdf3e0] px-2.5 py-0.5 text-[12px] font-semibold text-[#b45309]">Marking pending</span>
+              : null}
           </div>
         </div>
         <div className="flex-1 overflow-auto px-6 py-6">
           <div className="mx-auto max-w-3xl">
+            {markingStatus === 'approved' && tutorFeedback ? (
+              <div className="mb-5 rounded-lg border-2 border-[#1BA7C6] bg-[#f2fbfd] p-5">
+                <p className="flex items-center gap-2 text-[15px] font-bold" style={{ color: '#127a8f' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#127a8f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  Tutor feedback
+                </p>
+                <div className="mt-3 whitespace-pre-wrap text-[14.5px] leading-relaxed text-gray-800">{tutorFeedback}</div>
+              </div>
+            ) : markingStatus === 'pending' ? (
+              <div className="mb-5 rounded-lg border border-[#f0d9a8] bg-[#fdf8ee] p-4 text-[14px] text-[#8a5a12]">
+                Submitted for marking. You’ll see your tutor’s feedback here once it’s reviewed and approved.
+              </div>
+            ) : null}
             <details className="mb-5 rounded-lg border border-gray-200 bg-[#fafbfc] p-4">
               <summary className="cursor-pointer text-[14px] font-semibold text-gray-700">Show the prompt &amp; quotes</summary>
               <p className="mt-3 text-[14px] leading-relaxed text-gray-700">{prompt.instructions}</p>
@@ -281,9 +334,26 @@ export function EssayRunner({
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-5 py-3">
           <button onClick={() => router.push(backHref)} className="rounded-md px-5 py-2.5 text-[15px] text-[#2B6CB0] hover:bg-gray-50">Back to Section II</button>
-          <button onClick={() => router.push(`/essays/${examSlug}/written-communication/${prompt.id}`)} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Write again</button>
+          <div className="flex items-center gap-3">
+            {markingStatus === 'none' ? (
+              <div className="flex items-center gap-2">
+                {markMsg ? <span className="text-[13px] text-[#b45309]">{markMsg}</span> : null}
+                <button
+                  onClick={requestMarking} disabled={markBusy || credits < MARK_COST}
+                  className="rounded-md border-[1.5px] px-5 py-2.5 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-55"
+                  style={{ borderColor: '#1BA7C6', color: '#127a8f' }}
+                >
+                  {markBusy ? 'Submitting…' : `Submit for marking (${MARK_COST} credits · ${credits})`}
+                </button>
+              </div>
+            ) : null}
+            <button
+              onClick={() => router.push(concealTopic ? `/essays/${examSlug}/written-communication/random?task=${prompt.task}` : `/essays/${examSlug}/written-communication/${prompt.id}`)}
+              className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}
+            >Write again</button>
+          </div>
         </div>
       </div>
     )
@@ -294,7 +364,7 @@ export function EssayRunner({
     <div className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: FONT, color: INK }}>
       {/* header */}
       <div className="flex items-center gap-3 px-4 text-white" style={{ background: TEAL, height: 56 }}>
-        <button onClick={() => setConfirmFinish(true)} aria-label="Finish" className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[5px]" style={{ background: 'rgba(0,0,0,.12)' }}>
+        <button onClick={async () => { await doSave(); router.push(backHref) }} aria-label="Save and exit" className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[5px]" style={{ background: 'rgba(0,0,0,.12)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
         <span className="text-[17px] font-bold" style={{ letterSpacing: '-.01em' }}>{label}</span>
@@ -352,18 +422,44 @@ export function EssayRunner({
       {/* footer */}
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-6 py-3">
         <button onClick={() => { void doSave() }} className="rounded-md px-4 py-2.5 text-[15px] text-[#2B6CB0] hover:bg-gray-50">Save draft</button>
-        <button onClick={() => setConfirmFinish(true)} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Finish &amp; submit</button>
+        <button onClick={() => setFinishOpen(true)} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Finish &amp; submit</button>
       </div>
 
-      {confirmFinish ? (
-        <ExamConfirm
-          title="Submit this essay?"
-          message={`You've written ${words} word${words === 1 ? '' : 's'}. Once submitted, the essay is saved and locked for review — you can always start a fresh attempt of this theme afterwards.`}
-          confirmLabel="Yes, submit"
-          cancelLabel="Keep writing"
-          onConfirm={() => { void submit() }}
-          onCancel={() => setConfirmFinish(false)}
-        />
+      {finishOpen ? (
+        <div className="fixed inset-0 z-[115] flex items-center justify-center bg-black/40 p-4" style={{ fontFamily: FONT }}>
+          <div className="w-[min(520px,94vw)] overflow-hidden rounded-lg bg-white shadow-2xl">
+            <div className="px-6 py-4 text-[17px] font-bold" style={{ color: '#1b2a46' }}>Submit your essay</div>
+            <p className="border-t border-gray-100 px-6 py-4 text-[14px] leading-relaxed text-gray-600">
+              You’ve written {words} word{words === 1 ? '' : 's'}. Send it for tutor marking, or just submit it to your history — you can start a fresh attempt of this theme either way.
+            </p>
+            <div className="space-y-2.5 px-6 pb-2">
+              <button
+                onClick={() => { void submit(true) }}
+                disabled={submitting || credits < MARK_COST}
+                className="flex w-full items-center justify-between rounded-md border-[1.5px] px-4 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55"
+                style={{ borderColor: '#2f9e44', background: '#f2fbf4' }}
+              >
+                <span>
+                  <span className="block text-[15px] font-bold" style={{ color: '#1f7a34' }}>Submit for tutor marking</span>
+                  <span className="mt-0.5 block text-[12.5px] text-gray-600">
+                    {credits < MARK_COST ? 'Not enough credits' : `Spends ${MARK_COST} credits · you have ${credits}`}
+                  </span>
+                </span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2f9e44" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13M12 5l7 7-7 7" /></svg>
+              </button>
+              <button
+                onClick={() => { void submit(false) }} disabled={submitting}
+                className="w-full rounded-md border-[1.5px] border-gray-300 px-4 py-3 text-left text-[15px] font-semibold hover:bg-gray-50 disabled:opacity-55"
+              >
+                Submit without marking
+                <span className="mt-0.5 block text-[12.5px] font-normal text-gray-500">Saved to your essays; you can request marking later</span>
+              </button>
+            </div>
+            <div className="flex justify-end px-6 py-4">
+              <button onClick={() => setFinishOpen(false)} className="rounded-md px-4 py-2 text-[14px] text-[#2B6CB0] hover:bg-gray-50">Keep writing</button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {submitting ? (

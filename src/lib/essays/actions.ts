@@ -1,9 +1,10 @@
 'use server'
-import { requireUser } from '@/lib/auth/dal'
+import { requireUser, requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessSubtest } from '@/lib/access'
-import { countWords } from './config'
+import { countWords, parseQuotes, MARK_COST } from './config'
+import { MARKING_SYSTEM, buildMarkingUserMessage } from './marking-rubric'
 
 type Denied = { denied: true }
 
@@ -72,14 +73,16 @@ export async function saveEssayDraftAction(
   }
 }
 
-/** Finalise the essay. After this the row is read-only in the writer. */
+/** Finalise the essay. After this the row is read-only in the writer. When
+ *  `forMarking` is set, also spend credits and enter the tutor-marking queue. */
 export async function submitEssayAction(
   responseId: string,
   body: string,
   timeSpentSeconds: number,
-): Promise<{ ok: boolean }> {
+  forMarking = false,
+): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' }> {
   try {
-    await requireUser()
+    const user = await requireUser()
     const supabase = await createClient()
     await supabase
       .from('essay_responses')
@@ -91,9 +94,158 @@ export async function submitEssayAction(
         updated_at: new Date().toISOString(),
       })
       .eq('id', responseId)
+    if (!forMarking) return { ok: true, marked: false }
+    const r = await requestMarkingFor(user.id, responseId)
+    return { ok: true, marked: r.marked, reason: r.reason }
+  } catch {
+    return { ok: false, marked: false }
+  }
+}
+
+/** Request tutor marking for an already-submitted essay (from the essays list). */
+export async function requestMarkingAction(
+  responseId: string,
+): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' }> {
+  try {
+    const user = await requireUser()
+    const r = await requestMarkingFor(user.id, responseId)
+    return { ok: true, marked: r.marked, reason: r.reason }
+  } catch {
+    return { ok: false, marked: false }
+  }
+}
+
+/** Spend credits and enter the marking queue. Anchored in essay_markings (admin-
+ *  only), so a request cannot be forged, and credits are debited atomically. */
+async function requestMarkingFor(
+  userId: string,
+  responseId: string,
+): Promise<{ marked: boolean; reason?: 'no_credits' | 'already' }> {
+  const admin = createAdminClient()
+  const { data: resp } = await admin
+    .from('essay_responses').select('user_id, marking_status').eq('id', responseId).maybeSingle()
+  if (!resp || resp.user_id !== userId) return { marked: false, reason: 'already' }
+  if (resp.marking_status === 'pending' || resp.marking_status === 'approved') return { marked: false, reason: 'already' }
+
+  // Atomic debit as the calling user (auth.uid() inside the function).
+  const supabase = await createClient()
+  const { data: ok } = await supabase.rpc('spend_essay_credits', { p_amount: MARK_COST })
+  if (!ok) return { marked: false, reason: 'no_credits' }
+
+  const now = new Date().toISOString()
+  await admin.from('essay_responses').update({
+    marking_status: 'pending', submitted_for_marking_at: now, credits_spent: MARK_COST, updated_at: now,
+  }).eq('id', responseId)
+  await admin.from('essay_markings').upsert(
+    { response_id: responseId, status: 'pending', updated_at: now },
+    { onConflict: 'response_id' },
+  )
+  return { marked: true }
+}
+
+// ── Admin marking pipeline ───────────────────────────────────────────────────
+
+/** Generate the AI first-draft feedback for an essay (admin-only). Returns a
+ *  friendly reason when the API key isn't configured, so the queue still works
+ *  with manual feedback. */
+export async function generateAiDraftAction(
+  responseId: string,
+): Promise<{ ok: boolean; text?: string; reason?: 'no_key' | 'error' }> {
+  await requireAdmin()
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return { ok: false, reason: 'no_key' }
+  const admin = createAdminClient()
+  const { data: r } = await admin
+    .from('essay_responses').select('body, prompt_id').eq('id', responseId).maybeSingle()
+  if (!r) return { ok: false, reason: 'error' }
+  const { data: p } = await admin
+    .from('essay_prompts').select('task, theme, quotes').eq('id', r.prompt_id).maybeSingle()
+  if (!p) return { ok: false, reason: 'error' }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: process.env.ANTHROPIC_MARKING_MODEL || 'claude-sonnet-5',
+        max_tokens: 1400,
+        system: MARKING_SYSTEM,
+        messages: [{
+          role: 'user',
+          content: buildMarkingUserMessage({ task: p.task, theme: p.theme, quotes: parseQuotes(p.quotes), body: r.body }),
+        }],
+      }),
+    })
+    if (!res.ok) return { ok: false, reason: 'error' }
+    const json = await res.json()
+    const text: string = (json?.content ?? []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('\n').trim()
+    if (!text) return { ok: false, reason: 'error' }
+    const now = new Date().toISOString()
+    // Store the AI draft; seed the tutor's working copy if they haven't started one.
+    const { data: existing } = await admin.from('essay_markings').select('draft_feedback').eq('response_id', responseId).maybeSingle()
+    await admin.from('essay_markings').upsert({
+      response_id: responseId,
+      ai_feedback: text,
+      draft_feedback: existing?.draft_feedback ?? text,
+      status: 'pending',
+      updated_at: now,
+    }, { onConflict: 'response_id' })
+    return { ok: true, text }
+  } catch {
+    return { ok: false, reason: 'error' }
+  }
+}
+
+/** Save the tutor's in-progress edit of the feedback (admin-only). */
+export async function saveMarkingDraftAction(responseId: string, draft: string): Promise<{ ok: boolean }> {
+  try {
+    await requireAdmin()
+    const admin = createAdminClient()
+    await admin.from('essay_markings').upsert(
+      { response_id: responseId, draft_feedback: draft, updated_at: new Date().toISOString() },
+      { onConflict: 'response_id' },
+    )
     return { ok: true }
   } catch {
     return { ok: false }
+  }
+}
+
+/** Approve and release feedback to the student (admin-only). */
+export async function approveMarkingAction(responseId: string, feedback: string): Promise<{ ok: boolean }> {
+  try {
+    const admin_profile = await requireAdmin()
+    const admin = createAdminClient()
+    const now = new Date().toISOString()
+    await admin.from('essay_markings').upsert(
+      { response_id: responseId, draft_feedback: feedback, status: 'approved', marked_by: admin_profile.id, updated_at: now },
+      { onConflict: 'response_id' },
+    )
+    await admin.from('essay_responses').update({
+      marking_status: 'approved', tutor_feedback: feedback, marked_at: now, updated_at: now,
+    }).eq('id', responseId)
+    return { ok: true }
+  } catch {
+    return { ok: false }
+  }
+}
+
+/** Grant essay-marking credits to a user by email (admin-only). */
+export async function topUpCreditsAction(email: string, amount: number): Promise<{ ok: boolean; balance?: number; error?: string }> {
+  try {
+    await requireAdmin()
+    const n = Math.round(amount)
+    if (!Number.isFinite(n) || n <= 0) return { ok: false, error: 'Enter a positive number of credits.' }
+    const admin = createAdminClient()
+    const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
+    const target = (list?.users ?? []).find((u) => u.email?.toLowerCase() === email.trim().toLowerCase())
+    if (!target) return { ok: false, error: `No user found with email ${email}.` }
+    const { data: prof } = await admin.from('profiles').select('essay_credits').eq('id', target.id).maybeSingle()
+    const balance = (prof?.essay_credits ?? 0) + n
+    await admin.from('profiles').update({ essay_credits: balance }).eq('id', target.id)
+    return { ok: true, balance }
+  } catch {
+    return { ok: false, error: 'Something went wrong.' }
   }
 }
 

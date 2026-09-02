@@ -10,6 +10,11 @@ export function isEssaySection(examSlug: string, subtestSlug: string): boolean {
   return ESSAY_SECTIONS[examSlug]?.includes(subtestSlug) ?? false
 }
 
+/** Credits a new account starts with (also the profiles column default). */
+export const START_CREDITS = 40
+/** Credits spent to submit one essay for tutor marking. */
+export const MARK_COST = 2
+
 export type EssayQuote = { text: string; author?: string | null }
 
 /** Normalise the jsonb `quotes` column into a typed array (defensive). */
