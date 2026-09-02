@@ -23,7 +23,7 @@ export default function Home() {
               Exam-accurate question banks and full timed mocks, with written and video explanations for every answer. Face each exam as a pathogen, fight it, and build the immunity that makes you exam-ready.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/app" className="eb-press group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+              <Link href="/app" className="eb-press eb-soft-hover group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5">
                 Open Studocyte <ArrowUpRight />
               </Link>
               <Link href="/pricing" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface-muted">
@@ -106,7 +106,7 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <div className="eb-soft rounded-2xl border border-border bg-surface p-6">
             <InteractionRows />
           </div>
         </Container>
@@ -167,7 +167,7 @@ export default function Home() {
           <div className="rounded-3xl bg-ink px-8 py-14 text-center text-ink-foreground sm:px-12">
             <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Start with a free mock today.</h2>
             <p className="mx-auto mt-3 max-w-md text-ink-foreground/70">Pick your exam and practise in the interface you will actually sit.</p>
-            <Link href="/app" className="eb-press mt-7 inline-flex items-center gap-1.5 rounded-full bg-brand px-6 py-3 font-semibold text-brand-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+            <Link href="/app" className="eb-press eb-soft-hover mt-7 inline-flex items-center gap-1.5 rounded-full bg-brand px-6 py-3 font-semibold text-brand-foreground transition-all duration-200 hover:-translate-y-0.5">
               Open Studocyte <ArrowUpRight />
             </Link>
           </div>
@@ -212,7 +212,7 @@ function ExamCard({ name, blurb, pathogen, accent, soon }: { name: string; blurb
   )
   if (soon) return <div className="rounded-2xl border border-dashed border-border bg-surface/60 p-5 opacity-80">{inner}</div>
   return (
-    <Link href="/app" className="eb-press group block rounded-2xl border border-border bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md">
+    <Link href="/app" className="eb-press eb-soft-hover group block rounded-2xl border border-border bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40">
       {inner}
     </Link>
   )

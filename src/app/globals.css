@@ -223,3 +223,26 @@ body::after {
 @keyframes cy-floatz{0%{opacity:0;transform:translate(0,0) scale(.7)}30%{opacity:1}100%{opacity:0;transform:translate(6px,-24px) scale(1.1)}}
 @keyframes cy-flick{0%{transform:scaleY(.9) scaleX(1.03)}100%{transform:scaleY(1.08) scaleX(.96)}}
 @keyframes cy-fall{0%{opacity:0;transform:translateY(-6px) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translateY(44px) rotate(220deg)}}
+
+/* ── Browser surfaces ─────────────────────────────────────────────────────────
+ * The parts we don't draw still carry the brand: selection, keyboard focus,
+ * caret and scrollbar are themed from the palette rather than left as UA grey.
+ * (The exam runner sits above z-index 100 and is otherwise untouched.) */
+::selection { background: color-mix(in srgb, var(--brand) 22%, transparent); color: var(--foreground); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+:where(input, textarea, select) { caret-color: var(--brand); }
+
+html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 38%, transparent) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 34%, transparent);
+  border-radius: 9999px;
+  border: 3px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+
+/* Hover lift that stays within the No-Black-Shadow rule: the one soft ink-tinted
+ * glow, a touch stronger on hover. Use instead of Tailwind shadow-sm/md/lg/xl.
+ * No transition of its own — targets already carry `transition-all`. */
+.eb-soft-hover:hover { box-shadow: 0 10px 34px -16px rgba(31, 27, 48, 0.34); }
