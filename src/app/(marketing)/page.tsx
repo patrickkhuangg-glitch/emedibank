@@ -16,7 +16,7 @@ export default function Home() {
             <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
               <span className="h-1.5 w-1.5 rounded-full bg-mint" /> UCAT · GAMSAT · ISAT · Interviews
             </span>
-            <h1 className="mt-5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
               Build real exam <span className="text-mint">immunity</span>.
             </h1>
             <p className="mt-6 max-w-md text-lg text-muted">
@@ -249,46 +249,25 @@ function StudyCellHero() {
       <div className="relative mx-auto grid aspect-square max-w-sm place-items-center">
         <div aria-hidden className="absolute inset-[6%] rounded-full" style={{ border: '1px dashed rgba(255,255,255,0.22)' }} />
         <div aria-hidden className="absolute inset-[18%] rounded-full" style={{ border: '1px solid rgba(255,255,255,0.10)' }} />
-        <div aria-hidden className="absolute inset-[30%] rounded-full" style={{ border: '1px solid rgba(65,211,192,0.40)' }} />
-        <div aria-hidden className="absolute inset-[20%] rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(65,211,192,0.34), transparent 68%)' }} />
-        <svg className="eb-float relative w-[62%]" viewBox="0 0 220 230" role="img" aria-label="Studocyte, the study-cell mascot">
+        <div aria-hidden className="absolute inset-[30%] rounded-full" style={{ border: '1px solid rgba(240,72,59,0.42)' }} />
+        <div aria-hidden className="absolute inset-[20%] rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.32), transparent 68%)' }} />
+        <svg className="eb-float relative w-[58%]" viewBox="-4 -4 108 108" role="img" aria-label="Cyto, the study-cell mascot">
           <defs>
             <radialGradient id="cellBody" cx="42%" cy="34%" r="72%">
-              <stop offset="0%" stopColor="#6BEAD8" />
-              <stop offset="60%" stopColor="#2ECBB6" />
-              <stop offset="100%" stopColor="#17A493" />
+              <stop offset="0%" stopColor="#ff9184" />
+              <stop offset="55%" stopColor="#f0483b" />
+              <stop offset="100%" stopColor="#d61f27" />
             </radialGradient>
           </defs>
-          <path d="M84 196 q-4 20 -14 22" stroke="#17A493" strokeWidth="12" fill="none" strokeLinecap="round" />
-          <path d="M132 196 q6 20 16 20" stroke="#17A493" strokeWidth="12" fill="none" strokeLinecap="round" />
-          <path d="M92 34 q-6 -22 -18 -28" stroke="#17A493" strokeWidth="7" fill="none" strokeLinecap="round" />
-          <circle cx="72" cy="5" r="8" fill="#6BEAD8" />
-          <path d="M128 32 q8 -20 22 -22" stroke="#17A493" strokeWidth="7" fill="none" strokeLinecap="round" />
-          <circle cx="152" cy="9" r="7" fill="#6BEAD8" />
-          <path d="M110 24 C150 22 176 44 180 78 C184 108 178 128 172 150 C164 180 140 196 110 196 C80 196 56 180 48 150 C42 128 36 108 40 78 C44 44 70 26 110 24 Z" fill="url(#cellBody)" />
-          <path d="M110 24 C150 22 176 44 180 78 C184 108 178 128 172 150 C164 180 140 196 110 196 C80 196 56 180 48 150 C42 128 36 108 40 78 C44 44 70 26 110 24 Z" fill="none" stroke="#0E8677" strokeWidth="6" />
-          <path d="M110 40 C142 40 162 58 165 84 C168 108 160 150 140 168 C124 182 96 182 80 168 C60 150 54 108 57 84 C60 58 78 40 110 40 Z" fill="none" stroke="#59D8C6" strokeWidth="3" opacity="0.55" />
-          <circle cx="146" cy="150" r="16" fill="#0E8677" opacity="0.22" />
-          <circle cx="70" cy="86" r="7" fill="#0E8677" opacity="0.16" />
-          <g transform="rotate(-11 66 132)">
-            <rect x="18" y="112" width="46" height="34" rx="6" fill="#FFFFFF" stroke="#0E8677" strokeWidth="4" />
-            <line x1="26" y1="123" x2="56" y2="123" stroke="#6A45C9" strokeWidth="4" strokeLinecap="round" />
-            <line x1="26" y1="133" x2="48" y2="133" stroke="#C9BEEF" strokeWidth="4" strokeLinecap="round" />
-          </g>
-          <path d="M64 138 q-14 -4 -18 -14" stroke="#17A493" strokeWidth="11" fill="none" strokeLinecap="round" />
-          <path d="M158 132 q16 -2 22 -14" stroke="#17A493" strokeWidth="11" fill="none" strokeLinecap="round" />
-          <ellipse cx="90" cy="104" rx="15" ry="17" fill="#fff" />
-          <ellipse cx="132" cy="104" rx="15" ry="17" fill="#fff" />
-          <circle cx="93" cy="108" r="7.5" fill="#1F1B30" />
-          <circle cx="135" cy="108" r="7.5" fill="#1F1B30" />
-          <circle cx="90" cy="104" r="2.6" fill="#fff" />
-          <circle cx="132" cy="104" r="2.6" fill="#fff" />
-          <path d="M76 86 q14 -7 26 -1" stroke="#0E8677" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <path d="M120 85 q12 -6 24 1" stroke="#0E8677" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <ellipse cx="70" cy="128" rx="9" ry="6" fill="#FF9D8A" opacity="0.55" />
-          <ellipse cx="150" cy="128" rx="9" ry="6" fill="#FF9D8A" opacity="0.55" />
-          <path d="M96 132 q15 15 30 0" stroke="#1F1B30" strokeWidth="5.5" fill="none" strokeLinecap="round" />
-          <path d="M176 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#F0B24C" />
+          <path d="M36 12 q-3 -8 3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+          <path d="M64 12 q3 -8 -3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+          <path d="M50 8 C70 8 80 19 84 35 C88 51 94 60 89 73 C84 88 68 96 50 96 C32 96 16 88 11 73 C6 60 12 51 16 35 C20 19 30 8 50 8 Z" fill="url(#cellBody)" stroke="#b3231f" strokeWidth="3" />
+          <ellipse cx="27" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
+          <ellipse cx="73" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
+          <circle cx="37" cy="50" r="11.5" fill="#fff" /><circle cx="63" cy="50" r="11.5" fill="#fff" />
+          <circle cx="38.5" cy="52" r="6" fill="#1d1836" /><circle cx="64.5" cy="52" r="6" fill="#1d1836" />
+          <circle cx="41" cy="49" r="2.4" fill="#fff" /><circle cx="67" cy="49" r="2.4" fill="#fff" />
+          <path d="M40 70 q10 9 20 0" stroke="#8a1c1c" strokeWidth="3.4" fill="none" strokeLinecap="round" />
         </svg>
       </div>
       {/* floating specimen chips */}
