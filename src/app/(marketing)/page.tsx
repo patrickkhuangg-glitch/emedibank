@@ -2,6 +2,8 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Container } from '@/components/container'
 import { Reveal } from '@/components/reveal'
+import { Cyto } from '@/components/ui/cyto'
+import type { CytoMood } from '@/lib/mascot/mood'
 
 export default function Home() {
   return (
@@ -46,6 +48,24 @@ export default function Home() {
             <p className="mt-3 max-w-xl text-muted">Every answer earns XP. Levels, streaks, a mastery map and a weakness heatmap turn dry practice into visible momentum.</p>
           </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-4">
+            <div className="eb-rise eb-soft md:col-span-4 flex flex-col items-center gap-6 rounded-2xl border border-border bg-surface p-6 sm:flex-row sm:gap-9 sm:p-8">
+              <div className="relative flex-none">
+                <div aria-hidden className="absolute inset-2 -z-10 rounded-full blur-xl" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.18), transparent 70%)' }} />
+                <Cyto mood="thriving" size={132} title="Cyto, thriving" />
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="font-display text-2xl font-semibold tracking-tight">Meet Cyto — your study cell.</h3>
+                <p className="mt-2 max-w-xl text-muted">Cyto reacts to how you&rsquo;re really going. Keep your accuracy up and your streak alive and it&rsquo;s thriving, crown and all — let the streak lapse and it dozes off. A small, friendly nudge to come back tomorrow.</p>
+                <div className="mt-5 flex flex-wrap items-end justify-center gap-5 sm:justify-start">
+                  {([['sleepy', 'Off the streak'], ['worried', 'Slipping'], ['focused', 'Steady'], ['happy', 'On track'], ['thriving', 'Thriving']] as [CytoMood, string][]).map(([m, label]) => (
+                    <div key={m} className="flex flex-col items-center gap-1.5">
+                      <Cyto mood={m} size={46} />
+                      <span className="text-[11px] font-medium text-muted">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
             <GameCard delay={0} className="md:col-span-2" title="Earn XP for every answer" body="Faster and more accurate answers earn more, with bonus multipliers for accuracy streaks under time pressure." icon={<BoltIcon />} />
             <GameCard delay={80} title="Daily streaks" body="Keep a Duolingo-style streak alive, day after day." icon={<FlameIcon />} />
             <GameCard delay={160} title="Level up each section" body="See where you're a Level 8 and where you're a Level 2." icon={<BarsIcon />} />
