@@ -14,6 +14,8 @@ export function isEssaySection(examSlug: string, subtestSlug: string): boolean {
 export const START_CREDITS = 40
 /** Credits spent to submit one essay for tutor marking. */
 export const MARK_COST = 2
+/** Full Section II simulation: total minutes for both essays (Task A + Task B). */
+export const SIMULATION_MINUTES = 65
 
 export type EssayQuote = { text: string; author?: string | null }
 

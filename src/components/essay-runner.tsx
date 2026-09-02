@@ -29,6 +29,7 @@ type MarkingStatus = 'none' | 'pending' | 'approved'
 type Resume = {
   id: string
   body: string
+  plan: string | null
   timed: boolean
   durationMinutes: number | null
   timeSpentSeconds: number
@@ -81,6 +82,8 @@ export function EssayRunner({
 
   const [responseId, setResponseId] = useState<string | null>(resume?.id ?? null)
   const [body, setBody] = useState(resume?.body ?? '')
+  const [plan, setPlan] = useState(resume?.plan ?? '')
+  const [planOpen, setPlanOpen] = useState(!!(resume?.plan ?? '').trim())
   const [starting, setStarting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -97,7 +100,9 @@ export function EssayRunner({
   const [savedAt, setSavedAt] = useState<string>('')
   const dirtyRef = useRef(false)
   const bodyRef = useRef(body)
+  const planRef = useRef(plan)
   useEffect(() => { bodyRef.current = body }, [body])
+  useEffect(() => { planRef.current = plan }, [plan])
 
   const words = countWords(body)
 
@@ -122,7 +127,7 @@ export function EssayRunner({
   const doSave = useCallback(async () => {
     if (!responseId) return
     setSaveState('saving')
-    const r = await saveEssayDraftAction(responseId, bodyRef.current, totalSeconds())
+    const r = await saveEssayDraftAction(responseId, bodyRef.current, totalSeconds(), planRef.current)
     dirtyRef.current = false
     if (r.ok) {
       setSaveState('saved')
@@ -132,12 +137,12 @@ export function EssayRunner({
     }
   }, [responseId, totalSeconds])
 
-  // Debounced autosave whenever the body changes.
+  // Debounced autosave whenever the body or plan changes.
   useEffect(() => {
     if (phase !== 'writing' || !responseId || !dirtyRef.current) return
     const t = setTimeout(() => { void doSave() }, 2000)
     return () => clearTimeout(t)
-  }, [body, phase, responseId, doSave])
+  }, [body, plan, phase, responseId, doSave])
 
   // Periodic save so untimed elapsed time persists even while the student pauses.
   useEffect(() => {
@@ -173,7 +178,7 @@ export function EssayRunner({
     setSubmitting(true)
     baseSeconds.current = totalSeconds()
     startedAt.current = 0
-    const r = await submitEssayAction(responseId, bodyRef.current, baseSeconds.current, forMarking)
+    const r = await submitEssayAction(responseId, bodyRef.current, baseSeconds.current, forMarking, planRef.current)
     setElapsed(baseSeconds.current)
     if (forMarking && r.marked) {
       setMarkingStatus('pending')
@@ -201,6 +206,11 @@ export function EssayRunner({
 
   function onChangeBody(v: string) {
     setBody(v)
+    dirtyRef.current = true
+    setSaveState('idle')
+  }
+  function onChangePlan(v: string) {
+    setPlan(v)
     dirtyRef.current = true
     setSaveState('idle')
   }
@@ -329,6 +339,12 @@ export function EssayRunner({
                 ))}
               </ul>
             </details>
+            {plan.trim() ? (
+              <details className="mb-5 rounded-lg border border-gray-200 p-4" style={{ background: '#fffdf3' }}>
+                <summary className="cursor-pointer text-[14px] font-semibold" style={{ color: '#8a7a3a' }}>Your planning notes</summary>
+                <div className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed" style={{ color: '#5a5335' }}>{plan}</div>
+              </details>
+            ) : null}
             <div className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-6 text-[16px] leading-[1.75]" style={{ fontFamily: SERIF }}>
               {body.trim() ? body : <span className="text-gray-400">This essay was left blank.</span>}
             </div>
@@ -407,6 +423,22 @@ export function EssayRunner({
           </div>
         </div>
         <div className="flex min-h-0 flex-col">
+          <div className="flex items-center justify-between border-b border-gray-100 px-7 py-2">
+            <button onClick={() => setPlanOpen((o) => !o)} className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: NAVY }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ transform: planOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><path d="m9 18 6-6-6-6" /></svg>
+              Planning space
+            </button>
+            <span className="text-[11.5px] text-gray-400">Your notes — not marked</span>
+          </div>
+          {planOpen ? (
+            <textarea
+              value={plan}
+              onChange={(e) => onChangePlan(e.target.value)}
+              placeholder="Plan before you write: your position, 2–3 examples or angles, and the shape of your argument…"
+              className="h-32 flex-none resize-none border-b border-gray-200 px-7 py-3 text-[14px] leading-[1.6] outline-none"
+              style={{ fontFamily: FONT, background: '#fffdf3', color: '#4a4636' }}
+            />
+          ) : null}
           <textarea
             value={body}
             onChange={(e) => onChangeBody(e.target.value)}

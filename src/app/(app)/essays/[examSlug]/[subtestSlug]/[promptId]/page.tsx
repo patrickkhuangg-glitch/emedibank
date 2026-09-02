@@ -36,6 +36,7 @@ export default async function EssayWriterPage({
       resume = {
         id: r.id,
         body: r.body,
+        plan: r.plan,
         timed: r.timed,
         durationMinutes: r.durationMinutes,
         timeSpentSeconds: r.timeSpentSeconds,

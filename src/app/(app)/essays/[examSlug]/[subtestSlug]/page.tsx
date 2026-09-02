@@ -37,6 +37,14 @@ export default async function EssaySectionPage({
   const hasTaskA = prompts.some((p) => p.task === 'A')
   const hasTaskB = prompts.some((p) => p.task === 'B')
 
+  // A paused simulation = a sitting whose essays are all still drafts.
+  const sittings = new Map<string, EssayResponseView[]>()
+  for (const r of responses) if (r.sittingId) sittings.set(r.sittingId, [...(sittings.get(r.sittingId) ?? []), r])
+  const pausedSim = [...sittings.entries()]
+    .filter(([, rs]) => rs.length >= 2 && rs.every((r) => r.status === 'draft'))
+    .map(([id, rs]) => ({ id, rs, at: Math.max(...rs.map((r) => +new Date(r.updatedAt))) }))
+    .sort((a, b) => b.at - a.at)[0] ?? null
+
   return (
     <Container className="py-10">
       <div className="mx-auto max-w-3xl">
@@ -54,10 +62,36 @@ export default async function EssaySectionPage({
           Section II is two essay tasks. Read a theme and its quotes, then write an extended response — timed to build exam stamina, or untimed while you develop your ideas. Submit for tutor marking to get graded feedback (2 credits each).
         </p>
 
-        {/* Random sitting — topic concealed */}
-        <div className="mt-7 rounded-2xl border border-border bg-gradient-to-br from-brand-muted/60 to-surface p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">Start a random essay</h2>
-          <p className="mt-1 text-sm text-muted">Commit to a task and get a random topic — the quotes appear only when you begin, like the real sitting.</p>
+        {/* Resume a paused simulation */}
+        {pausedSim ? (
+          <Link href={`/essays/${exam.slug}/${subtest.slug}/simulation?resume=${pausedSim.id}`} className="eb-press group mt-7 flex items-center gap-4 rounded-2xl border-2 border-[#b45309]/40 bg-[#fdf8ee] p-5 transition-colors hover:border-[#b45309]">
+            <span className="grid h-12 w-12 flex-none place-items-center rounded-xl bg-[#b45309] text-white transition-transform group-hover:scale-105"><ClockIcon /></span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-[#8a4a0a]">Resume your simulation</h2>
+              <p className="mt-0.5 text-sm text-[#a15c1a]">
+                {pausedSim.rs.map((r) => `Task ${r.task}: ${r.wordCount}w`).join(' · ')} — the clock picks up where you left off.
+              </p>
+            </div>
+            <span className="hidden flex-none text-sm font-semibold text-[#b45309] sm:block">Continue →</span>
+          </Link>
+        ) : null}
+
+        {/* Full simulation — both tasks, one clock */}
+        {hasTaskA && hasTaskB ? (
+          <Link href={`/essays/${exam.slug}/${subtest.slug}/simulation`} className="eb-press group mt-7 flex items-center gap-4 rounded-2xl border-2 border-brand/50 bg-gradient-to-br from-brand-muted/70 to-surface p-5 transition-colors hover:border-brand">
+            <span className="grid h-12 w-12 flex-none place-items-center rounded-xl bg-brand text-brand-foreground transition-transform group-hover:scale-105"><ClockIcon /></span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold">Full exam simulation</h2>
+              <p className="mt-0.5 text-sm text-muted">65 minutes · one Task A + one Task B on a shared clock, with planning space — the real sitting.</p>
+            </div>
+            <span className="hidden flex-none text-sm font-semibold text-brand sm:block">Start →</span>
+          </Link>
+        ) : null}
+
+        {/* Random single essay — topic concealed */}
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">Or a single random essay</h2>
+          <p className="mt-1 text-sm text-muted">Commit to a task and get a random topic — the quotes appear only when you begin.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {hasTaskA ? <RandomButton href={`/essays/${exam.slug}/${subtest.slug}/random?task=A`} label="Random Task A" /> : null}
             {hasTaskB ? <RandomButton href={`/essays/${exam.slug}/${subtest.slug}/random?task=B`} label="Random Task B" /> : null}
@@ -111,18 +145,25 @@ export default async function EssaySectionPage({
         ) : (
           <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
             {responses.map((r, idx) => {
-              const cta = r.status === 'draft' ? 'Resume'
+              const isPausedSim = !!r.sittingId && r.status === 'draft'
+              const cta = isPausedSim ? 'Resume simulation'
+                : r.status === 'draft' ? 'Resume'
                 : r.markingStatus === 'approved' ? 'View feedback' : 'Review'
+              const href = isPausedSim
+                ? `/essays/${exam.slug}/${subtest.slug}/simulation?resume=${r.sittingId}`
+                : `/essays/${exam.slug}/${subtest.slug}/${r.promptId}?resume=${r.id}`
               return (
                 <li key={r.id} className="eb-rise" style={{ animationDelay: `${idx * 35}ms` }}>
                   <Link
-                    href={`/essays/${exam.slug}/${subtest.slug}/${r.promptId}?resume=${r.id}`}
+                    href={href}
                     className="eb-press flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted"
                   >
                     <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand"><PenIcon /></span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="font-medium">{r.theme}</span>
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">Task {r.task}</span>
+                        {r.sittingId ? <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-semibold text-brand">Simulation</span> : null}
                         <StatusBadge status={r.status} />
                         <MarkingBadge status={r.markingStatus} />
                         <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">{r.timed ? `Timed · ${r.durationMinutes ?? ''} min` : 'Untimed'}</span>
@@ -167,6 +208,14 @@ function CoinIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-brand" aria-hidden>
       <circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5a2.5 2 0 0 1 5 0c0 1-1 1.5-2.5 2s-2.5 1-2.5 2a2.5 2 0 0 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
     </svg>
   )
 }

@@ -52,6 +52,7 @@ export async function saveEssayDraftAction(
   responseId: string,
   body: string,
   timeSpentSeconds: number,
+  plan?: string | null,
 ): Promise<{ ok: boolean; savedAt: string }> {
   try {
     await requireUser()
@@ -64,6 +65,7 @@ export async function saveEssayDraftAction(
         word_count: countWords(body),
         time_spent_seconds: Math.max(0, Math.round(timeSpentSeconds)),
         updated_at: savedAt,
+        ...(plan !== undefined ? { plan } : {}),
       })
       .eq('id', responseId)
       .eq('status', 'draft') // never overwrite a submitted essay
@@ -73,6 +75,35 @@ export async function saveEssayDraftAction(
   }
 }
 
+/** Begin a full Section II simulation: create a shared sitting with two timed
+ *  draft essays (one Task A, one Task B) under a single clock. */
+export async function startSittingAction(
+  taskAPromptId: string,
+  taskBPromptId: string,
+  minutes: number,
+): Promise<{ sittingId: string; aId: string; bId: string } | Denied> {
+  const user = await requireUser()
+  const admin = createAdminClient()
+  const { data: prompts } = await admin
+    .from('essay_prompts')
+    .select('id, subtest_id, published')
+    .in('id', [taskAPromptId, taskBPromptId])
+  if (!prompts || prompts.length !== 2 || prompts.some((p) => !p.published)) return { denied: true }
+  if (!(await canAccessSubtest(user.id, prompts[0].subtest_id))) return { denied: true }
+
+  const sittingId = crypto.randomUUID()
+  const supabase = await createClient()
+  const base = { user_id: user.id, body: '', word_count: 0, timed: true, duration_minutes: minutes, time_spent_seconds: 0, status: 'draft', sitting_id: sittingId }
+  const { data, error } = await supabase
+    .from('essay_responses')
+    .insert([{ ...base, prompt_id: taskAPromptId }, { ...base, prompt_id: taskBPromptId }])
+    .select('id, prompt_id')
+  if (error || !data || data.length !== 2) return { denied: true }
+  const aId = data.find((r) => r.prompt_id === taskAPromptId)!.id
+  const bId = data.find((r) => r.prompt_id === taskBPromptId)!.id
+  return { sittingId, aId, bId }
+}
+
 /** Finalise the essay. After this the row is read-only in the writer. When
  *  `forMarking` is set, also spend credits and enter the tutor-marking queue. */
 export async function submitEssayAction(
@@ -80,6 +111,7 @@ export async function submitEssayAction(
   body: string,
   timeSpentSeconds: number,
   forMarking = false,
+  plan?: string | null,
 ): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' }> {
   try {
     const user = await requireUser()
@@ -92,6 +124,7 @@ export async function submitEssayAction(
         time_spent_seconds: Math.max(0, Math.round(timeSpentSeconds)),
         status: 'submitted',
         updated_at: new Date().toISOString(),
+        ...(plan !== undefined ? { plan } : {}),
       })
       .eq('id', responseId)
     if (!forMarking) return { ok: true, marked: false }

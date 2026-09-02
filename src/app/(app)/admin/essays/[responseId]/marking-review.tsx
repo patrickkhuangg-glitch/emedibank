@@ -8,6 +8,7 @@ type Detail = {
   status: 'pending' | 'approved' | 'none'
   prompt: { task: string; theme: string; instructions: string; quotes: Quote[] }
   body: string
+  plan: string | null
   wordCount: number
   timed: boolean
   durationMinutes: number | null
@@ -84,6 +85,12 @@ export function MarkingReview({ detail }: { detail: Detail }) {
               ))}
             </ul>
           </details>
+          {detail.plan && detail.plan.trim() ? (
+            <details className="rounded-xl border border-border bg-surface p-4">
+              <summary className="cursor-pointer text-sm font-semibold">Student&rsquo;s planning notes</summary>
+              <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted">{detail.plan}</div>
+            </details>
+          ) : null}
           <div className="rounded-xl border border-border bg-surface p-5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Student essay</p>
             <div className="whitespace-pre-wrap text-[15px] leading-[1.7]" style={{ fontFamily: 'Georgia, serif' }}>

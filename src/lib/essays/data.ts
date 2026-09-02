@@ -21,6 +21,7 @@ export type EssayResponseView = {
   theme: string
   task: string
   body: string
+  plan: string | null
   wordCount: number
   timed: boolean
   durationMinutes: number | null
@@ -29,20 +30,22 @@ export type EssayResponseView = {
   markingStatus: MarkingStatus
   tutorFeedback: string | null
   creditsSpent: number
+  sittingId: string | null
   updatedAt: string
 }
 
 const RESPONSE_COLS =
-  'id, prompt_id, body, word_count, timed, duration_minutes, time_spent_seconds, status, marking_status, tutor_feedback, credits_spent, updated_at, essay_prompts(theme, task)'
+  'id, prompt_id, body, plan, word_count, timed, duration_minutes, time_spent_seconds, status, marking_status, tutor_feedback, credits_spent, sitting_id, updated_at, essay_prompts(theme, task)'
 
 function toMarkingStatus(v: unknown): MarkingStatus {
   return v === 'pending' || v === 'approved' ? v : 'none'
 }
 
 function toResponseView(r: {
-  id: string; prompt_id: string; body: string; word_count: number; timed: boolean
+  id: string; prompt_id: string; body: string; plan: string | null; word_count: number; timed: boolean
   duration_minutes: number | null; time_spent_seconds: number; status: string
-  marking_status: string | null; tutor_feedback: string | null; credits_spent: number; updated_at: string
+  marking_status: string | null; tutor_feedback: string | null; credits_spent: number
+  sitting_id: string | null; updated_at: string
   essay_prompts?: { theme: string; task: string } | null
 }): EssayResponseView {
   const p = r.essay_prompts
@@ -52,6 +55,7 @@ function toResponseView(r: {
     theme: p?.theme ?? 'Essay',
     task: p?.task ?? 'A',
     body: r.body,
+    plan: r.plan,
     wordCount: r.word_count,
     timed: r.timed,
     durationMinutes: r.duration_minutes,
@@ -60,6 +64,7 @@ function toResponseView(r: {
     markingStatus: toMarkingStatus(r.marking_status),
     tutorFeedback: r.tutor_feedback,
     creditsSpent: r.credits_spent,
+    sittingId: r.sitting_id,
     updatedAt: r.updated_at,
   }
 }
@@ -112,6 +117,17 @@ export async function getEssayResponses(promptIds: string[]): Promise<EssayRespo
     .select(RESPONSE_COLS)
     .in('prompt_id', promptIds)
     .order('updated_at', { ascending: false })
+  return (data ?? []).map((r) => toResponseView(r as Parameters<typeof toResponseView>[0]))
+}
+
+/** Both essays of a simulation sitting, oldest first (RLS scopes to own rows). */
+export async function getSittingResponses(sittingId: string): Promise<EssayResponseView[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('essay_responses')
+    .select(RESPONSE_COLS)
+    .eq('sitting_id', sittingId)
+    .order('created_at', { ascending: true })
   return (data ?? []).map((r) => toResponseView(r as Parameters<typeof toResponseView>[0]))
 }
 
@@ -201,6 +217,7 @@ export type MarkingDetail = {
   status: 'pending' | 'approved' | 'none'
   prompt: EssayPromptView
   body: string
+  plan: string | null
   wordCount: number
   timed: boolean
   durationMinutes: number | null
@@ -216,7 +233,7 @@ export async function getMarkingDetail(responseId: string): Promise<MarkingDetai
   const admin = createAdminClient()
   const { data: r } = await admin
     .from('essay_responses')
-    .select('id, prompt_id, body, word_count, timed, duration_minutes, marking_status, tutor_feedback, submitted_for_marking_at, user_id')
+    .select('id, prompt_id, body, plan, word_count, timed, duration_minutes, marking_status, tutor_feedback, submitted_for_marking_at, user_id')
     .eq('id', responseId)
     .maybeSingle()
   if (!r) return null
@@ -233,6 +250,7 @@ export async function getMarkingDetail(responseId: string): Promise<MarkingDetai
     status: toMarkingStatus(r.marking_status),
     prompt: toPromptView(p),
     body: r.body,
+    plan: r.plan,
     wordCount: r.word_count,
     timed: r.timed,
     durationMinutes: r.duration_minutes,

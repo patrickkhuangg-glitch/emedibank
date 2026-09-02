@@ -501,6 +501,8 @@ export type Database = {
           duration_minutes: number | null
           time_spent_seconds: number
           status: string
+          plan: string | null
+          sitting_id: string | null
           marking_status: string | null
           tutor_feedback: string | null
           credits_spent: number
@@ -519,6 +521,8 @@ export type Database = {
           duration_minutes?: number | null
           time_spent_seconds?: number
           status?: string
+          plan?: string | null
+          sitting_id?: string | null
           marking_status?: string | null
           tutor_feedback?: string | null
           credits_spent?: number
@@ -534,6 +538,8 @@ export type Database = {
           duration_minutes?: number | null
           time_spent_seconds?: number
           status?: string
+          plan?: string | null
+          sitting_id?: string | null
           marking_status?: string | null
           tutor_feedback?: string | null
           credits_spent?: number
