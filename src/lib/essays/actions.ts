@@ -166,8 +166,10 @@ async function requestMarkingFor(
   if (!ok) return { marked: false, reason: 'no_credits' }
 
   const now = new Date().toISOString()
+  // Submitting for marking FINALISES the essay: it becomes submitted (locked, no
+  // more editing) at the same time it enters the queue.
   await admin.from('essay_responses').update({
-    marking_status: 'pending', submitted_for_marking_at: now, credits_spent: MARK_COST, updated_at: now,
+    status: 'submitted', marking_status: 'pending', submitted_for_marking_at: now, credits_spent: MARK_COST, updated_at: now,
   }).eq('id', responseId)
   await admin.from('essay_markings').upsert(
     { response_id: responseId, status: 'pending', updated_at: now },
