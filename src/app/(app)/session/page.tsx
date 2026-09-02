@@ -6,6 +6,7 @@ import { resolveSessionQuestionIds } from '@/lib/questions/session'
 import { resolveSetQuestionIds } from '@/lib/practice/sets'
 import { resolveReviewQuestionIds } from '@/lib/dashboard/stats'
 import { SessionRunner } from '@/components/session-runner'
+import { GamsatRunner } from '@/components/gamsat-runner'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +58,25 @@ export default async function SessionPage({
     )
   }
 
-  const instructions = `${exam.name.toUpperCase()} PRACTICE QUESTIONS
+  const isGamsat = exam.slug === 'gamsat'
+
+  // GAMSAT uses its own passage/stimulus interface (Sections I & III); everything
+  // else uses the Pearson-VUE-style runner.
+  let gamsatSubtestName = ''
+  if (isGamsat && subtestId) {
+    const { data: st } = await supabase.from('subtests').select('name').eq('id', subtestId).maybeSingle()
+    gamsatSubtestName = st?.name ?? ''
+  }
+
+  const instructions = isGamsat
+    ? `Practice Session — GAMSAT${gamsatSubtestName ? ` ${gamsatSubtestName}` : ''}
+
+Each unit presents a passage, table or figure on the left and its questions on the right. Read the stimulus, then choose the best answer for each question.
+
+Move between questions with the numbered tabs or the Next button, and bookmark any question to come back to it. Nothing is marked until you finish: select 'Finish' (or let the timer run out) to see your score, then open any question for the worked solution.
+
+Select 'Begin' when you are ready.`
+    : `${exam.name.toUpperCase()} PRACTICE QUESTIONS
 
 This session runs in a full-screen interface that mirrors the real ${exam.name} test.
 
@@ -69,9 +88,14 @@ Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A-
 
 Please click the Next (N) button to proceed.`
 
+  const Runner = isGamsat ? GamsatRunner : SessionRunner
+  const label = isGamsat
+    ? `Practice Session – GAMSAT${gamsatSubtestName ? ` ${gamsatSubtestName}` : ''}`
+    : `${exam.name} · Practice`
+
   return (
-    <SessionRunner
-      label={`${exam.name} · Practice`}
+    <Runner
+      label={label}
       examSlug={exam.slug}
       instructions={instructions}
       questionIds={ids}
