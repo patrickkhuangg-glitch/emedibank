@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { isEssaySection } from '@/lib/essays/config'
 import { getEssayPrompts, getEssayResponses, getEssayCredits, type EssayResponseView } from '@/lib/essays/data'
+import { ThemePicker } from './theme-picker'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Written Communication · Essays' }
@@ -99,7 +100,7 @@ export default async function EssaySectionPage({
           </div>
         </div>
 
-        {/* Prompt list */}
+        {/* Specific topic — dropdown (scales to many themes) */}
         <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-muted">Or choose a specific topic</h2>
         {prompts.length === 0 ? (
           <div className="mt-3 rounded-2xl border border-border bg-surface px-5 py-10 text-center">
@@ -107,32 +108,11 @@ export default async function EssaySectionPage({
             <p className="mx-auto mt-1 max-w-xs text-sm text-muted">New Section II prompts will appear here.</p>
           </div>
         ) : (
-          <ul className="mt-3 space-y-3">
-            {prompts.map((p, idx) => {
-              const attempts = attemptsByPrompt.get(p.id) ?? 0
-              return (
-                <li key={p.id} className="eb-rise" style={{ animationDelay: `${idx * 50}ms` }}>
-                  <Link
-                    href={`/essays/${exam.slug}/${subtest.slug}/${p.id}`}
-                    className="eb-press group flex items-start gap-4 rounded-2xl border border-border bg-surface px-5 py-4 transition-colors hover:bg-surface-muted"
-                  >
-                    <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand transition-transform duration-300 group-hover:scale-105">
-                      <PenIcon />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[11px] font-semibold text-brand">Task {p.task}</span>
-                        {attempts > 0 ? <span className="text-[11px] text-muted">{attempts} attempt{attempts === 1 ? '' : 's'}</span> : null}
-                      </div>
-                      <p className="mt-1 font-medium">{p.theme}</p>
-                      <p className="mt-0.5 text-xs text-muted">{p.quotes.length} quote{p.quotes.length === 1 ? '' : 's'} · suggested {p.suggestedMinutes} min</p>
-                    </div>
-                    <span className="mt-2 flex-none text-sm font-medium text-brand">Write →</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          <ThemePicker
+            examSlug={exam.slug}
+            subtestSlug={subtest.slug}
+            prompts={prompts.map((p) => ({ id: p.id, task: p.task, theme: p.theme, quotes: p.quotes.length, attempts: attemptsByPrompt.get(p.id) ?? 0 }))}
+          />
         )}
 
         {/* Saved essays */}
