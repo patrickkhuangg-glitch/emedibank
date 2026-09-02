@@ -8,10 +8,11 @@ import { haptic } from '@/lib/haptics'
 import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, revealAnswerAction } from '@/lib/questions/actions'
 import { recordPracticeSessionAction } from '@/lib/practice/session-actions'
 
-// GAMSAT practice interface (Sections I & III): a Medify-style passage/stimulus on
-// the left, single-best question on the right, numbered unit tabs, bookmark, and a
-// mark-at-end postscore review. GAMSAT items are single-best-answer over a passage,
-// figure or table — no Yes/No grids or most/least, so this runner is MCQ-only. The
+// Passage/stimulus practice interface — serves GAMSAT (Sections I & III) and ISAT
+// (Critical Reasoning, Quantitative Reasoning): a Medify-style stimulus on the left,
+// single-best question on the right, numbered unit tabs, bookmark, and a mark-at-end
+// postscore review. Items are single-best-answer over a passage, figure or table —
+// no Yes/No grids or most/least, so this runner is MCQ-only. The
 // UCAT Pearson-VUE runner (session-runner.tsx) is untouched; grading/recording reuse
 // the same server actions, so scoring stays identical.
 type SafeQuestion = {

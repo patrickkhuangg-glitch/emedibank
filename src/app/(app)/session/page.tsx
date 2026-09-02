@@ -58,18 +58,18 @@ export default async function SessionPage({
     )
   }
 
-  const isGamsat = exam.slug === 'gamsat'
-
-  // GAMSAT uses its own passage/stimulus interface (Sections I & III); everything
-  // else uses the Pearson-VUE-style runner.
-  let gamsatSubtestName = ''
-  if (isGamsat && subtestId) {
+  // GAMSAT and ISAT use the passage/stimulus interface (stimulus left, question
+  // right); everything else uses the Pearson-VUE-style runner.
+  const passageStyle = exam.slug === 'gamsat' || exam.slug === 'isat'
+  let passageSubtestName = ''
+  if (passageStyle && subtestId) {
     const { data: st } = await supabase.from('subtests').select('name').eq('id', subtestId).maybeSingle()
-    gamsatSubtestName = st?.name ?? ''
+    passageSubtestName = st?.name ?? ''
   }
+  const subLabel = passageSubtestName ? ` ${passageSubtestName}` : ''
 
-  const instructions = isGamsat
-    ? `Practice Session — GAMSAT${gamsatSubtestName ? ` ${gamsatSubtestName}` : ''}
+  const instructions = passageStyle
+    ? `Practice Session — ${exam.name}${subLabel}
 
 Each unit presents a passage, table or figure on the left and its questions on the right. Read the stimulus, then choose the best answer for each question.
 
@@ -88,10 +88,8 @@ Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A-
 
 Please click the Next (N) button to proceed.`
 
-  const Runner = isGamsat ? GamsatRunner : SessionRunner
-  const label = isGamsat
-    ? `Practice Session – GAMSAT${gamsatSubtestName ? ` ${gamsatSubtestName}` : ''}`
-    : `${exam.name} · Practice`
+  const Runner = passageStyle ? GamsatRunner : SessionRunner
+  const label = passageStyle ? `Practice Session – ${exam.name}${subLabel}` : `${exam.name} · Practice`
 
   return (
     <Runner
