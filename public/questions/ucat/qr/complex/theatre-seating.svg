@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="500" viewBox="0 0 760 500" role="img" aria-labelledby="title desc">
+  <title id="title">Theatre seating sections</title><desc id="desc">Theatre seating has Section P with 120 seats nearest the stage, Section Q with 100 seats, and Section R with 80 seats.</desc>
+  <rect width="760" height="500" rx="18" fill="#fff"/>
+  <g font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <rect x="155" y="58" width="450" height="64" rx="30" fill="#252936"/>
+    <text x="380" y="99" font-size="25" font-weight="700" fill="#fff">STAGE</text>
+    <path d="M175 152H585L625 250H135Z" fill="#e8e1f7" stroke="#20232a" stroke-width="4"/>
+    <path d="M135 250H625L660 340H100Z" fill="#d8ceef" stroke="#20232a" stroke-width="4"/>
+    <path d="M100 340H660L690 430H70Z" fill="#c7b8e7" stroke="#20232a" stroke-width="4"/>
+    <g fill="#20232a"><text x="380" y="202" font-size="27" font-weight="700">Section P</text><text x="380" y="232" font-size="21">120 seats</text><text x="380" y="294" font-size="27" font-weight="700">Section Q</text><text x="380" y="324" font-size="21">100 seats</text><text x="380" y="384" font-size="27" font-weight="700">Section R</text><text x="380" y="414" font-size="21">80 seats</text></g>
+  </g>
+</svg>

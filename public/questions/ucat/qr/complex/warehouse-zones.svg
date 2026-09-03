@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="420" viewBox="0 0 820 420" role="img" aria-labelledby="title desc">
+  <title id="title">Warehouse zone dimensions</title><desc id="desc">A twenty metre wide warehouse split into zones A, B and C, ten, six and four metres wide respectively. Every zone is eight metres deep.</desc>
+  <rect width="820" height="420" rx="18" fill="#fff"/>
+  <text x="410" y="44" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="700" fill="#20232a">Warehouse floor plan</text>
+  <g transform="translate(120 120)">
+    <rect x="0" y="0" width="580" height="190" fill="#f8f7fb" stroke="#20232a" stroke-width="4"/>
+    <rect x="0" y="0" width="290" height="190" fill="#e8e1f7" stroke="#20232a" stroke-width="3"/>
+    <rect x="290" y="0" width="174" height="190" fill="#d8ceeF" stroke="#20232a" stroke-width="3"/>
+    <rect x="464" y="0" width="116" height="190" fill="#c7b8e7" stroke="#20232a" stroke-width="3"/>
+    <g font-family="Arial,Helvetica,sans-serif" text-anchor="middle" fill="#20232a">
+      <text x="145" y="78" font-size="27" font-weight="700">Zone A</text><text x="145" y="116" font-size="22">10 m wide</text>
+      <text x="377" y="78" font-size="27" font-weight="700">Zone B</text><text x="377" y="116" font-size="22">6 m wide</text>
+      <text x="522" y="78" font-size="27" font-weight="700">C</text><text x="522" y="116" font-size="22">4 m</text>
+    </g>
+    <g stroke="#68707c" stroke-width="2" fill="none"><path d="M0-36v25M580-36v25M0-25h580"/><path d="M606 0h-18M606 190h-18M597 0v190"/></g>
+    <g font-family="Arial,Helvetica,sans-serif" fill="#20232a" font-size="22"><text x="290" y="-45" text-anchor="middle">Total width = 20 m</text><text x="629" y="95" text-anchor="middle" transform="rotate(90 629 95)">8 m deep</text></g>
+  </g>
+</svg>
