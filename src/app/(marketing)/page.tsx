@@ -4,6 +4,9 @@ import { Container } from '@/components/container'
 import { Reveal } from '@/components/reveal'
 import { Cyto } from '@/components/ui/cyto'
 import type { CytoMood } from '@/lib/mascot/mood'
+import { FormatSection } from '@/components/format-section'
+
+const LEAD_LINK = 'font-semibold text-brand underline decoration-brand/40 underline-offset-2 transition-colors hover:decoration-brand'
 
 export default function Home() {
   return (
@@ -13,14 +16,20 @@ export default function Home() {
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
         <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
-            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-mint" /> UCAT · GAMSAT · ISAT · Interviews
+            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[13px] text-muted">
+              <StethoIcon color="#6a45c9" /> Built for <b className="font-semibold text-foreground">future doctors</b>
             </span>
-            <h1 className="mt-5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
-              Build real exam <span className="text-mint">immunity</span>.
+            <p className="mt-6 font-display text-2xl font-bold tracking-tight text-brand">Ready to become a doctor?</p>
+            <h1 className="mt-1.5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
+              Build real exam <span className="text-brand">immunity</span>.
             </h1>
-            <p className="mt-6 max-w-md text-lg text-muted">
-              Exam-accurate question banks and full timed mocks, with written and video explanations for every answer. Face each exam as a pathogen, fight it, and build the immunity that makes you exam-ready.
+            <div className="mt-7 flex flex-wrap gap-2">
+              {['UCAT', 'GAMSAT', 'ISAT', 'Interviews'].map((t) => (
+                <span key={t} className="rounded-md bg-[#fbe7df] px-2.5 py-1 font-mono text-xs font-medium text-[#b8451f]">{t}</span>
+              ))}
+            </div>
+            <p className="mt-5 max-w-md text-muted">
+              Whatever stage you&rsquo;re at, sitting the <Link href="/#exams" className={LEAD_LINK}>UCAT</Link>, prepping for <Link href="/#exams" className={LEAD_LINK}>GAMSAT</Link> or <Link href="/#exams" className={LEAD_LINK}>ISAT</Link>, or getting ready for your <Link href="/#exams" className={LEAD_LINK}>interviews</Link>, Studocyte gives you the practice and feedback to walk in ready.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/app" className="eb-press eb-soft-hover group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5">
@@ -30,7 +39,7 @@ export default function Home() {
                 See pricing
               </Link>
             </div>
-            <p className="mt-4 text-sm text-muted">Full mock exams are free. No card to start.</p>
+            <p className="mt-4 flex items-center gap-2 text-sm text-muted"><CheckMini /> Full mock exams are free. No card needed to start.</p>
           </div>
 
           <div className="eb-rise" style={{ animationDelay: '140ms' }}>
@@ -91,26 +100,7 @@ export default function Home() {
       </section>
 
       {/* ---------------- Interface ---------------- */}
-      <section id="interface">
-        <Container className="grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-2">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">It looks and times like test day.</h2>
-            <p className="mt-3 max-w-md text-muted">
-              The runner mirrors the real interface down to the layout, fonts and pacing, so nothing on exam day is a surprise.
-            </p>
-            <ul className="mt-6 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-              {['Full-screen kiosk mode', 'On-screen TI-108 calculator', 'Keyboard shortcuts', 'Per-section timers', 'Flag and review navigator', 'Authentic question types'].map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm">
-                  <CheckDot /> {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="eb-soft rounded-2xl border border-border bg-surface p-6">
-            <InteractionRows />
-          </div>
-        </Container>
-      </section>
+      <FormatSection />
 
       {/* ---------------- How it works ---------------- */}
       <section id="how" className="border-t border-border bg-surface/50">
@@ -134,8 +124,8 @@ export default function Home() {
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Built to teach, not just test.</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <Feature className="md:col-span-2" title="Every answer, worked through" body="Written rationales on every question, plus video explanations that show exactly how to reach the answer under time." />
-            <Feature title="Real interactions" body="Yes/No grids, drag-and-drop, most/least appropriate. Not everything is multiple choice." />
-            <Feature title="Timed full mocks, free" body="Sit complete, section-timed exams at no cost. Upgrade for the full bank and video." />
+            <Feature title="Practice that targets your gaps" body="Flag questions, revisit weak topics, and build custom quizzes from any section so your study time goes where it's needed most." />
+            <Feature title="Timed full mocks, free" body="Sit complete, section-timed mocks for UCAT, GAMSAT, ISAT and interviews at no cost. Upgrade for the full bank and video." />
             <Feature className="md:col-span-2" title="See where you stand" body="Every attempt is tracked, so your accuracy per section shows against the Studocyte cohort average." />
           </div>
         </Container>
@@ -220,84 +210,75 @@ function ExamCard({ name, blurb, pathogen, accent, soon }: { name: string; blurb
 
 function Feature({ title, body, className = '' }: { title: string; body: string; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-border bg-surface p-6 ${className}`}>
-      <h3 className="font-display text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted">{body}</p>
+    <div className={`eb-soft-hover rounded-2xl border border-border bg-surface p-7 transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-brand/40 ${className}`}>
+      <h3 className="font-display text-xl font-semibold">{title}</h3>
+      <p className="mt-2.5 text-sm leading-relaxed text-muted">{body}</p>
     </div>
   )
 }
 
-/* ---- The signature: the study cell in its microscope field ---- */
+/* ---- The hero panel: the study cell on a vitals monitor ---- */
 function StudyCellHero() {
   return (
     <div
-      className="eb-soft relative overflow-hidden rounded-[2rem] border border-border p-6 sm:p-8"
-      style={{ background: 'radial-gradient(120% 90% at 50% 0%, #241C3D, #130F20 72%)' }}
+      className="eb-soft relative aspect-[1/0.92] overflow-hidden rounded-[28px]"
+      style={{
+        background: '#171331',
+        backgroundImage:
+          'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }}
     >
-      {/* field grid */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '34px 34px',
-          maskImage: 'radial-gradient(120% 90% at 50% 10%, #000, transparent 72%)',
-          WebkitMaskImage: 'radial-gradient(120% 90% at 50% 10%, #000, transparent 72%)',
-        }}
-      />
-      <div className="relative mx-auto grid aspect-square max-w-sm place-items-center">
-        <div aria-hidden className="absolute inset-[6%] rounded-full" style={{ border: '1px dashed rgba(255,255,255,0.22)' }} />
-        <div aria-hidden className="absolute inset-[18%] rounded-full" style={{ border: '1px solid rgba(255,255,255,0.10)' }} />
-        <div aria-hidden className="absolute inset-[30%] rounded-full" style={{ border: '1px solid rgba(240,72,59,0.42)' }} />
-        <div aria-hidden className="absolute inset-[20%] rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.32), transparent 68%)' }} />
-        <svg className="eb-float relative w-[58%]" viewBox="-4 -4 108 108" role="img" aria-label="Cyto, the study-cell mascot">
+      <span className="absolute left-6 top-6 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 font-mono text-[13px] text-[#b39ee8]">
+        <StethoIcon color="#b39ee8" size={15} /> 82% immunity
+      </span>
+
+      {/* heartbeat */}
+      <svg className="absolute inset-x-0 top-1/2 h-[120px] w-full -translate-y-1/2 opacity-55" viewBox="0 0 800 120" preserveAspectRatio="none" aria-hidden>
+        <path className="eb-ekg" d="M0,60 L140,60 L165,60 L180,20 L200,100 L220,40 L240,60 L620,60 L640,60 L655,20 L675,100 L695,40 L715,60 L800,60" fill="none" stroke="#8b6fd8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+
+      {/* orbit + mascot */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div aria-hidden className="absolute h-[52%] w-[52%] rounded-full blur-2xl" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.28), transparent 70%)' }} />
+        <div aria-hidden className="absolute h-[64%] w-[64%] rounded-full border border-dashed border-white/15" />
+        <svg className="eb-float relative w-[40%]" viewBox="-4 -4 108 108" role="img" aria-label="Cyto, the study-cell mascot">
           <defs>
             <radialGradient id="cellBody" cx="42%" cy="34%" r="72%">
-              <stop offset="0%" stopColor="#ff9184" />
-              <stop offset="55%" stopColor="#f0483b" />
-              <stop offset="100%" stopColor="#d61f27" />
+              <stop offset="0%" stopColor="#ff9184" /><stop offset="55%" stopColor="#f0483b" /><stop offset="100%" stopColor="#d61f27" />
             </radialGradient>
           </defs>
           <path d="M36 12 q-3 -8 3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
           <path d="M64 12 q3 -8 -3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
           <path d="M50 8 C70 8 80 19 84 35 C88 51 94 60 89 73 C84 88 68 96 50 96 C32 96 16 88 11 73 C6 60 12 51 16 35 C20 19 30 8 50 8 Z" fill="url(#cellBody)" stroke="#b3231f" strokeWidth="3" />
-          <ellipse cx="27" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
-          <ellipse cx="73" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
+          <ellipse cx="27" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" /><ellipse cx="73" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
           <circle cx="37" cy="50" r="11.5" fill="#fff" /><circle cx="63" cy="50" r="11.5" fill="#fff" />
           <circle cx="38.5" cy="52" r="6" fill="#1d1836" /><circle cx="64.5" cy="52" r="6" fill="#1d1836" />
           <circle cx="41" cy="49" r="2.4" fill="#fff" /><circle cx="67" cy="49" r="2.4" fill="#fff" />
           <path d="M40 70 q10 9 20 0" stroke="#8a1c1c" strokeWidth="3.4" fill="none" strokeLinecap="round" />
         </svg>
       </div>
-      {/* floating specimen chips */}
-      <span className="absolute left-5 top-6 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 font-mono text-[11px] font-medium text-[#8FEEE1] backdrop-blur-sm">82% immunity</span>
-      <span className="absolute bottom-6 right-5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 font-mono text-[11px] font-medium text-[#C9B6FF] backdrop-blur-sm">Level 6 · +14 XP</span>
+
+      {/* floating stethoscopes */}
+      <span className="absolute left-[12%] top-[22%]"><StethoIcon color="rgba(255,255,255,0.35)" size={34} strokeWidth={1.6} /></span>
+      <span className="absolute bottom-[18%] right-[10%]">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c1.9 0 3.3 1 4 2.3C11.2 6 12.6 5 14.5 5 18 5 20.5 8.5 18.5 12.5 16 16.65 12 21 12 21z" /></svg>
+      </span>
+
+      <span className="absolute bottom-6 right-6 z-10 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 font-mono text-[13px] text-[#B7B4D6]">Lvl 6 · +14 immunity pts</span>
     </div>
   )
 }
 
-function InteractionRows() {
-  const rows = [
-    { k: 'Verbal Reasoning', v: 'Passage sets, four questions each' },
-    { k: 'Decision Making', v: 'Yes/No conclusion grids, drag-and-drop' },
-    { k: 'Quantitative Reasoning', v: 'Data, tables and the on-screen calculator' },
-    { k: 'Situational Judgement', v: 'Most and least appropriate ranking' },
-  ]
+function StethoIcon({ color = 'currentColor', size = 16, strokeWidth = 2 }: { color?: string; size?: number; strokeWidth?: number }) {
   return (
-    <div className="divide-y divide-border">
-      {rows.map((r) => (
-        <div key={r.k} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-          <span className="text-sm font-medium">{r.k}</span>
-          <span className="text-right text-xs text-muted">{r.v}</span>
-        </div>
-      ))}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-shrink-0">
+      <path d="M4.5 3v6.5a4 4 0 0 0 8 0V3" /><path d="M8.5 9.5V13a5.5 5.5 0 0 0 11 0v-2" /><circle cx="19" cy="8" r="2.3" />
+    </svg>
   )
 }
-
-function CheckDot() {
-  return <span className="grid h-5 w-5 flex-none place-items-center rounded-full bg-brand-muted text-brand"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12 5 5L20 7" /></svg></span>
+function CheckMini() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
 }
 function ArrowRight({ className = '' }: { className?: string }) {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand ${className}`} aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>

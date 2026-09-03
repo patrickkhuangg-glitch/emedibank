@@ -297,3 +297,8 @@ html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 3
   .eb-sheet[data-open="true"] a.eb-item { animation: none; opacity: 1; transform: none; }
   .eb-burger i { transition: opacity 0.2s ease; }
 }
+
+/* Hero panel heartbeat line (marketing). */
+@keyframes eb-ekg { 0% { stroke-dashoffset: 900; } 55% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -900; } }
+.eb-ekg { stroke-dasharray: 900; stroke-dashoffset: 900; animation: eb-ekg 3.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .eb-ekg { animation: none; stroke-dashoffset: 0; } }
