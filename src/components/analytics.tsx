@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 
-const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || null
+const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || 'G-886N2HS3Q2'
 const CONSENT_COOKIE = 'em_analytics_consent'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180
 
