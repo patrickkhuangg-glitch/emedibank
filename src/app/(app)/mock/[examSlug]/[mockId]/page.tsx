@@ -38,11 +38,14 @@ export default async function MockRunPage({
   if (!mock.free && !(await canAccessExam(user.id, exam.id))) redirect(`/mock/${exam.slug}`)
 
   const resolved = await resolveMockSections(exam.id, mock)
-  if (resolved.length === 0) {
+  const expectedSections = mock.sections.length
+  const expectedQuestions = mock.sections.reduce((sum, section) => sum + section.count, 0)
+  const actualQuestions = resolved.reduce((sum, section) => sum + section.questionIds.length, 0)
+  if (resolved.length !== expectedSections || actualQuestions < expectedQuestions) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-[#eef1f4] p-6 text-center">
-        <p className="text-lg font-semibold text-[#1b2a46]">This mock has no questions yet.</p>
-        <p className="max-w-sm text-sm text-gray-600">Mocks fill up as the question bank grows. Check back soon.</p>
+        <p className="text-lg font-semibold text-[#1b2a46]">This practice test is not ready yet.</p>
+        <p className="max-w-sm text-sm text-gray-600">Its fixed, standardised question form will appear here once every section has been assigned.</p>
         <Link href={`/mock/${exam.slug}`} className="rounded-lg bg-[#157d72] px-5 py-2.5 text-sm font-medium text-white">Back to mock exams</Link>
       </div>
     )
@@ -53,6 +56,7 @@ export default async function MockRunPage({
 
   return (
     <MockRunner
+      kind={mock.kind}
       label={`${exam.name} ${mock.name}`}
       examSlug={exam.slug}
       token={token}

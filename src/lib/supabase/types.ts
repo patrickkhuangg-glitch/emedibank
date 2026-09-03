@@ -453,6 +453,52 @@ export type Database = {
           },
         ]
       }
+      mock_question_assignments: {
+        Row: {
+          id: string
+          exam_id: string
+          mock_key: string
+          subtest_id: string
+          question_id: string
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          exam_id: string
+          mock_key: string
+          subtest_id: string
+          question_id: string
+          sort_order: number
+          created_at?: string
+        }
+        Update: {
+          mock_key?: string
+          subtest_id?: string
+          question_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'mock_question_assignments_exam_id_fkey'
+            columns: ['exam_id']
+            referencedRelation: 'exams'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'mock_question_assignments_subtest_id_fkey'
+            columns: ['subtest_id']
+            referencedRelation: 'subtests'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'mock_question_assignments_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       essay_prompts: {
         Row: {
           id: string

@@ -31,11 +31,13 @@ function mmss(sec: number) {
 }
 
 export function MockRunner({
+  kind,
   label,
   examSlug,
   token,
   sections,
 }: {
+  kind: 'mini' | 'full'
   label: string
   examSlug: string
   token: string
@@ -172,8 +174,9 @@ export function MockRunner({
           <div className="mx-auto max-w-3xl">
             <h1 className="text-2xl font-semibold">{label}</h1>
             <p className="mt-3 text-[15px] leading-relaxed">
-              This is a full timed mock. You sit each section back to back under its own timer, with no answers shown
-              until the end. When a section&rsquo;s timer runs out it ends automatically and the next one begins.
+              {kind === 'mini'
+                ? 'This is a timed single-section mini mock. No answers are shown until the end, and the section submits automatically when time runs out.'
+                : 'This is a full timed mock. You sit each section back to back under its own timer, with no answers shown until the end. When a section’s timer runs out it ends automatically and the next one begins.'}
             </p>
             <div className="mt-6 overflow-hidden rounded border border-gray-300">
               {sections.map((s, k) => (
