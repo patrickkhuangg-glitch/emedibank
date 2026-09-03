@@ -19,6 +19,7 @@ import {
   CURRENCIES,
   PAID_EXAM_SLUGS,
   YEARLY_BUNDLE,
+  YEARLY_INTERVIEWS,
   YEARLY_PER_EXAM,
   monthlyFromYearly,
   type Currency,
@@ -107,6 +108,7 @@ async function ensurePrice(
 
 async function main() {
   assertFilled('Per-exam', YEARLY_PER_EXAM)
+  assertFilled('Interviews', YEARLY_INTERVIEWS)
   assertFilled('Bundle', YEARLY_BUNDLE)
 
   const { data: exams, error } = await supabase
@@ -123,7 +125,8 @@ async function main() {
       metadata: { exam_slug: exam.slug },
     })
     for (const interval of BILLING_INTERVALS) {
-      const priceId = await ensurePrice(productId, YEARLY_PER_EXAM, interval)
+      const yearly = exam.slug === 'interviews' ? YEARLY_INTERVIEWS : YEARLY_PER_EXAM
+      const priceId = await ensurePrice(productId, yearly, interval)
       console.log(`  ${exam.slug} ${interval} -> ${priceId}`)
     }
     console.log(`✔ ${exam.name}  (${productId})`)

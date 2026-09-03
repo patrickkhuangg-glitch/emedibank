@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { getStripe } from './client'
 import { getOrCreateCustomerId } from './customer'
-import { TRIAL_PERIOD_DAYS, type Interval } from './pricing'
+import { CURRENCIES, TRIAL_PERIOD_DAYS, type Currency, type Interval } from './pricing'
 import { getUser, getProfile } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getOrigin } from '@/lib/site'
@@ -17,6 +17,11 @@ export async function startCheckoutAction(formData: FormData) {
   const interval = (String(formData.get('interval') ?? 'year') === 'month'
     ? 'month'
     : 'year') as Interval
+  const requestedCurrency = String(formData.get('currency') ?? '').toLowerCase()
+  const currency = (CURRENCIES as readonly string[]).includes(requestedCurrency)
+    ? requestedCurrency as Currency
+    : undefined
+  const addInterviews = formData.get('addInterviews') === 'on'
 
   const supabase = createAdminClient()
   const { data: product } = await supabase
@@ -36,6 +41,23 @@ export async function startCheckoutAction(formData: FormData) {
   const price = prices.data[0]
   if (!price) redirect('/pricing?error=no_price')
 
+  const lineItems: { price: string; quantity: number }[] = [{ price: price.id, quantity: 1 }]
+  if (addInterviews) {
+    const { data: interviewExam } = await supabase.from('exams').select('id').eq('slug', 'interviews').maybeSingle()
+    const { data: interviews } = interviewExam
+      ? await supabase.from('products').select('stripe_product_id').eq('exam_id', interviewExam.id).maybeSingle()
+      : { data: null }
+    if (interviews?.stripe_product_id && interviews.stripe_product_id !== product.stripe_product_id) {
+      const interviewPrices = await stripe.prices.list({
+        product: interviews.stripe_product_id,
+        active: true,
+        recurring: { interval },
+        limit: 1,
+      })
+      if (interviewPrices.data[0]) lineItems.push({ price: interviewPrices.data[0].id, quantity: 1 })
+    }
+  }
+
   const profile = await getProfile()
   const customerId = await getOrCreateCustomerId(user.id, user.email, profile?.full_name)
   const origin = await getOrigin()
@@ -43,7 +65,8 @@ export async function startCheckoutAction(formData: FormData) {
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: price.id, quantity: 1 }],
+    line_items: lineItems,
+    ...(currency ? { currency } : {}),
     subscription_data: {
       trial_period_days: TRIAL_PERIOD_DAYS,
       metadata: { supabase_user_id: user.id },

@@ -52,6 +52,7 @@ export type Database = {
           stripe_customer_id: string | null
           interface_mode: InterfaceMode
           essay_credits: number
+          mmi_credits: number
           created_at: string
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           stripe_customer_id?: string | null
           interface_mode?: InterfaceMode
           essay_credits?: number
+          mmi_credits?: number
           created_at?: string
         }
         Update: {
@@ -70,6 +72,7 @@ export type Database = {
           stripe_customer_id?: string | null
           interface_mode?: InterfaceMode
           essay_credits?: number
+          mmi_credits?: number
           created_at?: string
         }
         Relationships: [
@@ -602,6 +605,16 @@ export type Database = {
       }
       spend_essay_credits: {
         Args: { p_amount: number }
+        Returns: boolean
+      }
+      grant_subscription_benefit: {
+        Args: {
+          p_user_id: string
+          p_stripe_subscription_id: string
+          p_benefit: string
+          p_period_end: string
+          p_amount: number
+        }
         Returns: boolean
       }
     }

@@ -12,10 +12,10 @@ Fill this spreadsheet in (Excel or Google Sheets), export as **CSV**, then uploa
 | `type` | `mcq`, `passage`, `grid`, or `most_least`. |
 | `stimulus_key` | Any label (e.g. `VR1`). **Rows that share a key share one passage/scenario/diagram.** Leave blank for standalone questions. |
 | `passage` | The shared text/scenario. Put it on the **first** row of a stimulus key; leave blank on the others. |
-| `image_url` | URL of a diagram (QR). Stimulus-level if a `stimulus_key` is set, otherwise question-level. |
-| `table` | A data table. Rows separated by `;`, cells by `|`, first row = headers. e.g. `Month\|Sales;Jan\|120;Feb\|150`. |
+| `image_url` | URL of a diagram (QR). For multiple diagrams, separate URLs with `~~`. Stimulus-level if a `stimulus_key` is set, otherwise question-level. |
+| `table` | A data table. Rows separated by `;`, cells by `|`, first row = headers. Separate multiple tables with `~~`. e.g. `Month\|Sales;Jan\|120~~Region\|Total;North\|42`. |
 | `stem` | The question text (or, for `most_least`, the scenario + instruction). |
-| `tags` | Comma-separated. **Tag DM syllogism / interpreting-information questions so they use the Yes/No grid.** |
+| `tags` | Semicolon-separated. For UCAT QR use exactly `Tables`, `Diagrams`, `Complex`, or `Text only`. |
 | `option_a` … `option_e` | MCQ / passage options (fill as many as you use). |
 | `correct` | The correct option **letter** (`A`–`E`) for MCQ / passage. |
 | `statements` | **Grid only.** `Statement text :: Yes ; Next statement :: No ; …` (up to 6). |
@@ -31,6 +31,13 @@ Fill this spreadsheet in (Excel or Google Sheets), export as **CSV**, then uploa
 - **Passage MCQ** (VR, SJT rating): share a `stimulus_key`; put the `passage` on the first row; then `stem`, `option_a…`, `correct`.
 - **Grid** (DM syllogisms / interpreting info): `stem` (the premises), `statements`, and tag it `Syllogisms` or `Interpreting Information`.
 - **Most/Least** (SJT): `stem` (scenario), `actions`, `most`, `least`.
+
+## UCAT Quantitative Reasoning categories
+
+- **Tables:** the primary stimulus is one or more data tables.
+- **Diagrams:** the primary stimulus is a chart, graph, map, shape, or other visual diagram.
+- **Complex:** a text-based scenario containing multiple tables, multiple diagrams, or a combination of tables and diagrams. The student only sees the category label “Complex”.
+- **Text only:** all information required is contained in prose or the question stem, without a table or diagram.
 
 The template file has one worked example of each — copy a row and edit it.
 

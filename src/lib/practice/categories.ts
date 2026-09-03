@@ -25,14 +25,10 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
       'Probability',
     ],
     'quantitative-reasoning': [
-      'Percentages',
-      'Ratios & Proportion',
-      'Speed, Distance & Time',
-      'Averages',
-      'Geometry & Measurement',
-      'Financial Maths',
-      'Data Interpretation',
-      'Algebra',
+      'Tables',
+      'Diagrams',
+      'Complex',
+      'Text only',
     ],
     'situational-judgement': [
       'Appropriateness',

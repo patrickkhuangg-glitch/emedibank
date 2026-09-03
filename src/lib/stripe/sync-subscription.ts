@@ -79,4 +79,46 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
   )
 
   await syncEntitlementsForUser(userId)
+
+  // Annual marking allowances are granted after the trial converts to active.
+  // The database function owns idempotency, so repeated webhook events are safe.
+  if (toStatus(sub.status) === 'active') {
+    const periodEnd = periodEndIso(sub)
+    const annualItems = sub.items.data.filter((item) => item.price.recurring?.interval === 'year')
+    const stripeProductIds = annualItems.flatMap((item) => {
+      const id = idOf(item.price.product as string | { id: string })
+      return id ? [id] : []
+    })
+    if (periodEnd && stripeProductIds.length > 0) {
+      const { data: purchased } = await supabase
+        .from('products')
+        .select('kind, exams(slug)')
+        .in('stripe_product_id', stripeProductIds)
+      const includesBundle = (purchased ?? []).some((p) => p.kind === 'bundle')
+      const slugs = new Set((purchased ?? []).flatMap((p) => {
+        const exam = p.exams as { slug: string } | null
+        return exam?.slug ? [exam.slug] : []
+      }))
+
+      // Two credits mark one essay, so 20 marked essays = 40 credits.
+      if (includesBundle || slugs.has('gamsat')) {
+        await supabase.rpc('grant_subscription_benefit', {
+          p_user_id: userId,
+          p_stripe_subscription_id: sub.id,
+          p_benefit: 'gamsat_essay_credits',
+          p_period_end: periodEnd,
+          p_amount: 40,
+        })
+      }
+      if (slugs.has('interviews')) {
+        await supabase.rpc('grant_subscription_benefit', {
+          p_user_id: userId,
+          p_stripe_subscription_id: sub.id,
+          p_benefit: 'interview_mmi_credits',
+          p_period_end: periodEnd,
+          p_amount: 50,
+        })
+      }
+    }
+  }
 }

@@ -2,53 +2,70 @@
 import { useState } from 'react'
 import { startCheckoutAction } from '@/lib/stripe/actions'
 import { Button } from '@/components/ui/button'
+import { CURRENCIES, type Currency } from '@/lib/stripe/pricing'
 
 export type Plan = {
   productId: string
   name: string
   kind: 'exam' | 'bundle'
-  month: number | null
-  year: number | null
+  slug: string | null
+  amounts: Record<Currency, { month: number | null; year: number | null }>
 }
 
-const fmt = (minor: number, fractionDigits: number) =>
-  new Intl.NumberFormat('en-AU', {
+const LOCALES: Record<Currency, string> = { aud: 'en-AU', nzd: 'en-NZ', gbp: 'en-GB', hkd: 'en-HK', sgd: 'en-SG' }
+const LABELS: Record<Currency, string> = { aud: 'AUD', nzd: 'NZD', gbp: 'GBP', hkd: 'HKD', sgd: 'SGD' }
+
+const fmt = (minor: number, fractionDigits: number, currency: Currency) =>
+  new Intl.NumberFormat(LOCALES[currency], {
     style: 'currency',
-    currency: 'AUD',
+    currency: currency.toUpperCase(),
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(minor / 100)
 
 /** Everything is advertised as a weekly figure: the annual price feels smaller
  *  spread across the year, and it is the honest cost of a week of prep. */
-const perWeek = (plan: Plan, interval: 'month' | 'year'): number | null => {
-  if (interval === 'year') return plan.year != null ? plan.year / 52 : null
-  return plan.month != null ? (plan.month * 12) / 52 : null
+const perWeek = (plan: Plan, interval: 'month' | 'year', currency: Currency): number | null => {
+  const amount = plan.amounts[currency]
+  if (interval === 'year') return amount.year != null ? amount.year / 52 : null
+  return amount.month != null ? (amount.month * 12) / 52 : null
 }
 
-const FEATURES: Record<Plan['kind'], string[]> = {
-  exam: [
+const featuresFor = (plan: Plan, interval: 'month' | 'year'): string[] => {
+  if (plan.slug === 'interviews') return [
+    'Complete MMI and panel interview preparation',
+    'Station frameworks and worked examples',
+    interval === 'year' ? '50 marked MMI stations included' : 'Marked MMI stations available separately',
+    'Performance feedback and progress tracking',
+    'Purchase additional marked stations anytime',
+  ]
+  const exam = [
     'The complete question bank',
     'Every question type, exam-accurate',
     'Written and video explanations',
     'Unlimited full, timed mock exams',
     'Per-section performance analytics',
-  ],
-  bundle: [
+  ]
+  if (plan.slug === 'gamsat' && interval === 'year') exam.splice(3, 0, '20 marked Section II essays included')
+  if (plan.kind === 'exam') return exam
+  return [
     'UCAT, GAMSAT and ISAT, all included',
     'Every question bank and all mocks',
     'Written and video explanations',
+    ...(interval === 'year' ? ['20 marked GAMSAT essays included'] : []),
     'Per-section performance analytics',
     'The lowest cost per exam',
-  ],
+  ]
 }
 
-export function PricingCards({ plans }: { plans: Plan[] }) {
+export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaultCurrency: Currency }) {
   const [interval, setInterval] = useState<'month' | 'year'>('year')
+  const [currency, setCurrency] = useState<Currency>(defaultCurrency)
+  const interviewPlan = plans.find((plan) => plan.slug === 'interviews')
 
   return (
     <>
-      <div className="mt-8 flex justify-center">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <div className="inline-flex rounded-full border border-border bg-surface p-1 text-sm">
           {(['month', 'year'] as const).map((p) => (
             <button
@@ -63,17 +80,28 @@ export function PricingCards({ plans }: { plans: Plan[] }) {
             </button>
           ))}
         </div>
+        <label className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-muted">
+          <span>Currency</span>
+          <select value={currency} onChange={(event) => setCurrency(event.target.value as Currency)} className="bg-transparent font-semibold text-foreground outline-none">
+            {CURRENCIES.map((value) => <option key={value} value={value}>{LABELS[value]}</option>)}
+          </select>
+        </label>
       </div>
 
-      <div className="mx-auto mt-8 grid max-w-5xl items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <p className="mt-3 text-center text-xs text-muted">Automatically selected for your location. You can change it before checkout.</p>
+
+      <div className="mx-auto mt-8 grid max-w-6xl items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => {
           const featured = plan.kind === 'bundle'
-          const week = perWeek(plan, interval)
-          const total = interval === 'year' ? plan.year : plan.month
+          const localized = plan.amounts[currency]
+          const week = perWeek(plan, interval, currency)
+          const total = interval === 'year' ? localized.year : localized.month
           const save =
-            plan.month != null && plan.year != null && plan.month > 0
-              ? Math.round((1 - plan.year / (plan.month * 12)) * 100)
+            localized.month != null && localized.year != null && localized.month > 0
+              ? Math.round((1 - localized.year / (localized.month * 12)) * 100)
               : null
+          const canAddInterviews = plan.slug !== 'interviews' && !!interviewPlan
+          const interviewWeek = interviewPlan ? perWeek(interviewPlan, interval, currency) : null
 
           return (
             <div
@@ -92,7 +120,7 @@ export function PricingCards({ plans }: { plans: Plan[] }) {
 
               <div className="mt-4">
                 <span className="font-display text-4xl font-semibold tracking-tight tabular-nums">
-                  {week != null ? fmt(week, 2) : '—'}
+                  {week != null ? fmt(week, 2, currency) : '—'}
                 </span>
                 <span className="text-sm font-medium text-muted"> /week</span>
               </div>
@@ -100,8 +128,8 @@ export function PricingCards({ plans }: { plans: Plan[] }) {
               <p className="mt-1.5 text-xs text-muted">
                 {total != null
                   ? interval === 'year'
-                    ? `Billed annually at ${fmt(total, total % 100 === 0 ? 0 : 2)}`
-                    : `Billed monthly at ${fmt(total, total % 100 === 0 ? 0 : 2)}`
+                    ? `Billed annually at ${fmt(total, total % 100 === 0 ? 0 : 2, currency)}`
+                    : `Billed monthly at ${fmt(total, total % 100 === 0 ? 0 : 2, currency)}`
                   : 'Price coming soon'}
               </p>
               {interval === 'year' && save != null && save > 0 ? (
@@ -111,7 +139,7 @@ export function PricingCards({ plans }: { plans: Plan[] }) {
               ) : null}
 
               <ul className="mt-5 space-y-2.5 border-t border-border/70 pt-5 text-sm">
-                {FEATURES[plan.kind].map((f) => (
+                {featuresFor(plan, interval).map((f) => (
                   <li key={f} className="flex items-start gap-2">
                     <Check /> <span className="text-foreground/90">{f}</span>
                   </li>
@@ -121,10 +149,17 @@ export function PricingCards({ plans }: { plans: Plan[] }) {
               <form action={startCheckoutAction} className="mt-6 pt-2">
                 <input type="hidden" name="productId" value={plan.productId} />
                 <input type="hidden" name="interval" value={interval} />
+                <input type="hidden" name="currency" value={currency} />
+                {canAddInterviews ? (
+                  <label className="mb-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-brand/25 bg-brand-muted/55 p-3 text-sm transition-colors hover:border-brand/50">
+                    <input type="checkbox" name="addInterviews" className="mt-0.5 accent-[var(--brand)]" />
+                    <span><b className="font-semibold">Add Interviews</b><span className="mt-0.5 block text-xs text-muted">{interviewWeek != null ? `+${fmt(interviewWeek, 2, currency)}/week` : 'Local price at checkout'}{interval === 'year' ? ' · includes 50 marked MMI stations' : ''}</span></span>
+                  </label>
+                ) : null}
                 <Button type="submit" variant={featured ? 'primary' : 'secondary'} className="w-full">
                   Start 7-day free trial
                 </Button>
-                <p className="mt-2 text-center text-[11px] text-muted">Then {week != null ? fmt(week, 2) : ''}/week. Cancel anytime.</p>
+                <p className="mt-2 text-center text-[11px] text-muted">Then {week != null ? fmt(week, 2, currency) : ''}/week. Cancel anytime.</p>
               </form>
             </div>
           )

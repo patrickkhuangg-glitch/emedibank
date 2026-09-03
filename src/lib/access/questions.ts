@@ -11,6 +11,7 @@ type Table = { headers: string[]; rows: string[][] }
 export type QData = {
   passage?: string
   image?: string
+  images?: string[]
   table?: Table
   tables?: Table[]
   statements?: { text: string; correct: YesNo }[]
@@ -81,6 +82,7 @@ export type SafeQuestion = {
   stem: string
   passage: string | null
   image: string | null
+  images: string[]
   table: { headers: string[]; rows: string[][] } | null
   tables: { headers: string[]; rows: string[][] }[]
   // present => 5-statement Yes/No grid (Decision Making syllogisms / interpreting info)
@@ -102,13 +104,15 @@ export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> 
   // A stimulus/question may carry several data tables (common in Section III
   // science units); keep `table` as the first for older single-table callers.
   const tbls: Table[] = sd?.tables ?? m.data?.tables ?? (sd?.table ? [sd.table] : m.data?.table ? [m.data.table] : [])
+  const imgs: string[] = sd?.images ?? m.data?.images ?? (sd?.image ? [sd.image] : m.data?.image ? [m.data.image] : [])
   const base = {
     id: m.id,
     kind: m.kind,
     topic: m.topic,
     stem: m.stem,
     passage: sd?.passage ?? m.data?.passage ?? null,
-    image: sd?.image ?? m.data?.image ?? null,
+    image: imgs[0] ?? null,
+    images: imgs,
     table: tbls[0] ?? null,
     tables: tbls,
   }

@@ -2,7 +2,8 @@
 //
 // Model (confirmed): a separate subscription per exam (UCAT, GAMSAT, ISAT), each
 // unlocking ALL of that exam's resources, PLUS an all-access bundle across every
-// exam. Interviews has no paid plan yet. Base currency AUD, with equivalent
+// exam. Interviews is available standalone and as an optional add-on to every
+// other plan. Base currency AUD, with equivalent
 // round prices (ending in 99) in GBP/HKD/NZD/SGD via Stripe currency options.
 // 7-day trial applied at checkout.
 //
@@ -20,8 +21,7 @@ export type Interval = (typeof BILLING_INTERVALS)[number]
 export const CURRENCIES = ['aud', 'gbp', 'hkd', 'nzd', 'sgd'] as const
 export type Currency = (typeof CURRENCIES)[number]
 
-// Exams that get a paid subscription (Interviews excluded for now).
-export const PAID_EXAM_SLUGS = ['ucat', 'gamsat', 'isat'] as const
+export const PAID_EXAM_SLUGS = ['ucat', 'gamsat', 'isat', 'interviews'] as const
 export const BUNDLE_NAME = 'All-access'
 
 // Yearly amounts per currency (smallest unit). A$399/yr per exam is confirmed.
@@ -31,6 +31,15 @@ export const YEARLY_PER_EXAM: Record<Currency, number> = {
   hkd: 199900, // HK$1,999
   nzd: 39900, // NZ$399
   sgd: 39900, // S$399
+}
+
+// Interviews is intentionally half the standard exam price.
+export const YEARLY_INTERVIEWS: Record<Currency, number> = {
+  aud: 19900,
+  gbp: 9900,
+  hkd: 99900,
+  nzd: 19900,
+  sgd: 19900,
 }
 
 export const YEARLY_BUNDLE: Record<Currency, number> = {

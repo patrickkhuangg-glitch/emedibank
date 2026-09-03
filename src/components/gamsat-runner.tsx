@@ -21,6 +21,7 @@ type SafeQuestion = {
   stem: string
   passage: string | null
   image: string | null
+  images: string[]
   table: { headers: string[]; rows: string[][] } | null
   tables: { headers: string[]; rows: string[][] }[]
   statements: { index: number; text: string }[] | null
@@ -90,7 +91,7 @@ export function GamsatRunner({
   // "Unit" size = questions sharing the current passage (GAMSAT groups ~6 per stimulus).
   const unitCount = useMemo(() => {
     if (!q) return total
-    const key = q.passage ?? q.image ?? q.stem
+    const key = q.passage ?? q.images?.[0] ?? q.image ?? q.stem
     return questionIds.filter((qid) => {
       const c = cache[qid]
       return c && (c.passage ?? c.image ?? c.stem) === key
@@ -258,10 +259,10 @@ export function GamsatRunner({
     <div className="max-w-[660px] text-[15px] leading-[1.62]" style={{ color: INK }}>
       <p className="mb-4 font-bold">There are {unitCount} question{unitCount === 1 ? '' : 's'} in this unit.</p>
       {q.passage ? <div className="whitespace-pre-wrap [&>*]:mb-[15px] [text-align:justify]">{q.passage.split(/\n{2,}/).map((para, k) => <p key={k}>{para}</p>)}</div> : null}
-      {q.image ? (
+      {(q.images ?? []).map((src, imageIndex) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={q.image} alt="Stimulus figure" className="my-3 max-w-full rounded border border-gray-200" />
-      ) : null}
+        <img key={imageIndex} src={src} alt={`Stimulus figure ${imageIndex + 1}`} className="my-3 max-w-full rounded border border-gray-200" />
+      ))}
       {(q.tables ?? []).map((t, ti) => (
         <div key={ti} className="my-3 overflow-x-auto">
           <table className="border-collapse text-[13.5px]" style={{ fontVariantNumeric: 'tabular-nums' }}>

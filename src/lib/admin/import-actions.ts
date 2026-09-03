@@ -83,7 +83,8 @@ export async function importQuestions(text: string): Promise<ImportResult> {
         if (!stimulusId) {
           const sdata: Record<string, unknown> = {}
           if (cell(row, 'passage')) sdata.passage = cell(row, 'passage')
-          if (cell(row, 'image_url')) sdata.image = cell(row, 'image_url')
+          const simages = cell(row, 'image_url').split('~~').map((value) => value.trim()).filter(Boolean)
+          if (simages.length) sdata.images = simages
           // One or more tables — separate multiple tables in the cell with "~~".
           const stbls = cell(row, 'table').split('~~').map((s) => parseTableCell(s)).filter(Boolean)
           if (stbls.length) sdata.tables = stbls
@@ -96,7 +97,8 @@ export async function importQuestions(text: string): Promise<ImportResult> {
       const qdata: Record<string, unknown> = {}
       if (!stimulusId) {
         if (type === 'passage' && cell(row, 'passage')) qdata.passage = cell(row, 'passage')
-        if (cell(row, 'image_url')) qdata.image = cell(row, 'image_url')
+        const qimages = cell(row, 'image_url').split('~~').map((value) => value.trim()).filter(Boolean)
+        if (qimages.length) qdata.images = qimages
         const qtbls = cell(row, 'table').split('~~').map((s) => parseTableCell(s)).filter(Boolean)
         if (qtbls.length) qdata.tables = qtbls
       }

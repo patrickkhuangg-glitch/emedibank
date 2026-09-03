@@ -16,7 +16,9 @@ type SafeQuestion = {
   stem: string
   passage: string | null
   image: string | null
+  images: string[]
   table: { headers: string[]; rows: string[][] } | null
+  tables: { headers: string[]; rows: string[][] }[]
   statements: { index: number; text: string }[] | null
   mostLeast: { actions: { index: number; text: string }[] } | null
   options: { id: string; label: string; body: string }[]
@@ -378,14 +380,14 @@ export function SessionRunner({
     </div>
   ) : null
 
-  const Table = q?.table ? (
-    <div className="my-4 inline-block overflow-x-auto">
+  const Tables = (q?.tables ?? []).map((table, tableIndex) => (
+    <div key={tableIndex} className="my-4 inline-block max-w-full overflow-x-auto align-top">
       <table className="border-collapse text-sm">
-        <thead><tr>{q.table.headers.map((h, k) => <th key={k} className="border border-gray-400 px-4 py-1.5 font-semibold">{h}</th>)}</tr></thead>
-        <tbody>{q.table.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-400 px-4 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
+        <thead><tr>{table.headers.map((h, k) => <th key={k} className="border border-gray-400 px-4 py-1.5 font-semibold">{h}</th>)}</tr></thead>
+        <tbody>{table.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-400 px-4 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
       </table>
     </div>
-  ) : null
+  ))
 
   const selectedId = answered ? answered.selectedId : pending[id]
   const Options = q ? (
@@ -455,10 +457,10 @@ export function SessionRunner({
   }) }
   const clearML = (slot: 'most' | 'least') => setMlPending((p) => { const cur = { ...(p[id] ?? {}) }; delete cur[slot]; return { ...p, [id]: cur } })
 
-  const Img = q?.image ? (
+  const Images = (q?.images ?? []).map((src, imageIndex) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={q.image} alt="Question diagram" className="my-4 max-w-full border border-gray-200" />
-  ) : null
+    <img key={imageIndex} src={src} alt={`Question diagram ${imageIndex + 1}`} className="my-4 max-w-full border border-gray-200" />
+  ))
 
   const ML = q?.mostLeast ? (
     <div className="mt-6">
@@ -513,18 +515,18 @@ export function SessionRunner({
       ) : isGrid ? (
         <div className="mx-auto max-w-6xl">
           <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-          {Img}{Table}{Grid}
+          {Images}{Tables}{Grid}
           {Explanation(gridAnswered?.result, gridAnswered?.video, answeredIds.has(id))}
         </div>
       ) : isML ? (
         <div className="mx-auto max-w-4xl">
           <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-          {Img}{ML}
+          {Images}{ML}
           {Explanation(mlAnswered?.result, mlAnswered?.video, answeredIds.has(id))}
         </div>
       ) : q.passage ? (
         <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
-          <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Img}</div>
+          <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Images}{Tables}</div>
           <div className="md:pl-8">
             <p className="text-[15px] leading-relaxed">{q.stem}</p>
             <div className="mt-6">{Options}</div>
@@ -535,7 +537,7 @@ export function SessionRunner({
         <div className="mx-auto max-w-3xl">
           {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
           <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
-          {Img}{Table}
+          {Images}{Tables}
           <div className="mt-5">{Options}</div>
           {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
         </div>
