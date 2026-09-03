@@ -36,11 +36,11 @@ const featuresFor = (plan: Plan, interval: 'month' | 'year'): string[] => {
     'MMI and panel interview stations',
     'Structured response frameworks',
     'Ethical and personal scenarios',
-    interval === 'year' ? '50 marked MMI stations included' : 'Marked MMI stations available separately',
+    interval === 'year' ? '25 marked MMI stations included' : 'Marked MMI stations available separately',
     'Purchase additional marked stations anytime',
   ]
   const annualInterviews = interval === 'year'
-    ? ['Interviews included free · limited promotion', '50 marked MMI stations included']
+    ? ['Interviews included free · limited promotion', '25 marked MMI stations included']
     : []
 
   if (plan.slug === 'ucat') return [

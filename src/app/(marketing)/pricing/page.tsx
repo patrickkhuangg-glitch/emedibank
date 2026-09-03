@@ -103,7 +103,7 @@ export default async function PricingPage() {
         <h1 className="text-4xl font-semibold tracking-tight">Everything, priced by the week</h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
           Start free with full mock exams. For a limited time, every annual academic plan includes
-          Interviews and 50 marked MMI stations free. Local pricing is shown in your currency.
+          Interviews and 25 marked MMI stations free. Local pricing is shown in your currency.
         </p>
       </div>
 
