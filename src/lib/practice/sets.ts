@@ -1,4 +1,5 @@
 import 'server-only'
+import { randomInt } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessExam } from '@/lib/access'
 import { questionMarkValue } from '@/lib/practice/marks'
@@ -67,7 +68,7 @@ export async function resolveSetQuestionIds(
   if (!(await canAccessExam(userId, examId))) return []
   const sets = await fetchSets(subtestId, tag)
   for (let i = sets.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = randomInt(i + 1)
     ;[sets[i], sets[j]] = [sets[j], sets[i]]
   }
   const picked = maxSets > 0 ? sets.slice(0, maxSets) : sets
@@ -87,7 +88,7 @@ export async function resolveMarkQuestionIds(
   if (!(await canAccessExam(userId, examId))) return []
   const sets = await fetchSets(subtestId, tag, subtestSlug)
   for (let i = sets.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = randomInt(i + 1)
     ;[sets[i], sets[j]] = [sets[j], sets[i]]
   }
   const target = Math.max(1, targetMarks)

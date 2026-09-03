@@ -7,7 +7,7 @@ import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
 import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
-import { recordPracticeSessionAction } from '@/lib/practice/session-actions'
+import { recordPracticeSessionAction, type StoredSessionResponse } from '@/lib/practice/session-actions'
 
 type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
@@ -172,6 +172,25 @@ export function SessionRunner({
     if (resultObjs.length > 0) {
       const scoreSum = resultObjs.reduce((s, r) => s + (r.score ?? (r.is_correct ? 1 : 0)), 0)
       const sessionMaxMarks = questionIds.reduce((sum, qid) => sum + (cache[qid]?.marks ?? 1), 0)
+      const storedResponses: StoredSessionResponse[] = questionIds.map((qid) => {
+        const question = cache[qid]
+        const mcq = nextA[qid]
+        const grid = nextG[qid]
+        const mostLeast = nextM[qid]
+        const answered = Boolean(mcq || grid || mostLeast)
+        const response = question?.statements
+          ? Object.fromEntries(Object.entries(gridPending[qid] ?? {}).map(([key, value]) => [key, value]))
+          : question?.mostLeast
+          ? (mlPending[qid] ? { ...mlPending[qid] } : null)
+          : null
+        return {
+          questionId: qid,
+          selectedOptionId: pending[qid] ?? null,
+          response,
+          score: mcq?.result.score ?? grid?.result.score ?? mostLeast?.result.score ?? 0,
+          answered,
+        }
+      })
       void recordPracticeSessionAction({
         examSlug,
         subtestId,
@@ -180,6 +199,8 @@ export function SessionRunner({
         total: sessionMaxMarks,
         correct: scoreSum,
         timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
+        questionIds,
+        responses: storedResponses,
       })
     }
   }, [questionIds, cache, gridPending, mlPending, pending, examSlug, subtestId, tag, mode])

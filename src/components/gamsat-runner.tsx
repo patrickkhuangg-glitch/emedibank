@@ -6,7 +6,7 @@ import MuxPlayer from '@mux/mux-player-react'
 import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
 import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, revealAnswerAction } from '@/lib/questions/actions'
-import { recordPracticeSessionAction } from '@/lib/practice/session-actions'
+import { recordPracticeSessionAction, type StoredSessionResponse } from '@/lib/practice/session-actions'
 
 // Passage/stimulus practice interface — serves GAMSAT (Sections I & III) and ISAT
 // (Critical Reasoning, Quantitative Reasoning): a Medify-style stimulus on the left,
@@ -18,6 +18,7 @@ import { recordPracticeSessionAction } from '@/lib/practice/session-actions'
 type SafeQuestion = {
   id: string
   topic: string | null
+  marks: number
   stem: string
   passage: string | null
   image: string | null
@@ -133,14 +134,24 @@ export function GamsatRunner({
     const results = Object.values(nextA).map((x) => x.result)
     if (results.length > 0) {
       const scoreSum = results.reduce((s, r) => s + (r.score ?? (r.is_correct ? 1 : 0)), 0)
+      const sessionMaxMarks = questionIds.reduce((sum, qid) => sum + (cache[qid]?.marks ?? 1), 0)
+      const storedResponses: StoredSessionResponse[] = questionIds.map((qid) => ({
+        questionId: qid,
+        selectedOptionId: pending[qid] ?? null,
+        response: null,
+        score: nextA[qid]?.result.score ?? 0,
+        answered: Boolean(nextA[qid]),
+      }))
       void recordPracticeSessionAction({
         examSlug, subtestId, tag, mode,
-        total: results.length,
+        total: sessionMaxMarks,
         correct: scoreSum,
         timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
+        questionIds,
+        responses: storedResponses,
       })
     }
-  }, [questionIds, pending, examSlug, subtestId, tag, mode])
+  }, [questionIds, cache, pending, examSlug, subtestId, tag, mode])
 
   const submitRef = useRef(submitAll)
   useEffect(() => { submitRef.current = submitAll }, [submitAll])

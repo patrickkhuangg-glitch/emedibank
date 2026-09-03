@@ -1,4 +1,5 @@
 import 'server-only'
+import { randomInt } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessExam } from '@/lib/access'
 
@@ -31,7 +32,7 @@ export async function resolveSessionQuestionIds(
   const { data } = await query
   const ids = (data ?? []).map((q) => q.id)
   for (let i = ids.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = randomInt(i + 1)
     ;[ids[i], ids[j]] = [ids[j], ids[i]]
   }
   return ids.slice(0, Math.max(1, f.count))

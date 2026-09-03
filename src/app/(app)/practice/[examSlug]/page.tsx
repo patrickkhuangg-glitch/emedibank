@@ -133,23 +133,31 @@ function HistoryList({ sessions }: { sessions: PracticeSession[] }) {
         const modeLabel = s.mode === 'timed' ? 'Timed' : s.mode === 'review' ? 'Review' : 'Untimed'
         const title = s.tag || s.subtestName || 'Practice'
         const scoreCls = pct >= 70 ? 'text-[#157d72]' : pct >= 50 ? 'text-[#b45309]' : 'text-[#dc2626]'
+        const content = (
+          <>
+            <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand"><HistoryIcon /></span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-medium">{title}</span>
+                {s.tag && s.subtestName ? <span className="text-xs text-muted">{s.subtestName}</span> : null}
+                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">{modeLabel}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-muted">{when}{s.timeSpentSeconds ? ` · ${fmtDuration(s.timeSpentSeconds)}` : ''}</p>
+              <p className="mt-1 text-xs font-medium text-brand">{s.reviewAvailable ? 'Review answers and explanations →' : 'Summary only · completed before review history was enabled'}</p>
+            </div>
+            <div className="flex-none text-right">
+              <div className="tabular-nums text-sm font-semibold">{s.correct}/{s.total}</div>
+              <div className={`text-xs font-semibold ${scoreCls}`}>{pct}%</div>
+            </div>
+          </>
+        )
         return (
           <li key={s.id} className="eb-rise" style={{ animationDelay: `${idx * 40}ms` }}>
-            <div className="flex items-center gap-4 px-5 py-4">
-              <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand"><HistoryIcon /></span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-medium">{title}</span>
-                  {s.tag && s.subtestName ? <span className="text-xs text-muted">{s.subtestName}</span> : null}
-                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">{modeLabel}</span>
-                </div>
-                <p className="mt-0.5 text-xs text-muted">{when}{s.timeSpentSeconds ? ` · ${fmtDuration(s.timeSpentSeconds)}` : ''}</p>
-              </div>
-              <div className="flex-none text-right">
-                <div className="tabular-nums text-sm font-semibold">{s.correct}/{s.total}</div>
-                <div className={`text-xs font-semibold ${scoreCls}`}>{pct}%</div>
-              </div>
-            </div>
+            {s.reviewAvailable ? (
+              <Link href={`/practice/review/${s.id}`} className="eb-press group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted">{content}</Link>
+            ) : (
+              <div className="flex items-center gap-4 px-5 py-4">{content}</div>
+            )}
           </li>
         )
       })}

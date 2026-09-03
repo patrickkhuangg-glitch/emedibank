@@ -411,6 +411,8 @@ export type Database = {
           total: number
           correct: number
           time_spent_seconds: number | null
+          question_ids: string[]
+          responses: unknown
           created_at: string
         }
         Insert: {
@@ -423,6 +425,8 @@ export type Database = {
           total: number
           correct: number
           time_spent_seconds?: number | null
+          question_ids?: string[]
+          responses?: unknown
           created_at?: string
         }
         Update: {
@@ -431,6 +435,8 @@ export type Database = {
           total?: number
           correct?: number
           time_spent_seconds?: number | null
+          question_ids?: string[]
+          responses?: unknown
         }
         Relationships: [
           {
