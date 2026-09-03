@@ -6,7 +6,7 @@
 // leaks another user's identity — only aggregate counts.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { canonicalCategories } from './categories'
+import { canonicalCategories, hidesExtraCategories } from './categories'
 
 export type SectionStat = {
   id: string
@@ -146,7 +146,9 @@ export async function getCategoryStats(
   const canonical = canonicalCategories(examSlug, subtest.slug)
   const matched = new Set(canonical ?? [])
   const extras = [...totalByTag.keys()].filter((t) => !matched.has(t)).sort((a, b) => a.localeCompare(b))
-  const ordered = canonical ? [...canonical, ...extras] : extras
+  const ordered = canonical
+    ? [...canonical, ...(hidesExtraCategories(examSlug, subtest.slug) ? [] : extras)]
+    : extras
 
   const categories: CategoryStat[] = [
     { key: '', label: `All ${subtest.name}`, total: questions.length, attempted: attemptedAll },
