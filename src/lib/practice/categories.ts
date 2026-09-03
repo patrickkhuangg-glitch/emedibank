@@ -36,6 +36,15 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
     ],
   },
   gamsat: {
+    'humanities-social-sciences': [
+      'Prose – Non-Fiction',
+      'Prose – Fiction and Drama',
+      'Arguments and Debate Sets',
+      'Data, Diagrams and Procedural Texts',
+      'Poetry and Song',
+      'Aphorisms, Proverbs and Satirical Definitions',
+      'Cartoons',
+    ],
     // Section III subject → topic. One flat level for now; 'Genetics' is the
     // Biology sub-topic seeded first.
     'biological-physical-sciences': [
@@ -52,5 +61,6 @@ export function canonicalCategories(examSlug: string, subtestSlug: string): stri
 /** DM questions carry granular analytics tags (for example bayes and
  * expected-value), but students should only see the six stable drill subsets. */
 export function hidesExtraCategories(examSlug: string, subtestSlug: string): boolean {
-  return examSlug === 'ucat' && subtestSlug === 'decision-making'
+  return (examSlug === 'ucat' && subtestSlug === 'decision-making')
+    || (examSlug === 'gamsat' && subtestSlug === 'humanities-social-sciences')
 }
