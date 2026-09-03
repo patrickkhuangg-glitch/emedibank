@@ -102,6 +102,8 @@ export function EssayRunner({
   const dirtyRef = useRef(false)
   const bodyRef = useRef(body)
   const planRef = useRef(plan)
+  const editorRef = useRef<HTMLTextAreaElement>(null)
+  const planningRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => { bodyRef.current = body }, [body])
   useEffect(() => { planRef.current = plan }, [plan])
 
@@ -128,7 +130,11 @@ export function EssayRunner({
   const doSave = useCallback(async () => {
     if (!responseId) return
     setSaveState('saving')
-    const r = await saveEssayDraftAction(responseId, bodyRef.current, totalSeconds(), planRef.current)
+    const currentBody = editorRef.current?.value ?? bodyRef.current
+    const currentPlan = planningRef.current?.value ?? planRef.current
+    bodyRef.current = currentBody
+    planRef.current = currentPlan
+    const r = await saveEssayDraftAction(responseId, currentBody, totalSeconds(), currentPlan)
     dirtyRef.current = false
     if (r.ok) {
       setSaveState('saved')
@@ -179,7 +185,11 @@ export function EssayRunner({
     setSubmitting(true)
     baseSeconds.current = totalSeconds()
     startedAt.current = 0
-    const r = await submitEssayAction(responseId, bodyRef.current, baseSeconds.current, forMarking, planRef.current)
+    const currentBody = editorRef.current?.value ?? bodyRef.current
+    const currentPlan = planningRef.current?.value ?? planRef.current
+    bodyRef.current = currentBody
+    planRef.current = currentPlan
+    const r = await submitEssayAction(responseId, currentBody, baseSeconds.current, forMarking, currentPlan)
     if (!r.ok) {
       setSubmitting(false)
       setFinishOpen(false)
@@ -460,6 +470,7 @@ export function EssayRunner({
           </div>
           {planOpen ? (
             <textarea
+              ref={planningRef}
               value={plan}
               onChange={(e) => onChangePlan(e.target.value)}
               placeholder="Plan before you write: your position, 2–3 examples or angles, and the shape of your argument…"
@@ -468,6 +479,7 @@ export function EssayRunner({
             />
           ) : null}
           <textarea
+            ref={editorRef}
             value={body}
             onChange={(e) => onChangeBody(e.target.value)}
             autoFocus

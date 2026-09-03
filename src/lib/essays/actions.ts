@@ -58,7 +58,7 @@ export async function saveEssayDraftAction(
     await requireUser()
     const supabase = await createClient()
     const savedAt = new Date().toISOString()
-    await supabase
+    const { data: saved, error } = await supabase
       .from('essay_responses')
       .update({
         body,
@@ -69,6 +69,9 @@ export async function saveEssayDraftAction(
       })
       .eq('id', responseId)
       .eq('status', 'draft') // never overwrite a submitted essay
+      .select('id')
+      .maybeSingle()
+    if (error || !saved) return { ok: false, savedAt: '' }
     return { ok: true, savedAt }
   } catch {
     return { ok: false, savedAt: '' }
@@ -129,7 +132,10 @@ export async function submitEssayAction(
     const finalBody = body.trim() ? body : existing.body
     if (!finalBody.trim()) return { ok: false, marked: false, reason: 'empty' }
 
-    const { data: saved, error: saveError } = await supabase
+    // Finalisation is server-controlled. The authenticated role can autosave
+    // editable fields only and cannot directly manipulate submission state.
+    const admin = createAdminClient()
+    const { data: saved, error: saveError } = await admin
       .from('essay_responses')
       .update({
         body: finalBody,
