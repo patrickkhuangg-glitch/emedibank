@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { haptic } from '@/lib/haptics'
 import { countWords, MARK_COST, type EssayQuote } from '@/lib/essays/config'
 import { startEssayAction, saveEssayDraftAction, submitEssayAction, requestMarkingAction } from '@/lib/essays/actions'
+import { EssayFeedbackReview } from '@/components/essay-feedback-review'
 
 // GAMSAT Section II (Written Communication) writer. Same teal chrome as the
 // passage runner (gamsat-runner.tsx), but instead of MCQs the student reads a
@@ -296,6 +297,22 @@ export function EssayRunner({
 
   // ---------- DONE / REVIEW ----------
   if (phase === 'done') {
+    if (markingStatus === 'approved' && tutorFeedback) {
+      return (
+        <EssayFeedbackReview
+          theme={prompt.theme}
+          task={prompt.task}
+          body={body}
+          feedback={tutorFeedback}
+          words={words}
+          timed={timed}
+          minutes={minutes}
+          elapsedLabel={`Time spent ${mmss(elapsed)}`}
+          onBack={() => router.push(backHref)}
+          onAgain={() => router.push(concealTopic ? `/essays/${examSlug}/written-communication/random?task=${prompt.task}` : `/essays/${examSlug}/written-communication/${prompt.id}`)}
+        />
+      )
+    }
     return (
       <div className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: FONT, color: INK }}>
         <div className="flex items-center gap-3 px-5 text-white" style={{ background: TEAL, height: 56 }}>
