@@ -210,7 +210,7 @@ async function requestMarkingFor(
  *  with manual feedback. */
 export async function generateAiDraftAction(
   responseId: string,
-): Promise<{ ok: boolean; text?: string; secondaryText?: string | null; reason?: 'no_key' | 'error' }> {
+): Promise<{ ok: boolean; text?: string; secondaryText?: string | null; secondaryError?: CoMarkerError; reason?: 'no_key' | 'error' }> {
   await requireAdmin()
   const openAiKey = process.env.OPENAI_ESSAY_MARKING_API_KEY || process.env.OPENAI_API_KEY
   if (!openAiKey) return { ok: false, reason: 'no_key' }
@@ -242,33 +242,16 @@ export async function generateAiDraftAction(
 
     const anthropicKey = process.env.ANTHROPIC_ESSAY_COMARKER_API_KEY || process.env.ANTHROPIC_API_KEY
     const secondaryRequest = anthropicKey
-      ? fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({
-            model: secondaryModel,
-            max_tokens: 700,
-            system: SECONDARY_MARKING_SYSTEM,
-            messages: [{ role: 'user', content: userMessage }],
-          }),
-        })
-      : Promise.resolve(null)
+      ? runClaudeCoMarker(anthropicKey, secondaryModel, userMessage)
+      : Promise.resolve({ text: null, error: 'no_key' as CoMarkerError })
 
-    const [primaryRes, secondaryRes] = await Promise.all([primaryRequest, secondaryRequest])
+    const [primaryRes, secondary] = await Promise.all([primaryRequest, secondaryRequest])
     if (!primaryRes.ok) return { ok: false, reason: 'error' }
     const primaryJson = await primaryRes.json()
     const text: string = extractOpenAiText(primaryJson)
     if (!text) return { ok: false, reason: 'error' }
 
-    let secondaryText: string | null = null
-    if (secondaryRes?.ok) {
-      const secondaryJson = await secondaryRes.json()
-      secondaryText = (secondaryJson?.content ?? [])
-        .filter((b: { type: string }) => b.type === 'text')
-        .map((b: { text: string }) => b.text)
-        .join('\n')
-        .trim() || null
-    }
+    const secondaryText = secondary.text
     const now = new Date().toISOString()
     // Store the AI draft; seed the tutor's working copy if they haven't started one.
     const { data: existing } = await admin.from('essay_markings').select('draft_feedback').eq('response_id', responseId).maybeSingle()
@@ -285,9 +268,67 @@ export async function generateAiDraftAction(
       status: 'pending',
       updated_at: now,
     }, { onConflict: 'response_id' })
-    return { ok: true, text, secondaryText }
+    return { ok: true, text, secondaryText, secondaryError: secondary.error }
   } catch {
     return { ok: false, reason: 'error' }
+  }
+}
+
+type CoMarkerError = 'no_key' | 'insufficient_credit' | 'rate_limited' | 'api_error' | 'empty_response'
+
+async function runClaudeCoMarker(key: string, model: string, userMessage: string): Promise<{ text: string | null; error?: CoMarkerError }> {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model,
+      max_tokens: 700,
+      system: SECONDARY_MARKING_SYSTEM,
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  })
+  if (!response.ok) {
+    const json = await response.json().catch(() => null) as { error?: { message?: string } } | null
+    const message = json?.error?.message?.toLowerCase() ?? ''
+    if (message.includes('credit balance') || message.includes('purchase credits')) return { text: null, error: 'insufficient_credit' }
+    if (response.status === 429) return { text: null, error: 'rate_limited' }
+    return { text: null, error: 'api_error' }
+  }
+  const json = await response.json()
+  const text = (json?.content ?? [])
+    .filter((block: { type: string }) => block.type === 'text')
+    .map((block: { text: string }) => block.text)
+    .join('\n')
+    .trim()
+  return text ? { text } : { text: null, error: 'empty_response' }
+}
+
+/** Retry only the Claude quality-control pass without paying for another Terra draft. */
+export async function retryClaudeCoMarkerAction(
+  responseId: string,
+): Promise<{ ok: boolean; text?: string; error?: CoMarkerError }> {
+  await requireAdmin()
+  const key = process.env.ANTHROPIC_ESSAY_COMARKER_API_KEY || process.env.ANTHROPIC_API_KEY
+  if (!key) return { ok: false, error: 'no_key' }
+  const admin = createAdminClient()
+  const { data: response } = await admin.from('essay_responses').select('body, prompt_id').eq('id', responseId).maybeSingle()
+  if (!response) return { ok: false, error: 'api_error' }
+  const { data: prompt } = await admin.from('essay_prompts').select('task, theme, quotes').eq('id', response.prompt_id).maybeSingle()
+  if (!prompt) return { ok: false, error: 'api_error' }
+  const model = process.env.ANTHROPIC_ESSAY_COMARKER_MODEL || process.env.ANTHROPIC_COMARKER_MODEL || 'claude-sonnet-5'
+  const userMessage = buildMarkingUserMessage({ task: prompt.task, theme: prompt.theme, quotes: parseQuotes(prompt.quotes), body: response.body })
+  try {
+    const result = await runClaudeCoMarker(key, model, userMessage)
+    if (!result.text) return { ok: false, error: result.error }
+    await admin.from('essay_markings').update({
+      secondary_feedback: result.text,
+      secondary_provider: 'anthropic',
+      secondary_model: model,
+      updated_at: new Date().toISOString(),
+    }).eq('response_id', responseId)
+    return { ok: true, text: result.text }
+  } catch {
+    return { ok: false, error: 'api_error' }
   }
 }
 
@@ -320,7 +361,7 @@ export async function saveMarkingDraftAction(responseId: string, draft: string):
 }
 
 /** Approve and release feedback to the student (admin-only). */
-export async function approveMarkingAction(responseId: string, feedback: string): Promise<{ ok: boolean }> {
+export async function approveMarkingAction(responseId: string, feedback: string): Promise<{ ok: boolean; nextResponseId?: string | null }> {
   try {
     const admin_profile = await requireAdmin()
     const admin = createAdminClient()
@@ -332,7 +373,15 @@ export async function approveMarkingAction(responseId: string, feedback: string)
     await admin.from('essay_responses').update({
       marking_status: 'approved', tutor_feedback: feedback, marked_at: now, updated_at: now,
     }).eq('id', responseId)
-    return { ok: true }
+    const { data: next } = await admin
+      .from('essay_responses')
+      .select('id')
+      .eq('marking_status', 'pending')
+      .neq('id', responseId)
+      .order('submitted_for_marking_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    return { ok: true, nextResponseId: next?.id ?? null }
   } catch {
     return { ok: false }
   }

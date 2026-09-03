@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { generateAiDraftAction, saveMarkingDraftAction, approveMarkingAction } from '@/lib/essays/actions'
+import { useRouter } from 'next/navigation'
+import { generateAiDraftAction, retryClaudeCoMarkerAction, saveMarkingDraftAction, approveMarkingAction } from '@/lib/essays/actions'
 
 type Quote = { text: string; author?: string | null }
 type Detail = {
@@ -25,10 +26,15 @@ type Detail = {
 }
 
 export function MarkingReview({ detail }: { detail: Detail }) {
+  const router = useRouter()
   const [status, setStatus] = useState(detail.status)
   const [draft, setDraft] = useState(detail.draftFeedback ?? detail.aiFeedback ?? detail.tutorFeedback ?? '')
   const [aiRaw, setAiRaw] = useState<string | null>(detail.aiFeedback)
   const [secondaryRaw, setSecondaryRaw] = useState<string | null>(detail.secondaryFeedback)
+  const [secondaryError, setSecondaryError] = useState<string | null>(
+    detail.aiFeedback && !detail.secondaryFeedback ? 'previous_failure' : null,
+  )
+  const [retryingClaude, setRetryingClaude] = useState(false)
   const [gen, setGen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [approving, setApproving] = useState(false)
@@ -48,6 +54,7 @@ export function MarkingReview({ detail }: { detail: Detail }) {
     if (r.ok && r.text) {
       setAiRaw(r.text)
       setSecondaryRaw(r.secondaryText ?? null)
+      setSecondaryError(r.secondaryError ?? null)
       if (!draft.trim()) setDraft(r.text)
       setMsg(r.secondaryText
         ? 'Terra primary draft and Claude independent check generated. Edit before approving.'
@@ -58,17 +65,32 @@ export function MarkingReview({ detail }: { detail: Detail }) {
       setMsg('Could not generate a draft. Try again, or write feedback manually.')
     }
   }
+  async function retryClaude() {
+    setRetryingClaude(true); setMsg(null)
+    const r = await retryClaudeCoMarkerAction(detail.responseId)
+    setRetryingClaude(false)
+    if (r.ok && r.text) {
+      setSecondaryRaw(r.text); setSecondaryError(null); setMsg('Claude secondary check generated.')
+    } else {
+      setSecondaryError(r.error ?? 'api_error')
+    }
+  }
   async function save() {
     setSaving(true); setMsg(null)
     const r = await saveMarkingDraftAction(detail.responseId, draft)
     setSaving(false); setMsg(r.ok ? 'Draft saved.' : 'Save failed.')
   }
-  async function approve() {
+  async function approve(destination: 'next' | 'queue') {
     if (!draft.trim()) { setMsg('Write some feedback before approving.'); return }
     setApproving(true); setMsg(null)
     const r = await approveMarkingAction(detail.responseId, draft)
     setApproving(false)
-    if (r.ok) { setStatus('approved'); setMsg('Approved and sent to the student.') } else setMsg('Approve failed.')
+    if (r.ok) {
+      setStatus('approved')
+      if (destination === 'next' && r.nextResponseId) router.push(`/admin/essays/${r.nextResponseId}`)
+      else router.push('/admin/essays')
+      router.refresh()
+    } else setMsg('Approve failed.')
   }
   async function copyPrompt() {
     try { await navigator.clipboard.writeText(chatPrompt); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { /* ignore */ }
@@ -150,6 +172,16 @@ export function MarkingReview({ detail }: { detail: Detail }) {
             </details>
           ) : null}
 
+          {!secondaryRaw && secondaryError ? (
+            <div className="rounded-xl border border-[#e8c9a4] bg-[#fff8ef] p-4 text-sm">
+              <p className="font-semibold text-[#8a4b08]">Claude co-marker unavailable</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-[#76552f]">{coMarkerMessage(secondaryError)}</p>
+              <button onClick={retryClaude} disabled={retryingClaude} className="mt-3 rounded-lg border border-[#d9aa73] bg-white px-3 py-2 text-xs font-semibold text-[#8a4b08] disabled:opacity-55">
+                {retryingClaude ? 'Retrying Claude…' : 'Retry Claude only'}
+              </button>
+            </div>
+          ) : null}
+
           {(detail.primaryModel || detail.rubricVersion) ? (
             <p className="text-xs text-muted">
               Primary: {detail.primaryModel ?? 'GPT-5.6 Terra'}
@@ -157,16 +189,27 @@ export function MarkingReview({ detail }: { detail: Detail }) {
             </p>
           ) : null}
 
-          <div className="flex items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-3 pt-1">
             <button onClick={save} disabled={saving} className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted disabled:opacity-55">
               {saving ? 'Saving…' : 'Save draft'}
             </button>
-            <button onClick={approve} disabled={approving} className="rounded-lg bg-[#2f9e44] px-5 py-2 text-sm font-semibold text-white disabled:opacity-55">
-              {approving ? 'Sending…' : status === 'approved' ? 'Re-send updated feedback' : 'Approve & send'}
+            <button onClick={() => approve('next')} disabled={approving} className="rounded-lg bg-[#2f9e44] px-5 py-2 text-sm font-semibold text-white disabled:opacity-55">
+              {approving ? 'Sending…' : status === 'approved' ? 'Re-send and open next' : 'Approve and open next'}
+            </button>
+            <button onClick={() => approve('queue')} disabled={approving} className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted disabled:opacity-55">
+              Approve and close
             </button>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+function coMarkerMessage(error: string) {
+  if (error === 'insufficient_credit') return 'The Anthropic account does not have enough API credit. Add credit in Anthropic Plans & Billing, then retry Claude only.'
+  if (error === 'rate_limited') return 'Anthropic is temporarily rate-limiting requests. Wait briefly, then retry Claude only.'
+  if (error === 'no_key') return 'No Anthropic co-marker API key is configured in this environment.'
+  if (error === 'empty_response') return 'Claude returned no usable feedback. Retry the co-marker pass.'
+  return 'Anthropic could not complete this check. Retry it without regenerating or charging for another Terra draft.'
 }
