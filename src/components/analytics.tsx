@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 
-const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-LCJM0223RX'
+const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || null
 const CONSENT_COOKIE = 'em_analytics_consent'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180
 
@@ -56,7 +56,7 @@ function sendPageView(pathname = window.location.pathname) {
 }
 
 function startAnalytics() {
-  if (window.__emeducateAnalyticsStarted) return
+  if (!MEASUREMENT_ID || window.__emeducateAnalyticsStarted) return
   window.__emeducateAnalyticsStarted = true
   initialiseQueue()
   window.gtag?.('consent', 'default', {
@@ -82,7 +82,7 @@ function startAnalytics() {
 
 function revokeAnalytics() {
   window.gtag?.('consent', 'update', { analytics_storage: 'denied' })
-  const analyticsCookies = ['_ga', `_ga_${MEASUREMENT_ID.replace(/^G-/, '')}`]
+  const analyticsCookies = ['_ga', ...(MEASUREMENT_ID ? [`_ga_${MEASUREMENT_ID.replace(/^G-/, '')}`] : [])]
   analyticsCookies.forEach((name) => {
     document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.emeducate.com.au; SameSite=Lax; Secure`
     document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`
@@ -90,7 +90,7 @@ function revokeAnalytics() {
 }
 
 export function trackAnalyticsEvent(name: string, parameters: AnalyticsParameters = {}) {
-  if (typeof window === 'undefined' || readConsent() !== 'granted') return
+  if (!MEASUREMENT_ID || typeof window === 'undefined' || readConsent() !== 'granted') return
   startAnalytics()
   window.gtag?.('event', name, parameters)
 }
@@ -129,7 +129,7 @@ export function Analytics() {
     }
   }, [analyticsAllowedOnPage, consent, pathname, publicPage, search])
 
-  if (!analyticsAllowedOnPage) return null
+  if (!MEASUREMENT_ID || !analyticsAllowedOnPage) return null
 
   const choose = (value: Exclude<AnalyticsConsent, null>) => {
     writeConsent(value)
