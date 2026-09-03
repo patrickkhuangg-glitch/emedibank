@@ -20,4 +20,5 @@ export async function setSubtestFreeAction(formData: FormData) {
   if (error) throw error
 
   revalidatePath('/admin')
+  revalidatePath('/admin/access')
 }

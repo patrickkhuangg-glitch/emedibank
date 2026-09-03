@@ -65,15 +65,18 @@ export default async function AdminQuestionsPage({
   return (
     <Container className="py-12">
       <div className="mx-auto max-w-4xl space-y-8">
-        <div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
           <h1 className="text-3xl font-semibold tracking-tight">Questions</h1>
           <p className="mt-1 text-muted">Filter, bulk-manage, author, and attach video explanations.</p>
           <Link href="/admin/questions/import" className="mt-3 inline-block rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
             Bulk import from CSV →
           </Link>
+          </div>
+          <Link href="/admin" className="whitespace-nowrap rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">← Admin</Link>
         </div>
 
-        <details className="rounded-2xl border border-border bg-surface">
+        <details id="new-question" className="scroll-mt-24 rounded-2xl border border-border bg-surface">
           <summary className="cursor-pointer list-none px-5 py-4 font-medium [&::-webkit-details-marker]:hidden">
             + New question
           </summary>
