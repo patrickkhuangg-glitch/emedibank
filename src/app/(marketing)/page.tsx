@@ -46,14 +46,18 @@ export default function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(studocyteJsonLd) }} />
+      <div className="border-b border-brand/20 bg-brand px-4 py-2.5 text-center text-sm font-semibold text-brand-foreground">
+        <span>Studocyte is launching soon.</span>{' '}
+        <a href="#opening-list" className="underline decoration-white/45 underline-offset-4 transition-colors hover:decoration-white">Join the opening list</a>
+      </div>
       {/* ---------------- Hero ---------------- */}
       <section className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
         <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
-            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[13px] text-muted">
+            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-muted px-3.5 py-2 text-[13px] text-brand">
               <StethoIcon color="#6a45c9" />
-              <span>Built for <b className="font-semibold text-foreground">future doctors</b></span>
+              <span><b className="font-semibold">Coming soon.</b> Built for future doctors.</span>
             </span>
             <p className="mt-6 font-display text-2xl font-bold tracking-tight text-brand">Studocyte by EMeducate</p>
             <h1 className="mt-1.5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
@@ -68,14 +72,10 @@ export default function Home() {
               Whatever stage you&rsquo;re at, sitting the <Link href="/#exams" className={LEAD_LINK}>UCAT</Link>, prepping for <Link href="/#exams" className={LEAD_LINK}>GAMSAT</Link> or <Link href="/#exams" className={LEAD_LINK}>ISAT</Link>, or getting ready for your <Link href="/#exams" className={LEAD_LINK}>interviews</Link>, Studocyte gives you the practice and feedback to walk in ready.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/app" className="eb-press eb-soft-hover group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition-all duration-300 hover:-translate-y-0.5">
-                Open Studocyte <ArrowUpRight />
-              </Link>
-              <Link href="/pricing" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface-muted">
-                See pricing
-              </Link>
+              <a href="#opening-list" className="eb-press eb-soft-hover inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 font-semibold text-brand-foreground transition-all duration-300 hover:-translate-y-0.5">Join the opening list <ArrowUpRight /></a>
+              <Link href="/app" className="rounded-full border border-border bg-surface px-5 py-3 font-medium transition-all duration-300 hover:-translate-y-0.5 hover:bg-surface-muted">Existing students</Link>
             </div>
-            <p className="mt-4 flex items-center gap-2 text-sm text-muted"><CheckMini /> Full mock exams are free. No card needed to start.</p>
+            <p className="mt-4 flex items-center gap-2 text-sm text-muted"><CheckMini /> Opening-list members receive the subscriber launch offer.</p>
           </div>
 
           <div className="eb-rise" style={{ animationDelay: '140ms' }}>
@@ -85,13 +85,13 @@ export default function Home() {
       </section>
 
       {/* ---------------- Launch list ---------------- */}
-      <section className="border-t border-border bg-brand-muted/35">
-        <Container className="py-14 sm:py-18">
+      <section id="opening-list" className="scroll-mt-20 border-y border-brand/20 bg-brand-muted">
+        <Container className="py-16 sm:py-20">
           <Reveal>
             <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="flex items-center gap-5">
                 <div className="hidden flex-none sm:block"><Cyto mood="happy" size={92} title="Cyto is getting ready for launch" /></div>
-                <div><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Coming soon</p><h2 className="mt-2 text-balance font-display text-3xl font-bold tracking-tight sm:text-4xl">Be first through the door.</h2><p className="mt-3 max-w-lg leading-7 text-muted">Join the opening list for launch access, product updates and a subscriber-only opening offer.</p></div>
+                <div><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Opening list</p><h2 className="mt-2 text-balance font-display text-3xl font-bold tracking-tight sm:text-4xl">Studocyte is coming soon.</h2><p className="mt-3 max-w-lg leading-7 text-muted">Leave your email to be notified when the platform opens and receive our subscriber-only opening offer.</p></div>
               </div>
               <LaunchWaitlist />
             </div>
