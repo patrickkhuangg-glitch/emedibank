@@ -4,7 +4,7 @@ import { SITE_URL } from '@/lib/site'
 // Public marketing surface. The app lives behind auth and is intentionally absent.
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
-  const routes = ['', '/pricing', '/login', '/signup']
+  const routes = ['', '/pricing']
   return routes.map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,

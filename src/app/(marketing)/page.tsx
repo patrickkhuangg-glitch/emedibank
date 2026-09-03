@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Container } from '@/components/container'
@@ -7,6 +8,10 @@ import type { CytoMood } from '@/lib/mascot/mood'
 import { FormatSection } from '@/components/format-section'
 
 const LEAD_LINK = 'font-semibold text-brand underline decoration-brand/40 underline-offset-2 transition-colors hover:decoration-brand'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
 
 export default function Home() {
   return (

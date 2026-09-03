@@ -50,6 +50,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Pricing',
   description: 'Free tier plus per-exam and all-access subscriptions.',
+  alternates: { canonical: '/pricing' },
 }
 
 async function loadPlans(): Promise<Plan[]> {
