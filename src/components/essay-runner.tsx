@@ -180,6 +180,14 @@ export function EssayRunner({
     baseSeconds.current = totalSeconds()
     startedAt.current = 0
     const r = await submitEssayAction(responseId, bodyRef.current, baseSeconds.current, forMarking, planRef.current)
+    if (!r.ok) {
+      setSubmitting(false)
+      setFinishOpen(false)
+      setMarkMsg(r.reason === 'empty'
+        ? 'Your essay is empty. Add your response before submitting.'
+        : 'Your essay could not be saved. Your draft is still open, so please try again.')
+      return
+    }
     setElapsed(baseSeconds.current)
     if (forMarking && r.marked) {
       setMarkingStatus('pending')
@@ -202,15 +210,18 @@ export function EssayRunner({
     setMarkBusy(false)
     if (r.marked) { setMarkingStatus('pending'); setCredits((c) => Math.max(0, c - MARK_COST)); setMarkMsg(null) }
     else if (r.reason === 'no_credits') setMarkMsg('Not enough credits to submit for marking.')
+    else if (r.reason === 'empty') setMarkMsg('This essay is empty and cannot be sent for marking.')
     else if (r.reason === 'already') setMarkingStatus('pending')
   }
 
   function onChangeBody(v: string) {
+    bodyRef.current = v
     setBody(v)
     dirtyRef.current = true
     setSaveState('idle')
   }
   function onChangePlan(v: string) {
+    planRef.current = v
     setPlan(v)
     dirtyRef.current = true
     setSaveState('idle')

@@ -112,21 +112,39 @@ export async function submitEssayAction(
   timeSpentSeconds: number,
   forMarking = false,
   plan?: string | null,
-): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' }> {
+): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' | 'empty' | 'save_failed' }> {
   try {
     const user = await requireUser()
     const supabase = await createClient()
-    await supabase
+    const { data: existing, error: loadError } = await supabase
+      .from('essay_responses')
+      .select('body, status')
+      .eq('id', responseId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (loadError || !existing || existing.status !== 'draft') return { ok: false, marked: false, reason: 'save_failed' }
+
+    // Prefer the editor's current value. If a client event arrives with a stale
+    // empty value, recover the latest autosaved draft rather than erasing it.
+    const finalBody = body.trim() ? body : existing.body
+    if (!finalBody.trim()) return { ok: false, marked: false, reason: 'empty' }
+
+    const { data: saved, error: saveError } = await supabase
       .from('essay_responses')
       .update({
-        body,
-        word_count: countWords(body),
+        body: finalBody,
+        word_count: countWords(finalBody),
         time_spent_seconds: Math.max(0, Math.round(timeSpentSeconds)),
         status: 'submitted',
         updated_at: new Date().toISOString(),
         ...(plan !== undefined ? { plan } : {}),
       })
       .eq('id', responseId)
+      .eq('user_id', user.id)
+      .eq('status', 'draft')
+      .select('id')
+      .maybeSingle()
+    if (saveError || !saved) return { ok: false, marked: false, reason: 'save_failed' }
     if (!forMarking) return { ok: true, marked: false }
     const r = await requestMarkingFor(user.id, responseId)
     return { ok: true, marked: r.marked, reason: r.reason }
@@ -138,7 +156,7 @@ export async function submitEssayAction(
 /** Request tutor marking for an already-submitted essay (from the essays list). */
 export async function requestMarkingAction(
   responseId: string,
-): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' }> {
+): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' | 'empty' }> {
   try {
     const user = await requireUser()
     const r = await requestMarkingFor(user.id, responseId)
@@ -153,12 +171,13 @@ export async function requestMarkingAction(
 async function requestMarkingFor(
   userId: string,
   responseId: string,
-): Promise<{ marked: boolean; reason?: 'no_credits' | 'already' }> {
+): Promise<{ marked: boolean; reason?: 'no_credits' | 'already' | 'empty' }> {
   const admin = createAdminClient()
   const { data: resp } = await admin
-    .from('essay_responses').select('user_id, marking_status').eq('id', responseId).maybeSingle()
+    .from('essay_responses').select('user_id, marking_status, body').eq('id', responseId).maybeSingle()
   if (!resp || resp.user_id !== userId) return { marked: false, reason: 'already' }
   if (resp.marking_status === 'pending' || resp.marking_status === 'approved') return { marked: false, reason: 'already' }
+  if (!resp.body.trim()) return { marked: false, reason: 'empty' }
 
   // Atomic debit as the calling user (auth.uid() inside the function).
   const supabase = await createClient()

@@ -94,11 +94,28 @@ export function EssaySimulationRunner({
 
   const submitAll = useCallback(async () => {
     if (!idsRef.current || submitting) return
+    const empty = bodiesRef.current.findIndex((essay) => !essay.trim())
+    if (empty !== -1) {
+      setFinishOpen(false)
+      setActive(empty)
+      setMarkMsg(`Task ${empty === 0 ? 'A' : 'B'} is empty. Add your response before submitting the simulation.`)
+      return
+    }
     setSubmitting(true)
     const secs = elapsedNow()
-    await Promise.all(idsRef.current.map((rid, i) =>
+    const results = await Promise.all(idsRef.current.map((rid, i) =>
       submitEssayAction(rid, bodiesRef.current[i], secs, false, plansRef.current[i]),
     ))
+    const failed = results.findIndex((result) => !result.ok)
+    if (failed !== -1) {
+      setSubmitting(false)
+      setFinishOpen(false)
+      setActive(failed)
+      setMarkMsg(results[failed].reason === 'empty'
+        ? `Task ${failed === 0 ? 'A' : 'B'} is empty. Add your response before submitting the simulation.`
+        : 'Your essays could not be saved. The simulation remains open, so please try again.')
+      return
+    }
     setElapsed(secs)
     setSubmitting(false)
     setFinishOpen(false)
@@ -152,8 +169,13 @@ export function EssaySimulationRunner({
 
   function edit(field: 'body' | 'plan', v: string) {
     dirtyRef.current = true; dirtyIdxRef.current = active; setSaveState('idle')
-    if (field === 'body') setBodies((b) => b.map((x, i) => (i === active ? v : x)))
-    else setPlans((p) => p.map((x, i) => (i === active ? v : x)))
+    if (field === 'body') {
+      bodiesRef.current = bodiesRef.current.map((x, i) => (i === active ? v : x))
+      setBodies(bodiesRef.current)
+    } else {
+      plansRef.current = plansRef.current.map((x, i) => (i === active ? v : x))
+      setPlans(plansRef.current)
+    }
   }
 
   async function requestMarking(idx: number) {
@@ -165,6 +187,7 @@ export function EssaySimulationRunner({
     setMarkBusyIdx(null)
     if (r.marked) { setMarking((m) => m.map((s, i) => (i === idx ? 'pending' : s))); setCredits((c) => Math.max(0, c - MARK_COST)) }
     else if (r.reason === 'no_credits') setMarkMsg('Not enough credits to submit for marking.')
+    else if (r.reason === 'empty') setMarkMsg('This essay is empty and cannot be sent for marking.')
     else if (r.reason === 'already') setMarking((m) => m.map((s, i) => (i === idx ? 'pending' : s)))
   }
 
