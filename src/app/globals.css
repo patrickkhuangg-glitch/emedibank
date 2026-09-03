@@ -168,7 +168,7 @@ body::after {
 /* ── Cyto mascot ──────────────────────────────────────────────────────────────
  * One SVG (components/ui/cyto.tsx); face + accents toggle by [data-mood], all
  * animation pure-CSS and reduced-motion aware. */
-.cyto{display:block}
+.cyto{display:block;overflow:visible}
 .cyto .char{transform-box:fill-box;transform-origin:50% 62%}
 .cyto .eyes{transform-box:fill-box;transform-origin:50% 45%}
 .cyto [data-show]{display:none}

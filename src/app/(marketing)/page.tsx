@@ -17,7 +17,8 @@ export default function Home() {
         <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
             <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[13px] text-muted">
-              <StethoIcon color="#6a45c9" /> Built for <b className="font-semibold text-foreground">future doctors</b>
+              <StethoIcon color="#6a45c9" />
+              <span>Built for <b className="font-semibold text-foreground">future doctors</b></span>
             </span>
             <p className="mt-6 font-display text-2xl font-bold tracking-tight text-brand">Ready to become a doctor?</p>
             <h1 className="mt-1.5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
@@ -58,7 +59,7 @@ export default function Home() {
           </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-4">
             <div className="eb-rise eb-soft md:col-span-4 flex flex-col items-center gap-6 rounded-2xl border border-border bg-surface p-6 sm:flex-row sm:gap-9 sm:p-8">
-              <div className="relative flex-none">
+              <div className="relative flex-none py-4">
                 <div aria-hidden className="absolute inset-2 -z-10 rounded-full blur-xl" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.18), transparent 70%)' }} />
                 <Cyto mood="thriving" size={132} title="Cyto, thriving" />
               </div>
