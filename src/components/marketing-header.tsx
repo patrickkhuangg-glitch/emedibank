@@ -45,7 +45,7 @@ export function MarketingHeader() {
           <Dropdown label="Company">
             <MenuLink href="/#why">About</MenuLink>
             <MenuLink href="mailto:hello@emeducate.com.au">Contact</MenuLink>
-            <MenuLink href="https://emeducate.com.au" external>Part of EMeducate ↗</MenuLink>
+            <MenuLink href="https://emeducate.com.au/studocyte" external>Studocyte by EMeducate ↗</MenuLink>
           </Dropdown>
         </nav>
 

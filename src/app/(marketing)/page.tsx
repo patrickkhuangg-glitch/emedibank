@@ -6,6 +6,7 @@ import { Reveal } from '@/components/reveal'
 import { Cyto } from '@/components/ui/cyto'
 import type { CytoMood } from '@/lib/mascot/mood'
 import { FormatSection } from '@/components/format-section'
+import { SITE_URL } from '@/lib/site'
 
 const LEAD_LINK = 'font-semibold text-brand underline decoration-brand/40 underline-offset-2 transition-colors hover:decoration-brand'
 
@@ -13,9 +14,37 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 }
 
+const studocyteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: 'Studocyte',
+      alternateName: 'Studocyte by EMeducate',
+      publisher: { '@id': 'https://emeducate.com.au/#organization' },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': `${SITE_URL}/#application`,
+      url: `${SITE_URL}/`,
+      name: 'Studocyte',
+      alternateName: 'Studocyte by EMeducate',
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web',
+      description:
+        'Exam-style UCAT, GAMSAT and ISAT practice with written and video explanations, timed mock exams and performance analytics.',
+      provider: { '@id': 'https://emeducate.com.au/#organization' },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+    },
+  ],
+}
+
 export default function Home() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(studocyteJsonLd) }} />
       {/* ---------------- Hero ---------------- */}
       <section className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
@@ -25,7 +54,7 @@ export default function Home() {
               <StethoIcon color="#6a45c9" />
               <span>Built for <b className="font-semibold text-foreground">future doctors</b></span>
             </span>
-            <p className="mt-6 font-display text-2xl font-bold tracking-tight text-brand">Ready to become a doctor?</p>
+            <p className="mt-6 font-display text-2xl font-bold tracking-tight text-brand">Studocyte by EMeducate</p>
             <h1 className="mt-1.5 text-balance font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
               Build real exam <span className="text-brand">immunity</span>.
             </h1>

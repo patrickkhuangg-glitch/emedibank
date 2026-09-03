@@ -26,12 +26,21 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: 'Studocyte',
   title: {
     default: 'Studocyte — Build your exam immunity',
     template: '%s · Studocyte',
   },
   description:
     'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written and video explanations for every answer. Part of EMeducate.',
+  openGraph: {
+    title: 'Studocyte — Build your exam immunity',
+    description:
+      'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written and video explanations for every answer. Part of EMeducate.',
+    siteName: 'Studocyte',
+    type: 'website',
+    url: '/',
+  },
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
