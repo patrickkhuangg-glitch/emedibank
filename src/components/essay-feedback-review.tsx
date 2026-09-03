@@ -110,7 +110,7 @@ export function EssayFeedbackReview({
             <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand">Indicative score</p>
             <p className="mt-3 font-display text-5xl font-semibold tracking-[-0.06em] text-brand">{parsed.score ?? 'Marked'}</p>
             <p className="mt-1 text-xs text-muted">GAMSAT Section 2</p>
-            <span className="mt-5 inline-flex rounded-full border border-brand/20 bg-surface px-2.5 py-1 text-[11px] font-semibold text-brand">Tutor approved</span>
+            <span className="mt-5 inline-flex rounded-full border border-brand/20 bg-surface px-2.5 py-1 text-[11px] font-semibold text-brand">Feedback ready</span>
           </article>
 
           <SummaryCard title="🌟 Things it did well" items={parsed.strengths} tone="good" empty="See the detailed feedback below." />
