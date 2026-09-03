@@ -35,6 +35,7 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
   // 2. Resolve the referenced products.
   const stripeProductIds = new Set<string>()
   const productsBySubscription = new Map<string, string[]>()
+  const annualSubscriptions = new Set<string>()
   const stripe = getStripe()
   await Promise.all((subs ?? []).map(async (sub) => {
     if (!sub.stripe_subscription_id) return
@@ -47,6 +48,9 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
       return id ? [id] : []
     })
     productsBySubscription.set(sub.stripe_subscription_id, ids)
+    if (remote.items.data.some((item) => item.price.recurring?.interval === 'year')) {
+      annualSubscriptions.add(sub.stripe_subscription_id)
+    }
     ids.forEach((id) => stripeProductIds.add(id))
   }))
 
@@ -75,6 +79,7 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
   // 3. Build the desired entitlement set, one row per exam (furthest expiry wins).
   const desired = new Map<string, DesiredEntitlement>()
   let allExamIds: string[] | null = null
+  let interviewExamId: string | null | undefined
 
   const add = (examId: string, source: EntitlementSource, expires: string | null) => {
     const existing = desired.get(examId)
@@ -91,11 +96,11 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
   }
 
   for (const sub of subs ?? []) {
-    if (!sub.product_id) continue
+    if (!sub.product_id && !sub.stripe_subscription_id) continue
     const itemProducts = sub.stripe_subscription_id
       ? (productsBySubscription.get(sub.stripe_subscription_id) ?? []).map((id) => localByStripeId.get(id)).filter((p): p is { kind: 'exam' | 'bundle'; exam_id: string | null } => !!p)
       : []
-    const fallback = productById.get(sub.product_id)
+    const fallback = sub.product_id ? productById.get(sub.product_id) : undefined
     const resolvedProducts = itemProducts.length > 0 ? itemProducts : fallback ? [fallback] : []
 
     for (const product of resolvedProducts) {
@@ -111,6 +116,18 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
       } else if (product.exam_id) {
         add(product.exam_id, 'subscription', sub.current_period_end)
       }
+    }
+
+    // Limited annual promotion: every annual academic subscription also unlocks
+    // Interviews without adding a paid Interviews line item to Stripe Checkout.
+    if (sub.stripe_subscription_id && annualSubscriptions.has(sub.stripe_subscription_id)) {
+      if (interviewExamId === undefined) {
+        const { data: interviewExam, error: interviewErr } = await supabase
+          .from('exams').select('id').eq('kind', 'interview').maybeSingle()
+        if (interviewErr) throw interviewErr
+        interviewExamId = interviewExam?.id ?? null
+      }
+      if (interviewExamId) add(interviewExamId, 'subscription', sub.current_period_end)
     }
   }
 

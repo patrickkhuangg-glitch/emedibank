@@ -33,27 +33,43 @@ const perWeek = (plan: Plan, interval: 'month' | 'year', currency: Currency): nu
 
 const featuresFor = (plan: Plan, interval: 'month' | 'year'): string[] => {
   if (plan.slug === 'interviews') return [
-    'Complete MMI and panel interview preparation',
-    'Station frameworks and worked examples',
+    'MMI and panel interview stations',
+    'Structured response frameworks',
+    'Ethical and personal scenarios',
     interval === 'year' ? '50 marked MMI stations included' : 'Marked MMI stations available separately',
-    'Performance feedback and progress tracking',
     'Purchase additional marked stations anytime',
   ]
-  const exam = [
-    'The complete question bank',
-    'Every question type, exam-accurate',
-    'Written and video explanations',
-    'Unlimited full, timed mock exams',
-    'Per-section performance analytics',
+  const annualInterviews = interval === 'year'
+    ? ['Interviews included free · limited promotion', '50 marked MMI stations included']
+    : []
+
+  if (plan.slug === 'ucat') return [
+    'Authentic UCAT exam interface',
+    'Timed section drills and full mocks',
+    'Decision Making and SJT question formats',
+    'Speed and accuracy analytics',
+    ...annualInterviews,
   ]
-  if (plan.slug === 'gamsat' && interval === 'year') exam.splice(3, 0, '20 marked Section II essays included')
-  if (plan.kind === 'exam') return exam
+  if (plan.slug === 'gamsat') return [
+    'Section I and III stimulus practice',
+    'Section II essay simulator',
+    'Tutor-reviewed writing feedback',
+    ...(interval === 'year' ? ['20 marked essays included'] : []),
+    ...annualInterviews,
+  ]
+  if (plan.slug === 'isat') return [
+    'Critical and quantitative reasoning',
+    'Passage-based practice units',
+    'Timed integrated sessions',
+    'Progress by question type',
+    ...annualInterviews,
+  ]
   return [
-    'UCAT, GAMSAT and ISAT, all included',
-    'Every question bank and all mocks',
-    'Written and video explanations',
-    ...(interval === 'year' ? ['20 marked GAMSAT essays included'] : []),
-    'Per-section performance analytics',
+    'UCAT, GAMSAT and ISAT included',
+    'Every question bank and full mock',
+    'Cross-exam performance analytics',
+    ...(interval === 'year' ? ['20 marked essays included'] : []),
+    ...annualInterviews,
     'The lowest cost per exam',
   ]
 }
@@ -90,7 +106,13 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
 
       <p className="mt-3 text-center text-xs text-muted">Automatically selected for your location. You can change it before checkout.</p>
 
-      <div className="mx-auto mt-8 grid max-w-6xl items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {interval === 'year' ? (
+        <div className="mx-auto mt-5 flex w-fit items-center gap-2 rounded-full border border-brand/25 bg-brand-muted px-4 py-2 text-sm font-semibold text-brand">
+          <span aria-hidden>✦</span> Limited promotion: Interviews included free with every annual academic plan
+        </div>
+      ) : null}
+
+      <div className="mx-auto mt-8 grid max-w-[1400px] items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {plans.map((plan) => {
           const featured = plan.kind === 'bundle'
           const localized = plan.amounts[currency]
@@ -100,13 +122,13 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
             localized.month != null && localized.year != null && localized.month > 0
               ? Math.round((1 - localized.year / (localized.month * 12)) * 100)
               : null
-          const canAddInterviews = plan.slug !== 'interviews' && !!interviewPlan
+          const canAddInterviews = interval === 'month' && plan.slug !== 'interviews' && !!interviewPlan
           const interviewWeek = interviewPlan ? perWeek(interviewPlan, interval, currency) : null
 
           return (
             <div
               key={plan.productId}
-              className={`relative flex flex-col rounded-2xl border p-6 ${
+              className={`relative flex flex-col rounded-2xl border p-5 ${
                 featured ? 'border-2 border-brand bg-brand-muted shadow-md' : 'border-border bg-surface'
               }`}
             >
@@ -117,9 +139,12 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
               ) : null}
 
               <h3 className="font-display text-base font-semibold">{plan.name.replace(' — Full access', '')}</h3>
+              {interval === 'year' && plan.slug !== 'interviews' ? (
+                <span className="mt-2 w-fit rounded-full bg-brand px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-brand-foreground">Free Interviews promo</span>
+              ) : null}
 
               <div className="mt-4">
-                <span className="font-display text-4xl font-semibold tracking-tight tabular-nums">
+                <span className="font-display text-3xl font-semibold tracking-tight tabular-nums xl:text-4xl">
                   {week != null ? fmt(week, 2, currency) : '—'}
                 </span>
                 <span className="text-sm font-medium text-muted"> /week</span>
@@ -153,7 +178,7 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
                 {canAddInterviews ? (
                   <label className="mb-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-brand/25 bg-brand-muted/55 p-3 text-sm transition-colors hover:border-brand/50">
                     <input type="checkbox" name="addInterviews" className="mt-0.5 accent-[var(--brand)]" />
-                    <span><b className="font-semibold">Add Interviews</b><span className="mt-0.5 block text-xs text-muted">{interviewWeek != null ? `+${fmt(interviewWeek, 2, currency)}/week` : 'Local price at checkout'}{interval === 'year' ? ' · includes 50 marked MMI stations' : ''}</span></span>
+                    <span><b className="font-semibold">Add Interviews</b><span className="mt-0.5 block text-xs text-muted">{interviewWeek != null ? `+${fmt(interviewWeek, 2, currency)}/week` : 'Local price at checkout'}</span></span>
                   </label>
                 ) : null}
                 <Button type="submit" variant={featured ? 'primary' : 'secondary'} className="w-full">

@@ -110,7 +110,9 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
           p_amount: 40,
         })
       }
-      if (slugs.has('interviews')) {
+      // The annual promotion includes Interviews with every annual package, so
+      // every active annual subscription receives the 50-station allowance.
+      if (annualItems.length > 0) {
         await supabase.rpc('grant_subscription_benefit', {
           p_user_id: userId,
           p_stripe_subscription_id: sub.id,

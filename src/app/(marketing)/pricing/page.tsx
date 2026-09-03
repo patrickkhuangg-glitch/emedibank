@@ -102,8 +102,8 @@ export default async function PricingPage() {
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight">Everything, priced by the week</h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
-          Start free with full mock exams. Choose one exam or combine any plan with Interviews.
-          Local pricing is shown in your currency, with a 7-day trial on every plan.
+          Start free with full mock exams. For a limited time, every annual academic plan includes
+          Interviews and 50 marked MMI stations free. Local pricing is shown in your currency.
         </p>
       </div>
 
