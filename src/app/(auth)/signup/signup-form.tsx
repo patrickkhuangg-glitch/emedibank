@@ -4,12 +4,13 @@ import { signUpAction, type AuthState } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Alert } from '@/components/ui/alert'
+import { trackAnalyticsEvent } from '@/components/analytics'
 
 export function SignupForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUpAction, {})
   if (state.message) return <Alert kind="success">{state.message}</Alert>
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-4" onSubmit={() => trackAnalyticsEvent('signup_started', { method: 'email' })}>
       {state.error ? <Alert>{state.error}</Alert> : null}
       <Field label="Full name" name="full_name" type="text" autoComplete="name" required />
       <Field label="Email" name="email" type="email" autoComplete="email" required />

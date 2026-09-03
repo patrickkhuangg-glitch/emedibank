@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { startCheckoutAction } from '@/lib/stripe/actions'
 import { Button } from '@/components/ui/button'
 import { CURRENCIES, type Currency } from '@/lib/stripe/pricing'
+import { trackAnalyticsEvent } from '@/components/analytics'
 
 export type Plan = {
   productId: string
@@ -171,7 +172,7 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
                 ))}
               </ul>
 
-              <form action={startCheckoutAction} className="mt-6 pt-2">
+              <form action={startCheckoutAction} className="mt-6 pt-2" onSubmit={() => trackAnalyticsEvent('subscription_checkout_started', { plan: plan.slug ?? 'all_access', billing_interval: interval, currency })}>
                 <input type="hidden" name="productId" value={plan.productId} />
                 <input type="hidden" name="interval" value={interval} />
                 <input type="hidden" name="currency" value={currency} />

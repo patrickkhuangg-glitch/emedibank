@@ -40,7 +40,7 @@ export async function signUpAction(
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${origin}/auth/confirm?next=/dashboard`,
+      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent('/dashboard?signup=success')}`,
     },
   })
   if (error) return { error: error.message }
@@ -49,7 +49,7 @@ export async function signUpAction(
   if (!data.session) {
     return { message: 'Check your email to confirm your account, then log in.' }
   }
-  redirect('/dashboard')
+  redirect('/dashboard?signup=success')
 }
 
 export async function signInWithGoogleAction(formData: FormData) {

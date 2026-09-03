@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono } from 'next/font/google'
 import { SITE_URL } from '@/lib/site'
+import { Analytics } from '@/components/analytics'
 import './globals.css'
 
 // Display — confident, slightly unconventional headlines. Variable font: the full
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="en"
       className={`${bricolage.variable} ${hanken.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{children}<Analytics /></body>
     </html>
   )
 }

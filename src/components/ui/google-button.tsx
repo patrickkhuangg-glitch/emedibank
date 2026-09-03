@@ -1,9 +1,12 @@
+'use client'
+
 import { signInWithGoogleAction } from '@/lib/auth/actions'
+import { trackAnalyticsEvent } from '@/components/analytics'
 import { Button } from './button'
 
-export function GoogleButton({ redirectTo = '/dashboard' }: { redirectTo?: string }) {
+export function GoogleButton({ redirectTo = '/dashboard', intent = 'login' }: { redirectTo?: string; intent?: 'login' | 'signup' }) {
   return (
-    <form action={signInWithGoogleAction}>
+    <form action={signInWithGoogleAction} onSubmit={() => intent === 'signup' && trackAnalyticsEvent('signup_started', { method: 'google' })}>
       <input type="hidden" name="redirectTo" value={redirectTo} />
       <Button type="submit" variant="secondary" className="w-full">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>

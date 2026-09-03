@@ -17,7 +17,7 @@ export default async function SignupPage() {
           Free to start — you get the free-tier subtests right away.
         </p>
       </div>
-      <GoogleButton />
+      <GoogleButton redirectTo="/dashboard?signup=success" intent="signup" />
       <div className="flex items-center gap-3 text-xs text-muted">
         <span className="h-px flex-1 bg-border" />
         or
