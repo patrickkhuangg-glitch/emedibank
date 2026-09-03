@@ -5,6 +5,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessExam, hasActiveEntitlement } from '@/lib/access'
 import type { QuestionKind } from '@/lib/supabase/types'
+import { questionMarkValue } from '@/lib/practice/marks'
 
 type YesNo = 'Yes' | 'No'
 type Table = { headers: string[]; rows: string[][] }
@@ -27,6 +28,7 @@ export type QuestionMeta = {
   published: boolean
   kind: QuestionKind
   topic: string | null
+  tags: string[]
   stem: string
   data: QData | null
   explanation_text: string | null
@@ -51,12 +53,12 @@ export async function loadMeta(questionId: string): Promise<QuestionMeta | null>
 // the midpoint (B<->C) or any larger gap. Every other question is all-or-nothing.
 // Assumes options are labelled A..D top-to-bottom of the scale (the import order).
 export function markScore(
-  m: Pick<QuestionMeta, 'subtest_slug'>,
+  m: Pick<QuestionMeta, 'subtest_slug' | 'tags'>,
   correctLabel: string | undefined,
   selectedLabel: string | undefined,
   isCorrect: boolean,
 ): number {
-  if (isCorrect) return 1
+  if (isCorrect) return questionMarkValue(m.subtest_slug, m.tags)
   if (m.subtest_slug !== 'situational-judgement' || !correctLabel || !selectedLabel) return 0
   const pair = new Set([correctLabel.toUpperCase(), selectedLabel.toUpperCase()])
   if ((pair.has('A') && pair.has('B')) || (pair.has('C') && pair.has('D'))) return 0.5
@@ -79,6 +81,7 @@ export type SafeQuestion = {
   id: string
   kind: QuestionKind
   topic: string | null
+  marks: number
   stem: string
   passage: string | null
   image: string | null
@@ -109,6 +112,7 @@ export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> 
     id: m.id,
     kind: m.kind,
     topic: m.topic,
+    marks: questionMarkValue(m.subtest_slug, m.tags),
     stem: m.stem,
     passage: sd?.passage ?? m.data?.passage ?? null,
     image: imgs[0] ?? null,
@@ -260,7 +264,7 @@ export async function gradeGrid(
 
   return {
     is_correct,
-    score: is_correct ? 1 : 0,
+    score: is_correct ? questionMarkValue(m.subtest_slug, m.tags) : 0,
     per_statement,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),

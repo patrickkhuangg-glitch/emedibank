@@ -6,8 +6,8 @@ import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
 import { getSectionStats } from '@/lib/practice/stats'
-import { countSets } from '@/lib/practice/sets'
-import { sectionMinutes, minutesPerSet, timedPresets, questionsForMinutes } from '@/lib/practice/timing'
+import { countAvailableMarks, countSets } from '@/lib/practice/sets'
+import { marksForMinutes, sectionMarks, sectionMinutes, minutesPerSet, timedPresets, questionsForMinutes } from '@/lib/practice/timing'
 import { PerformanceCard } from '@/components/practice/performance-card'
 import { TimingPicker } from './timing-picker'
 
@@ -45,9 +45,10 @@ export default async function TimingPage({
     .eq('published', true)
   if (cat) questionCountQuery = questionCountQuery.contains('tags', [cat])
 
-  const [stats, availableSets, questionCountResult] = await Promise.all([
+  const [stats, availableSets, availableMarks, questionCountResult] = await Promise.all([
     getSectionStats(exam.id, user.id),
     countSets(subtest.id, cat),
+    countAvailableMarks(subtest.id, subtest.slug, cat),
     questionCountQuery,
   ])
   const availableQuestions = questionCountResult.count ?? 0
@@ -58,9 +59,9 @@ export default async function TimingPage({
   const presets = timedPresets(exam.slug, subtest.slug)
   const secMin = sectionMinutes(exam.slug, subtest.slug)
   const timedOptions = [
-    ...presets.map((m) => ({ minutes: m, questions: questionsForMinutes(exam.slug, subtest.slug, m), full: false })),
+    ...presets.map((m) => ({ minutes: m, questions: questionsForMinutes(exam.slug, subtest.slug, m), marks: marksForMinutes(exam.slug, subtest.slug, m), full: false })),
     ...(secMin && !presets.includes(secMin)
-      ? [{ minutes: secMin, questions: questionsForMinutes(exam.slug, subtest.slug, secMin), full: true }]
+      ? [{ minutes: secMin, questions: questionsForMinutes(exam.slug, subtest.slug, secMin), marks: marksForMinutes(exam.slug, subtest.slug, secMin), full: true }]
       : []),
   ]
 
@@ -86,6 +87,8 @@ export default async function TimingPage({
             minutesPerSet={minutesPerSet(exam.slug, subtest.slug)}
             availableSets={availableSets}
             availableQuestions={availableQuestions}
+            availableMarks={availableMarks}
+            marksPerMinute={(sectionMarks(exam.slug, subtest.slug) ?? 0) / (secMin ?? 1)}
           />
         </main>
 

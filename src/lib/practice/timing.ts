@@ -8,7 +8,7 @@
 export const SECTION_MINUTES: Record<string, Record<string, number>> = {
   ucat: {
     'verbal-reasoning': 22,
-    'decision-making': 37,
+    'decision-making': 35,
     'quantitative-reasoning': 26,
     'situational-judgement': 26,
   },
@@ -16,6 +16,25 @@ export const SECTION_MINUTES: Record<string, Record<string, number>> = {
 
 export function sectionMinutes(examSlug: string, subtestSlug: string): number | null {
   return SECTION_MINUTES[examSlug]?.[subtestSlug] ?? null
+}
+
+/** Full-section mark totals where pacing is defined by marks rather than the
+ * number of question screens. DM has 47 marks in 35 minutes. */
+export const SECTION_MARKS: Record<string, Record<string, number>> = {
+  ucat: {
+    'decision-making': 47,
+  },
+}
+
+export function sectionMarks(examSlug: string, subtestSlug: string): number | null {
+  return SECTION_MARKS[examSlug]?.[subtestSlug] ?? null
+}
+
+export function marksForMinutes(examSlug: string, subtestSlug: string, minutes: number): number | null {
+  const marks = sectionMarks(examSlug, subtestSlug)
+  const mins = sectionMinutes(examSlug, subtestSlug)
+  if (!marks || !mins) return null
+  return Math.max(1, Math.min(marks, Math.round(minutes * (marks / mins))))
 }
 
 /** Full-section question counts. Where set (and a SECTION_MINUTES entry exists),
@@ -55,6 +74,7 @@ export const TIMED_PRESETS = [5, 10, 15]
  *  section's clock. QR presets map to 2, 4 and 6 complete four-question sets. */
 export const TIMED_PRESETS_BY_SECTION: Record<string, Record<string, number[]>> = {
   ucat: {
+    'decision-making': [9, 18, 26],
     'quantitative-reasoning': [6, 12, 17],
     'situational-judgement': [7, 13, 20],
   },

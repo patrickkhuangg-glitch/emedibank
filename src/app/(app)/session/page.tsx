@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { resolveSessionQuestionIds } from '@/lib/questions/session'
-import { resolveSetQuestionIds } from '@/lib/practice/sets'
+import { resolveMarkQuestionIds, resolveSetQuestionIds } from '@/lib/practice/sets'
 import { resolveReviewQuestionIds } from '@/lib/dashboard/stats'
 import { SessionRunner } from '@/components/session-runner'
 import { GamsatRunner } from '@/components/gamsat-runner'
@@ -31,10 +31,17 @@ export default async function SessionPage({
   // such tags get truncated to "True" and match zero questions.
   const tag = (sp.tags ?? '').trim()
   const timed = mode === 'timed' || sp.timed === '1'
+  const { data: selectedSubtest } = subtestId
+    ? await supabase.from('subtests').select('name, slug').eq('id', subtestId).maybeSingle()
+    : { data: null }
 
   const ids =
     mode === 'review'
       ? await resolveReviewQuestionIds(user.id, exam.id)
+      : mode === 'timed' && Number(sp.marks ?? 0) > 0
+      ? await resolveMarkQuestionIds(
+          user.id, exam.id, subtestId, selectedSubtest?.slug ?? '', tag, Number(sp.marks),
+        )
       : mode === 'sets' || mode === 'timed'
       ? // Both flows run whole sets; timed also carries a `sets` count sized to the
         // clock (2 min/set). Fall back to 0 = every set for older timed links.
@@ -61,11 +68,7 @@ export default async function SessionPage({
   // GAMSAT and ISAT use the passage/stimulus interface (stimulus left, question
   // right); everything else uses the Pearson-VUE-style runner.
   const passageStyle = exam.slug === 'gamsat' || exam.slug === 'isat'
-  let passageSubtestName = ''
-  if (passageStyle && subtestId) {
-    const { data: st } = await supabase.from('subtests').select('name').eq('id', subtestId).maybeSingle()
-    passageSubtestName = st?.name ?? ''
-  }
+  const passageSubtestName = passageStyle ? selectedSubtest?.name ?? '' : ''
   const subLabel = passageSubtestName ? ` ${passageSubtestName}` : ''
 
   const instructions = passageStyle

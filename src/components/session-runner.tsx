@@ -13,6 +13,7 @@ type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
   id: string
   topic: string | null
+  marks: number
   stem: string
   passage: string | null
   image: string | null
@@ -170,12 +171,13 @@ export function SessionRunner({
     ]
     if (resultObjs.length > 0) {
       const scoreSum = resultObjs.reduce((s, r) => s + (r.score ?? (r.is_correct ? 1 : 0)), 0)
+      const sessionMaxMarks = questionIds.reduce((sum, qid) => sum + (cache[qid]?.marks ?? 1), 0)
       void recordPracticeSessionAction({
         examSlug,
         subtestId,
         tag,
         mode,
-        total: resultObjs.length,
+        total: sessionMaxMarks,
         correct: scoreSum,
         timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
       })
@@ -312,6 +314,7 @@ export function SessionRunner({
     const incorrectCount = incorrectIdx.length
     const answeredCount = questionIds.filter((qid) => answeredIds.has(qid)).length
     const markSum = questionIds.reduce((s, qid) => s + (answeredIds.has(qid) ? (resultOf(qid)?.score ?? 0) : 0), 0)
+    const maxMarks = questionIds.reduce((sum, qid) => sum + (cache[qid]?.marks ?? 1), 0)
     const hasPartial = questionIds.some((qid) => statusOf(qid) === 'Partial')
     const fmtMark = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
@@ -322,7 +325,7 @@ export function SessionRunner({
         <p className="pt-3 text-center text-[15px] text-[#1b1b1b]">Review Postscore: see which items are incorrect and return to them to see the solution</p>
         {answeredCount > 0 ? (
           <p className="pb-3 pt-1 text-center text-[15px] font-semibold text-[#1b2a46]">
-            Your score: {fmtMark(markSum)} / {answeredCount} · {Math.round((markSum / answeredCount) * 100)}%{hasPartial ? '  (half marks applied)' : ''}
+            Your score: {fmtMark(markSum)} / {fmtMark(maxMarks)} · {Math.round((markSum / maxMarks) * 100)}%{hasPartial ? '  (half marks applied)' : ''}
           </p>
         ) : null}
         <div className="flex items-center justify-between px-5 py-2 font-semibold text-white" style={{ background: '#2f74b8' }}>

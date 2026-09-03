@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { haptic } from '@/lib/haptics'
 import { SET_COUNTS, setsForMinutes } from '@/lib/practice/timing'
 
-type TimedOption = { minutes: number; questions: number | null; full: boolean }
+type TimedOption = { minutes: number; questions: number | null; marks: number | null; full: boolean }
 
 export function TimingPicker({
   examSlug,
@@ -14,6 +14,8 @@ export function TimingPicker({
   minutesPerSet,
   availableSets,
   availableQuestions,
+  availableMarks,
+  marksPerMinute,
 }: {
   examSlug: string
   subtestId: string
@@ -22,6 +24,8 @@ export function TimingPicker({
   minutesPerSet: number
   availableSets: number
   availableQuestions: number
+  availableMarks: number
+  marksPerMinute: number
 }) {
   const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
@@ -41,13 +45,14 @@ export function TimingPicker({
     if (categoryKey) p.set('tags', categoryKey)
     return p
   }
-  function startTimed(minutes: number, key: string) {
+  function startTimed(minutes: number, key: string, marks: number | null = null) {
     haptic(12)
     setSelected(key)
     const p = base()
     p.set('mode', 'timed')
     p.set('minutes', String(minutes))
     p.set('sets', String(setsFor(minutes)))
+    if (marks != null) p.set('marks', String(Math.min(marks, availableMarks)))
     router.push('/session?' + p.toString())
   }
   function startSets(n: number) {
@@ -65,7 +70,12 @@ export function TimingPicker({
     label: `${o.minutes} minutes`,
     // When the section is proportioned by pace, label the amount in questions;
     // otherwise fall back to the number of whole sets the clock loads.
-    detail: o.questions != null ? `${Math.min(o.questions, availableQuestions)} questions` : `${setsFor(o.minutes)} question set${setsFor(o.minutes) > 1 ? 's' : ''}`,
+    detail: o.marks != null
+      ? `${Math.min(o.marks, availableMarks)} marks`
+      : o.questions != null
+      ? `${Math.min(o.questions, availableQuestions)} questions`
+      : `${setsFor(o.minutes)} question set${setsFor(o.minutes) > 1 ? 's' : ''}`,
+    marks: o.marks,
     full: o.full,
   }))
   const setCounts = SET_COUNTS.filter((n) => n <= Math.max(1, availableSets))
@@ -83,7 +93,7 @@ export function TimingPicker({
         <div className="space-y-2.5">
           {timed.map((t, idx) => (
             <div key={t.key} className="eb-rise" style={{ animationDelay: `${idx * 45}ms` }}>
-              <button onClick={() => startTimed(t.minutes, t.key)} className={rowCls(selected === t.key)}>
+              <button onClick={() => startTimed(t.minutes, t.key, t.marks)} className={rowCls(selected === t.key)}>
                 <IconTile active={selected === t.key}><ClockIcon /></IconTile>
                 <span className="flex-1">
                   <span className="block font-medium">{t.label}</span>
@@ -108,7 +118,7 @@ export function TimingPicker({
                   onChange={(e) => setCustomMin(Math.max(1, Math.min(180, Number(e.target.value) || 1)))}
                   className="w-24 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                 />
-                <button onClick={() => startTimed(customMin, 't-custom')} className="eb-press rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-foreground hover:opacity-90">
+                <button onClick={() => startTimed(customMin, 't-custom', marksPerMinute > 0 ? Math.round(customMin * marksPerMinute) : null)} className="eb-press rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-foreground hover:opacity-90">
                   Start →
                 </button>
               </div>
