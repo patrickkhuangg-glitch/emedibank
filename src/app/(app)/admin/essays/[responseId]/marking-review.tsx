@@ -13,6 +13,12 @@ type Detail = {
   timed: boolean
   durationMinutes: number | null
   aiFeedback: string | null
+  primaryProvider: string | null
+  primaryModel: string | null
+  secondaryFeedback: string | null
+  secondaryProvider: string | null
+  secondaryModel: string | null
+  rubricVersion: string | null
   draftFeedback: string | null
   tutorFeedback: string | null
   studentName: string | null
@@ -22,6 +28,7 @@ export function MarkingReview({ detail }: { detail: Detail }) {
   const [status, setStatus] = useState(detail.status)
   const [draft, setDraft] = useState(detail.draftFeedback ?? detail.aiFeedback ?? detail.tutorFeedback ?? '')
   const [aiRaw, setAiRaw] = useState<string | null>(detail.aiFeedback)
+  const [secondaryRaw, setSecondaryRaw] = useState<string | null>(detail.secondaryFeedback)
   const [gen, setGen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [approving, setApproving] = useState(false)
@@ -40,10 +47,13 @@ export function MarkingReview({ detail }: { detail: Detail }) {
     setGen(false)
     if (r.ok && r.text) {
       setAiRaw(r.text)
+      setSecondaryRaw(r.secondaryText ?? null)
       if (!draft.trim()) setDraft(r.text)
-      setMsg('AI draft generated below — edit before approving.')
+      setMsg(r.secondaryText
+        ? 'Terra primary draft and Claude independent check generated. Edit before approving.'
+        : 'Terra primary draft generated. Claude secondary check was unavailable, so review closely before approving.')
     } else if (r.reason === 'no_key') {
-      setMsg('AI is not configured yet (no ANTHROPIC_API_KEY). Use “Copy prompt for chat”, or write feedback manually.')
+      setMsg('Terra is not configured yet (no OPENAI_API_KEY). Use “Copy prompt for chat”, or write feedback manually.')
     } else {
       setMsg('Could not generate a draft. Try again, or write feedback manually.')
     }
@@ -103,7 +113,7 @@ export function MarkingReview({ detail }: { detail: Detail }) {
         <div className="space-y-3 lg:sticky lg:top-6 lg:self-start">
           <div className="flex flex-wrap gap-2">
             <button onClick={generate} disabled={gen} className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground disabled:opacity-55">
-              {gen ? 'Generating…' : aiRaw ? 'Regenerate AI draft' : 'Generate AI draft'}
+              {gen ? 'Running both markers…' : aiRaw ? 'Regenerate both markers' : 'Generate Terra + Claude marks'}
             </button>
             <button onClick={copyPrompt} className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
               {copied ? 'Copied ✓' : 'Copy prompt for chat'}
@@ -125,6 +135,26 @@ export function MarkingReview({ detail }: { detail: Detail }) {
               <summary className="cursor-pointer text-xs font-semibold text-muted">View original AI draft</summary>
               <div className="mt-2 whitespace-pre-wrap text-[13.5px] leading-relaxed text-muted">{aiRaw}</div>
             </details>
+          ) : null}
+
+          {secondaryRaw ? (
+            <details className="rounded-xl border border-brand/25 bg-brand-muted/35 p-4 text-sm">
+              <summary className="cursor-pointer font-semibold text-foreground">
+                Claude secondary check
+                <span className="ml-2 font-normal text-muted">
+                  {detail.secondaryModel ? `(${detail.secondaryModel})` : ''}
+                </span>
+              </summary>
+              <p className="mt-2 text-xs text-muted">Independent quality-control mark. It is never sent directly to the student.</p>
+              <div className="mt-3 whitespace-pre-wrap text-[13.5px] leading-relaxed text-foreground">{secondaryRaw}</div>
+            </details>
+          ) : null}
+
+          {(detail.primaryModel || detail.rubricVersion) ? (
+            <p className="text-xs text-muted">
+              Primary: {detail.primaryModel ?? 'GPT-5.6 Terra'}
+              {detail.rubricVersion ? ` · Rubric ${detail.rubricVersion}` : ''}
+            </p>
           ) : null}
 
           <div className="flex items-center gap-3 pt-1">

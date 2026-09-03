@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessSubtest } from '@/lib/access'
 import { countWords, parseQuotes, MARK_COST } from './config'
-import { MARKING_SYSTEM, buildMarkingUserMessage } from './marking-rubric'
+import { MARKING_SYSTEM, SECONDARY_MARKING_SYSTEM, RUBRIC_VERSION, buildMarkingUserMessage } from './marking-rubric'
 
 type Denied = { denied: true }
 
@@ -185,10 +185,10 @@ async function requestMarkingFor(
  *  with manual feedback. */
 export async function generateAiDraftAction(
   responseId: string,
-): Promise<{ ok: boolean; text?: string; reason?: 'no_key' | 'error' }> {
+): Promise<{ ok: boolean; text?: string; secondaryText?: string | null; reason?: 'no_key' | 'error' }> {
   await requireAdmin()
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return { ok: false, reason: 'no_key' }
+  const openAiKey = process.env.OPENAI_ESSAY_MARKING_API_KEY || process.env.OPENAI_API_KEY
+  if (!openAiKey) return { ok: false, reason: 'no_key' }
   const admin = createAdminClient()
   const { data: r } = await admin
     .from('essay_responses').select('body, prompt_id').eq('id', responseId).maybeSingle()
@@ -198,37 +198,85 @@ export async function generateAiDraftAction(
   if (!p) return { ok: false, reason: 'error' }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const userMessage = buildMarkingUserMessage({ task: p.task, theme: p.theme, quotes: parseQuotes(p.quotes), body: r.body })
+    const primaryModel = process.env.OPENAI_ESSAY_MARKING_MODEL || process.env.OPENAI_MARKING_MODEL || 'gpt-5.6-terra'
+    const secondaryModel = process.env.ANTHROPIC_ESSAY_COMARKER_MODEL || process.env.ANTHROPIC_COMARKER_MODEL || 'claude-sonnet-5'
+
+    const primaryRequest = fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${openAiKey}` },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MARKING_MODEL || 'claude-sonnet-5',
-        max_tokens: 1400,
-        system: MARKING_SYSTEM,
-        messages: [{
-          role: 'user',
-          content: buildMarkingUserMessage({ task: p.task, theme: p.theme, quotes: parseQuotes(p.quotes), body: r.body }),
-        }],
+        model: primaryModel,
+        max_output_tokens: 3200,
+        input: [
+          { role: 'system', content: MARKING_SYSTEM },
+          { role: 'user', content: userMessage },
+        ],
       }),
     })
-    if (!res.ok) return { ok: false, reason: 'error' }
-    const json = await res.json()
-    const text: string = (json?.content ?? []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('\n').trim()
+
+    const anthropicKey = process.env.ANTHROPIC_ESSAY_COMARKER_API_KEY || process.env.ANTHROPIC_API_KEY
+    const secondaryRequest = anthropicKey
+      ? fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: secondaryModel,
+            max_tokens: 700,
+            system: SECONDARY_MARKING_SYSTEM,
+            messages: [{ role: 'user', content: userMessage }],
+          }),
+        })
+      : Promise.resolve(null)
+
+    const [primaryRes, secondaryRes] = await Promise.all([primaryRequest, secondaryRequest])
+    if (!primaryRes.ok) return { ok: false, reason: 'error' }
+    const primaryJson = await primaryRes.json()
+    const text: string = extractOpenAiText(primaryJson)
     if (!text) return { ok: false, reason: 'error' }
+
+    let secondaryText: string | null = null
+    if (secondaryRes?.ok) {
+      const secondaryJson = await secondaryRes.json()
+      secondaryText = (secondaryJson?.content ?? [])
+        .filter((b: { type: string }) => b.type === 'text')
+        .map((b: { text: string }) => b.text)
+        .join('\n')
+        .trim() || null
+    }
     const now = new Date().toISOString()
     // Store the AI draft; seed the tutor's working copy if they haven't started one.
     const { data: existing } = await admin.from('essay_markings').select('draft_feedback').eq('response_id', responseId).maybeSingle()
     await admin.from('essay_markings').upsert({
       response_id: responseId,
       ai_feedback: text,
+      primary_provider: 'openai',
+      primary_model: primaryModel,
+      secondary_feedback: secondaryText,
+      secondary_provider: secondaryText ? 'anthropic' : null,
+      secondary_model: secondaryText ? secondaryModel : null,
+      rubric_version: RUBRIC_VERSION,
       draft_feedback: existing?.draft_feedback ?? text,
       status: 'pending',
       updated_at: now,
     }, { onConflict: 'response_id' })
-    return { ok: true, text }
+    return { ok: true, text, secondaryText }
   } catch {
     return { ok: false, reason: 'error' }
   }
+}
+
+function extractOpenAiText(json: {
+  output_text?: string
+  output?: Array<{ content?: Array<{ type?: string; text?: string }> }>
+}): string {
+  if (typeof json.output_text === 'string') return json.output_text.trim()
+  return (json.output ?? [])
+    .flatMap((item) => item.content ?? [])
+    .filter((item) => item.type === 'output_text' || item.type === 'text')
+    .map((item) => item.text ?? '')
+    .join('\n')
+    .trim()
 }
 
 /** Save the tutor's in-progress edit of the feedback (admin-only). */

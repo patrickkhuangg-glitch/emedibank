@@ -222,6 +222,12 @@ export type MarkingDetail = {
   timed: boolean
   durationMinutes: number | null
   aiFeedback: string | null
+  primaryProvider: string | null
+  primaryModel: string | null
+  secondaryFeedback: string | null
+  secondaryProvider: string | null
+  secondaryModel: string | null
+  rubricVersion: string | null
   draftFeedback: string | null
   tutorFeedback: string | null
   studentName: string | null
@@ -243,7 +249,9 @@ export async function getMarkingDetail(responseId: string): Promise<MarkingDetai
     .eq('id', r.prompt_id).maybeSingle()
   if (!p) return null
   const { data: m } = await admin
-    .from('essay_markings').select('ai_feedback, draft_feedback, status').eq('response_id', responseId).maybeSingle()
+    .from('essay_markings')
+    .select('ai_feedback, primary_provider, primary_model, secondary_feedback, secondary_provider, secondary_model, rubric_version, draft_feedback, status')
+    .eq('response_id', responseId).maybeSingle()
   const { data: prof } = await admin.from('profiles').select('full_name').eq('id', r.user_id).maybeSingle()
   return {
     responseId: r.id,
@@ -255,6 +263,12 @@ export async function getMarkingDetail(responseId: string): Promise<MarkingDetai
     timed: r.timed,
     durationMinutes: r.duration_minutes,
     aiFeedback: m?.ai_feedback ?? null,
+    primaryProvider: m?.primary_provider ?? null,
+    primaryModel: m?.primary_model ?? null,
+    secondaryFeedback: m?.secondary_feedback ?? null,
+    secondaryProvider: m?.secondary_provider ?? null,
+    secondaryModel: m?.secondary_model ?? null,
+    rubricVersion: m?.rubric_version ?? null,
     draftFeedback: m?.draft_feedback ?? null,
     tutorFeedback: r.tutor_feedback,
     studentName: prof?.full_name ?? null,

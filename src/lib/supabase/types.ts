@@ -639,6 +639,12 @@ export type Database = {
           id: string
           response_id: string
           ai_feedback: string | null
+          primary_provider: string | null
+          primary_model: string | null
+          secondary_feedback: string | null
+          secondary_provider: string | null
+          secondary_model: string | null
+          rubric_version: string | null
           draft_feedback: string | null
           status: string
           marked_by: string | null
@@ -649,6 +655,12 @@ export type Database = {
           id?: string
           response_id: string
           ai_feedback?: string | null
+          primary_provider?: string | null
+          primary_model?: string | null
+          secondary_feedback?: string | null
+          secondary_provider?: string | null
+          secondary_model?: string | null
+          rubric_version?: string | null
           draft_feedback?: string | null
           status?: string
           marked_by?: string | null
@@ -657,6 +669,12 @@ export type Database = {
         }
         Update: {
           ai_feedback?: string | null
+          primary_provider?: string | null
+          primary_model?: string | null
+          secondary_feedback?: string | null
+          secondary_provider?: string | null
+          secondary_model?: string | null
+          rubric_version?: string | null
           draft_feedback?: string | null
           status?: string
           marked_by?: string | null
