@@ -13,6 +13,7 @@ export function TimingPicker({
   timedOptions,
   minutesPerSet,
   availableSets,
+  availableQuestions,
 }: {
   examSlug: string
   subtestId: string
@@ -20,6 +21,7 @@ export function TimingPicker({
   timedOptions: TimedOption[]
   minutesPerSet: number
   availableSets: number
+  availableQuestions: number
 }) {
   const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
@@ -63,7 +65,7 @@ export function TimingPicker({
     label: `${o.minutes} minutes`,
     // When the section is proportioned by pace, label the amount in questions;
     // otherwise fall back to the number of whole sets the clock loads.
-    detail: o.questions != null ? `≈ ${o.questions} questions` : `${setsFor(o.minutes)} question set${setsFor(o.minutes) > 1 ? 's' : ''}`,
+    detail: o.questions != null ? `${Math.min(o.questions, availableQuestions)} questions` : `${setsFor(o.minutes)} question set${setsFor(o.minutes) > 1 ? 's' : ''}`,
     full: o.full,
   }))
   const setCounts = SET_COUNTS.filter((n) => n <= Math.max(1, availableSets))

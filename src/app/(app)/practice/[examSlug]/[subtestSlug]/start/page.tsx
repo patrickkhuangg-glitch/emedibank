@@ -38,10 +38,19 @@ export default async function TimingPage({
     .maybeSingle()
   if (!subtest) notFound()
 
-  const [stats, availableSets] = await Promise.all([
+  let questionCountQuery = supabase
+    .from('questions')
+    .select('id', { count: 'exact', head: true })
+    .eq('subtest_id', subtest.id)
+    .eq('published', true)
+  if (cat) questionCountQuery = questionCountQuery.contains('tags', [cat])
+
+  const [stats, availableSets, questionCountResult] = await Promise.all([
     getSectionStats(exam.id, user.id),
     countSets(subtest.id, cat),
+    questionCountQuery,
   ])
+  const availableQuestions = questionCountResult.count ?? 0
   const categoryLabel = cat || `All ${subtest.name}`
 
   // Timed options: per-section presets, each labelled by its approximate question
@@ -76,6 +85,7 @@ export default async function TimingPage({
             timedOptions={timedOptions}
             minutesPerSet={minutesPerSet(exam.slug, subtest.slug)}
             availableSets={availableSets}
+            availableQuestions={availableQuestions}
           />
         </main>
 

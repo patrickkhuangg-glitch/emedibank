@@ -23,7 +23,17 @@ export function sectionMinutes(examSlug: string, subtestSlug: string): number | 
  *  sets — e.g. Situational Judgement is 69 questions in 26 min. */
 export const SECTION_QUESTIONS: Record<string, Record<string, number>> = {
   ucat: {
+    'quantitative-reasoning': 36,
     'situational-judgement': 69,
+  },
+}
+
+// Some sections use shared stimuli that must remain intact in practice. QR
+// questions are authored in four-question sets, so proportional counts round
+// to the nearest complete set rather than cutting a scenario in half.
+export const QUESTION_GROUP_SIZE: Record<string, Record<string, number>> = {
+  ucat: {
+    'quantitative-reasoning': 4,
   },
 }
 
@@ -33,16 +43,19 @@ export function questionsForMinutes(examSlug: string, subtestSlug: string, minut
   const total = SECTION_QUESTIONS[examSlug]?.[subtestSlug]
   const mins = SECTION_MINUTES[examSlug]?.[subtestSlug]
   if (!total || !mins) return null
-  return Math.max(1, Math.min(total, Math.round(minutes * (total / mins))))
+  const raw = minutes * (total / mins)
+  const groupSize = QUESTION_GROUP_SIZE[examSlug]?.[subtestSlug] ?? 1
+  return Math.max(groupSize, Math.min(total, Math.round(raw / groupSize) * groupSize))
 }
 
 /** Short timed presets shown before the full-section option is appended. */
 export const TIMED_PRESETS = [5, 10, 15]
 
 /** Per-section timed presets (minutes), where the generic 5/10/15 don't fit the
- *  section's clock. SJT is 26 min, so ~quarter / half / three-quarter of it. */
+ *  section's clock. QR presets map to 2, 4 and 6 complete four-question sets. */
 export const TIMED_PRESETS_BY_SECTION: Record<string, Record<string, number[]>> = {
   ucat: {
+    'quantitative-reasoning': [6, 12, 17],
     'situational-judgement': [7, 13, 20],
   },
 }
@@ -63,7 +76,8 @@ export const MINUTES_PER_SET: Record<string, Record<string, number>> = {
   ucat: {
     'verbal-reasoning': 2,
     'decision-making': 2,
-    'quantitative-reasoning': 2,
+    // 36 questions = nine four-question sets in 26 minutes.
+    'quantitative-reasoning': 26 / 9,
     // SJT: ~5-question scenarios at the real 69-in-26-min pace (5 × 26/69 ≈ 1.9).
     'situational-judgement': 1.9,
   },
