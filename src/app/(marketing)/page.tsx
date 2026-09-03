@@ -6,6 +6,7 @@ import { Reveal } from '@/components/reveal'
 import { Cyto } from '@/components/ui/cyto'
 import type { CytoMood } from '@/lib/mascot/mood'
 import { FormatSection } from '@/components/format-section'
+import { LaunchWaitlist } from '@/components/launch-waitlist'
 import { SITE_URL } from '@/lib/site'
 
 const LEAD_LINK = 'font-semibold text-brand underline decoration-brand/40 underline-offset-2 transition-colors hover:decoration-brand'
@@ -83,6 +84,21 @@ export default function Home() {
         </Container>
       </section>
 
+      {/* ---------------- Launch list ---------------- */}
+      <section className="border-t border-border bg-brand-muted/35">
+        <Container className="py-14 sm:py-18">
+          <Reveal>
+            <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="flex items-center gap-5">
+                <div className="hidden flex-none sm:block"><Cyto mood="happy" size={92} title="Cyto is getting ready for launch" /></div>
+                <div><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Coming soon</p><h2 className="mt-2 text-balance font-display text-3xl font-bold tracking-tight sm:text-4xl">Be first through the door.</h2><p className="mt-3 max-w-lg leading-7 text-muted">Join the opening list for launch access, product updates and a subscriber-only opening offer.</p></div>
+              </div>
+              <LaunchWaitlist />
+            </div>
+          </Reveal>
+        </Container>
+      </section>
+
       {/* ---------------- Gamified prep ---------------- */}
       <section id="progress" className="border-t border-border bg-surface/50">
         <Container className="py-20 sm:py-28">
@@ -98,8 +114,8 @@ export default function Home() {
                 <Cyto mood="thriving" size={132} title="Cyto, thriving" />
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="font-display text-2xl font-semibold tracking-tight">Meet Cyto — your study cell.</h3>
-                <p className="mt-2 max-w-xl text-muted">Cyto reacts to how you&rsquo;re really going. Keep your accuracy up and your streak alive and it&rsquo;s thriving, crown and all — let the streak lapse and it dozes off. A small, friendly nudge to come back tomorrow.</p>
+                <h3 className="font-display text-2xl font-semibold tracking-tight">Meet Cyto, your study cell.</h3>
+                <p className="mt-2 max-w-xl text-muted">Cyto reacts to how you&rsquo;re really going. Keep your accuracy up and your streak alive and it&rsquo;s thriving, crown and all. Let the streak lapse and it dozes off. A small, friendly nudge to come back tomorrow.</p>
                 <div className="mt-5 flex flex-wrap items-end justify-center gap-5 sm:justify-start">
                   {([['sleepy', 'Off the streak'], ['worried', 'Slipping'], ['focused', 'Steady'], ['happy', 'On track'], ['thriving', 'Thriving']] as [CytoMood, string][]).map(([m, label]) => (
                     <div key={m} className="flex flex-col items-center gap-1.5">
@@ -124,7 +140,7 @@ export default function Home() {
       <section id="exams" className="border-t border-border bg-surface/50">
         <Container className="py-16 sm:py-20">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Four exams, four pathogens.</h2>
-          <p className="mt-2 max-w-xl text-muted">Each assessment becomes a pathogen with its own colour and personality. Pick one and you drop straight into its question bank and mocks — switch whenever you like.</p>
+          <p className="mt-2 max-w-xl text-muted">Each assessment becomes a pathogen with its own colour and personality. Pick one and you drop straight into its question bank and mocks. Switch whenever you like.</p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <ExamCard name="UCAT" pathogen="Tachynon" accent="#F0503C" blurb="University Clinical Aptitude Test. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement." />
             <ExamCard name="GAMSAT" pathogen="Cerebrus" accent="#D9911F" blurb="Graduate Medical School Admissions Test across the three reasoning sections." />

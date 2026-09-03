@@ -499,6 +499,29 @@ export type Database = {
           },
         ]
       }
+      launch_waitlist: {
+        Row: {
+          id: string
+          email: string
+          source: string
+          consented_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          source?: string
+          consented_at?: string
+          created_at?: string
+        }
+        Update: {
+          email?: string
+          source?: string
+          consented_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       essay_prompts: {
         Row: {
           id: string
