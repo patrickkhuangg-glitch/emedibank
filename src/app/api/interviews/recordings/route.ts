@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth/dal'
 import { getInterviewStation, type InterviewFormat } from '@/lib/interviews/stations'
+import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
 import { createClient } from '@/lib/supabase/server'
 
 const MAX_AUDIO_BYTES = 32 * 1024 * 1024
@@ -13,7 +14,9 @@ export async function POST(request: Request) {
   const audio = formData.get('audio')
   const format: InterviewFormat = formData.get('format') === 'panel' ? 'panel' : 'mmi'
   const station = getInterviewStation(format, stringValue(formData.get('stationId')))
-  const durationSeconds = Math.max(0, Math.min(480, Number(stringValue(formData.get('durationSeconds'))) || 0))
+  if (!station) return NextResponse.json({ error: 'This interview station is no longer available.' }, { status: 404 })
+  const timing = getInterviewTiming(format)
+  const durationSeconds = Math.max(0, Math.min(timing.responseSeconds, Number(stringValue(formData.get('durationSeconds'))) || 0))
 
   if (!(audio instanceof File) || audio.size === 0 || audio.size > MAX_AUDIO_BYTES || !audio.type.startsWith('audio/')) {
     return NextResponse.json({ error: 'Please provide an audio recording under 32 MB.' }, { status: 400 })
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
     format,
     station_id: station.id,
     station_title: station.title,
-    questions: station.questions,
+    questions: getInterviewQuestions(station),
     duration_seconds: durationSeconds,
     recording_path: path,
     recording_mime_type: audio.type,

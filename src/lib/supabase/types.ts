@@ -483,6 +483,24 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_study_notes: {
+        Row: {
+          id: string
+          user_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          body?: string
+        }
+        Relationships: []
+      }
       mock_question_assignments: {
         Row: {
           id: string

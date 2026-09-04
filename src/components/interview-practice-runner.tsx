@@ -3,15 +3,15 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InterviewStation } from '@/lib/interviews/stations'
+import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
 
 type Phase = 'ready' | 'preparation' | 'response' | 'saving' | 'complete' | 'error'
 
-const PREPARATION_SECONDS = 2 * 60
-const RESPONSE_SECONDS = 8 * 60
-
 export function InterviewPracticeRunner({ station }: { station: InterviewStation }) {
+  const timing = getInterviewTiming(station.format)
+  const questions = getInterviewQuestions(station)
   const [phase, setPhase] = useState<Phase>('ready')
-  const [secondsLeft, setSecondsLeft] = useState(PREPARATION_SECONDS)
+  const [secondsLeft, setSecondsLeft] = useState(timing.preparationSeconds)
   const [questionIndex, setQuestionIndex] = useState(0)
   const [error, setError] = useState('')
   const deadlineRef = useRef<number | null>(null)
@@ -39,7 +39,7 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
   const finishRecording = useCallback(() => {
     if (phase !== 'response') return
     setPhase('saving')
-    const durationSeconds = Math.max(0, RESPONSE_SECONDS - secondsLeft)
+    const durationSeconds = Math.max(0, timing.responseSeconds - secondsLeft)
     const recorder = recorderRef.current
     if (recorder && recorder.state !== 'inactive') {
       recorder.onstop = () => {
@@ -53,7 +53,7 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
       setError('We could not complete the audio recording. Please try this station again.')
       setPhase('error')
     }
-  }, [phase, secondsLeft, uploadRecording])
+  }, [phase, secondsLeft, timing.responseSeconds, uploadRecording])
 
   const startResponse = useCallback(() => {
     const stream = streamRef.current
@@ -69,15 +69,15 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
       recorder.ondataavailable = (event) => { if (event.data.size) chunksRef.current.push(event.data) }
       recorder.start(1000)
       recorderRef.current = recorder
-      deadlineRef.current = Date.now() + RESPONSE_SECONDS * 1000
-      setSecondsLeft(RESPONSE_SECONDS)
+      deadlineRef.current = Date.now() + timing.responseSeconds * 1000
+      setSecondsLeft(timing.responseSeconds)
       setPhase('response')
     } catch {
       stream.getTracks().forEach((track) => track.stop())
       setError('The microphone could not start. Please allow microphone access and try again.')
       setPhase('error')
     }
-  }, [])
+  }, [timing.responseSeconds])
 
   const begin = useCallback(async () => {
     setError('')
@@ -95,8 +95,8 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-      deadlineRef.current = Date.now() + PREPARATION_SECONDS * 1000
-      setSecondsLeft(PREPARATION_SECONDS)
+      deadlineRef.current = Date.now() + timing.preparationSeconds * 1000
+      setSecondsLeft(timing.preparationSeconds)
       setPhase('preparation')
     } catch (requestError) {
       const denied = requestError instanceof DOMException && requestError.name === 'NotAllowedError'
@@ -105,13 +105,13 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
         : 'We could not reach a microphone. Check that one is connected and available, then try again.')
       setPhase('error')
     }
-  }, [])
+  }, [timing.preparationSeconds])
 
   const nextQuestion = useCallback(() => {
     if (phase !== 'response') return
-    if (questionIndex < station.questions.length - 1) setQuestionIndex((index) => index + 1)
+    if (questionIndex < questions.length - 1) setQuestionIndex((index) => index + 1)
     else finishRecording()
-  }, [finishRecording, phase, questionIndex, station.questions.length])
+  }, [finishRecording, phase, questionIndex, questions.length])
 
   useEffect(() => {
     if (phase !== 'preparation' && phase !== 'response') return
@@ -146,11 +146,11 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
 
-  if (phase === 'ready' || phase === 'error') return <RunnerShell><section className="mx-auto max-w-2xl text-center"><span className="inline-flex rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">{station.format === 'mmi' ? 'MMI station' : 'Panel interview'}</span><h1 className="mt-7 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{station.title}</h1><p className="mt-4 text-base leading-7 text-muted">You will have two minutes to read the station. Your eight-minute spoken response begins once the questions appear and is saved privately to your account.</p><div className="mt-8 rounded-3xl bg-surface p-6 text-left eb-soft"><p className="font-display text-xl font-semibold tracking-tight">Before you begin</p><ul className="mt-4 space-y-3 text-sm leading-6 text-muted"><li className="flex gap-3"><CheckIcon /> Find a quiet place and check your microphone.</li><li className="flex gap-3"><CheckIcon /> Your audio is recorded only during the eight-minute response.</li><li className="flex gap-3"><CheckIcon /> Press Space or select Next question to move through the station.</li></ul></div>{error ? <p role="alert" className="mt-5 text-sm font-semibold text-red-700">{error}</p> : null}<button type="button" onClick={begin} className="eb-press mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground">Allow microphone &amp; begin <ArrowIcon /></button><Link href="/interviews/practice" className="mt-5 block text-sm font-semibold text-muted hover:text-foreground">Back to stations</Link></section></RunnerShell>
+  if (phase === 'ready' || phase === 'error') return <RunnerShell><section className="mx-auto max-w-2xl text-center"><span className="inline-flex rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">{station.format === 'mmi' ? 'MMI station' : 'Panel interview'}</span><h1 className="mt-7 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{station.title}</h1><p className="mt-4 text-base leading-7 text-muted">You will have {station.format === 'mmi' ? 'two minutes to read the station. Your eight-minute spoken response begins once the questions appear' : '30 seconds to read the question. Your three-minute spoken response begins automatically'} and is saved privately to your account.</p><div className="mt-8 rounded-3xl bg-surface p-6 text-left eb-soft"><p className="font-display text-xl font-semibold tracking-tight">Before you begin</p><ul className="mt-4 space-y-3 text-sm leading-6 text-muted"><li className="flex gap-3"><CheckIcon /> Find a quiet place and check your microphone.</li><li className="flex gap-3"><CheckIcon /> Your audio is recorded only during the {station.format === 'mmi' ? 'eight-minute' : 'three-minute'} response.</li><li className="flex gap-3"><CheckIcon /> {station.format === 'mmi' ? 'Press Space or select Next question to move through the station.' : 'There is one question. Press Space or select Finish & save when you are done.'}</li></ul></div>{error ? <p role="alert" className="mt-5 text-sm font-semibold text-red-700">{error}</p> : null}<button type="button" onClick={begin} className="eb-press mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground">Allow microphone &amp; begin <ArrowIcon /></button><Link href="/interviews/practice" className="mt-5 block text-sm font-semibold text-muted hover:text-foreground">Back to stations</Link></section></RunnerShell>
 
   if (phase === 'preparation') return <RunnerShell><section className="mx-auto max-w-4xl"><RunnerTop label="Preparation time" time={`${minutes}:${seconds}`} live={false} /><div className="mt-10 rounded-3xl bg-surface p-7 eb-soft sm:p-10"><p className="text-sm font-semibold text-brand">{station.category}</p><h1 className="mt-5 font-display text-3xl font-semibold tracking-tight sm:text-5xl">{station.preparation}</h1><p className="mt-8 text-sm leading-6 text-muted">Read the station carefully. The first question appears automatically when preparation time ends.</p></div></section></RunnerShell>
 
-  if (phase === 'response' || phase === 'saving') return <RunnerShell><section className="mx-auto max-w-4xl"><RunnerTop label={phase === 'saving' ? 'Saving recording' : 'Recording response'} time={phase === 'saving' ? '…' : `${minutes}:${seconds}`} live={phase === 'response'} /><div className="mt-10 rounded-3xl bg-surface p-7 eb-soft sm:p-10"><div className="flex flex-wrap items-center justify-between gap-4"><span className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs text-muted">Question {questionIndex + 1} of {station.questions.length}</span><span className="text-xs text-muted">Audio is recording</span></div><h1 className="mt-9 max-w-3xl font-display text-3xl font-semibold tracking-tight sm:text-5xl">{station.questions[questionIndex]}</h1><p className="mt-6 text-sm leading-6 text-muted">Take the time you need to answer naturally. Move on when you are ready.</p><div className="mt-10 flex flex-wrap items-center justify-between gap-4"><span className="text-sm text-muted">Press Space to continue</span><button type="button" disabled={phase === 'saving'} onClick={nextQuestion} className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground disabled:opacity-50">{questionIndex === station.questions.length - 1 ? 'Finish & save' : 'Next question'} <ArrowIcon /></button></div></div></section></RunnerShell>
+  if (phase === 'response' || phase === 'saving') return <RunnerShell><section className="mx-auto max-w-4xl"><RunnerTop label={phase === 'saving' ? 'Saving recording' : 'Recording response'} time={phase === 'saving' ? '…' : `${minutes}:${seconds}`} live={phase === 'response'} /><div className="mt-10 rounded-3xl bg-surface p-7 eb-soft sm:p-10"><div className="flex flex-wrap items-center justify-between gap-4"><span className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs text-muted">Question {questionIndex + 1} of {questions.length}</span><span className="text-xs text-muted">Audio is recording</span></div><h1 className="mt-9 max-w-3xl font-display text-3xl font-semibold tracking-tight sm:text-5xl">{questions[questionIndex]}</h1><p className="mt-6 text-sm leading-6 text-muted">{station.format === 'mmi' ? 'Take the time you need to answer naturally. Move on when you are ready.' : 'Take the time to give a clear, considered answer.'}</p><div className="mt-10 flex flex-wrap items-center justify-between gap-4"><span className="text-sm text-muted">{station.format === 'mmi' ? 'Press Space to continue' : 'Press Space to finish'}</span><button type="button" disabled={phase === 'saving'} onClick={nextQuestion} className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground disabled:opacity-50">{questionIndex === questions.length - 1 ? 'Finish & save' : 'Next question'} <ArrowIcon /></button></div></div></section></RunnerShell>
 
   return <RunnerShell><section className="mx-auto max-w-xl text-center"><span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-mint-muted text-mint-deep"><CheckIcon /></span><h1 className="mt-6 font-display text-4xl font-semibold tracking-tight">Recording saved.</h1><p className="mt-4 text-base leading-7 text-muted">Your {station.title.toLowerCase()} response is now private to your account and ready to revisit.</p><div className="mt-8 flex flex-wrap justify-center gap-3"><Link href="/interviews/review" className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground">Review recording <ArrowIcon /></Link><Link href="/interviews/practice" className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold text-foreground hover:bg-surface-muted">Choose another station</Link></div></section></RunnerShell>
 }

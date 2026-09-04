@@ -1,5 +1,10 @@
 export type InterviewFormat = 'mmi' | 'panel'
 
+export type ExaminerFeedbackGuide = {
+  strongResponse: Array<{ title: string; description: string }>
+  commonWeaknesses: string[]
+}
+
 export type InterviewStation = {
   id: string
   format: InterviewFormat
@@ -7,40 +12,28 @@ export type InterviewStation = {
   category: string
   preparation: string
   questions: string[]
+  examinerFeedback?: ExaminerFeedbackGuide
 }
 
 export const INTERVIEW_STATIONS: InterviewStation[] = [
   {
-    id: 'mmi-patient-autonomy',
+    id: 'mmi-confidentiality-patient-safety',
     format: 'mmi',
-    title: 'Patient autonomy',
-    category: 'Ethics · communication',
-    preparation: 'A patient with capacity declines a treatment you believe would be beneficial. Think about how you would respond while respecting their autonomy and your role in the team.',
-    questions: ['How would you begin this conversation?', 'What information would you make sure the patient understands?', 'When would you involve a more senior member of the team?'],
-  },
-  {
-    id: 'mmi-team-conflict',
-    format: 'mmi',
-    title: 'Team disagreement',
-    category: 'Teamwork · reflection',
-    preparation: 'During a group task, a team member repeatedly dismisses quieter students and the work is starting to suffer. Consider how you would approach the situation.',
-    questions: ['What would you do first?', 'How would you keep the conversation constructive?', 'What have you learnt from working in challenging teams?'],
-  },
-  {
-    id: 'mmi-rural-access',
-    format: 'mmi',
-    title: 'Rural access',
-    category: 'Equity · health systems',
-    preparation: 'A rural community has long waits for specialist appointments and many residents struggle to travel for care. Consider the barriers patients may face.',
-    questions: ['What are the likely impacts on patients and families?', 'What could improve access without assuming one solution fits everyone?', 'How can a future doctor contribute to more equitable care?'],
-  },
-  {
-    id: 'mmi-confidentiality',
-    format: 'mmi',
-    title: 'Confidentiality and trust',
-    category: 'Professionalism · ethics',
-    preparation: 'A friend asks you about a patient they believe they saw at the hospital where you are on placement. Consider your responsibilities in responding.',
-    questions: ['How would you respond to your friend?', 'Why does confidentiality matter beyond legal requirements?', 'What would you do if you were unsure about a boundary?'],
+    title: 'Confidentiality and patient safety',
+    category: 'Ethics · patient safety',
+    preparation: 'You are a medical student on placement. During a break, your friend Sam tells you they have recently been diagnosed with a sexually transmitted infection. Sam is embarrassed and asks you not to tell anyone. Sam then says they do not plan to tell a recent sexual partner because they are worried about being judged and believe the partner is “probably fine”. Consider how you would respond.',
+    questions: ['What are the main ethical and practical issues in this scenario?', 'How would you respond to Sam in a supportive and non-judgemental way?', 'How would you balance Sam’s confidentiality with concern for the sexual partner’s wellbeing?', 'Tell us about a time you had to manage sensitive information, maintain someone’s trust, or navigate a difficult conversation. What did you learn?'],
+    examinerFeedback: {
+      strongResponse: [
+        { title: 'Empathy', description: 'Acknowledge Sam’s embarrassment and avoid judgement or blame.' },
+        { title: 'Confidentiality', description: 'Respect Sam’s privacy as the starting point.' },
+        { title: 'Safety', description: 'Recognise the partner may be at risk and should have access to testing and treatment.' },
+        { title: 'Practical support', description: 'Encourage Sam to speak with a GP or sexual-health service, including supported or anonymous partner-notification options.' },
+        { title: 'Boundaries', description: 'Recognise that, as a student and friend, you should not diagnose, give detailed medical or legal advice, or contact the partner yourself.' },
+        { title: 'Reflection', description: 'Use a specific personal example and clearly explain what you learned.' },
+      ],
+      commonWeaknesses: ['Treating confidentiality as absolute.', 'Immediately breaching privacy or contacting the partner directly.', 'Being moralistic, alarmist, or dismissive.', 'Ignoring stigma and Sam’s emotional concerns.', 'Giving vague answers without a safe next step.'],
+    },
   },
   {
     id: 'panel-motivation',
@@ -68,8 +61,8 @@ export const INTERVIEW_STATIONS: InterviewStation[] = [
   },
 ]
 
-export function getInterviewStation(format: InterviewFormat, id: string | undefined) {
+export function getInterviewStation(format: InterviewFormat, id: string | undefined): InterviewStation | null {
   return INTERVIEW_STATIONS.find((station) => station.format === format && station.id === id)
     ?? INTERVIEW_STATIONS.find((station) => station.format === format)
-    ?? INTERVIEW_STATIONS[0]
+    ?? null
 }

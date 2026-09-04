@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { InterviewPracticeTabs } from '@/components/interview-practice-tabs'
+import type { ExaminerFeedbackGuide } from '@/lib/interviews/stations'
 
 type InterviewAttempt = {
   id: string
@@ -9,6 +10,7 @@ type InterviewAttempt = {
   durationSeconds: number
   createdAt: string
   audioUrl: string | null
+  examinerFeedback?: ExaminerFeedbackGuide
 }
 
 export function InterviewAttemptReview({ attempts }: { attempts: InterviewAttempt[] }) {
@@ -58,7 +60,21 @@ function AttemptRow({ attempt }: { attempt: InterviewAttempt }) {
         <span className="shrink-0 text-xs font-semibold text-muted">Private recording</span>
       </div>
       {attempt.audioUrl ? <audio className="mt-6 w-full" controls preload="metadata" src={attempt.audioUrl}>Your browser does not support audio playback.</audio> : <p className="mt-6 text-sm text-muted">This recording is temporarily unavailable. Refresh the page to try again.</p>}
+      {attempt.examinerFeedback ? <ExaminerGuide guide={attempt.examinerFeedback} /> : null}
     </article>
+  )
+}
+
+function ExaminerGuide({ guide }: { guide: ExaminerFeedbackGuide }) {
+  return (
+    <section className="mt-7 border-t border-border pt-6">
+      <h3 className="font-display text-xl font-semibold tracking-tight">Examiner feedback guide</h3>
+      <p className="mt-2 text-sm leading-6 text-muted">Use this after listening back to identify what to keep and what to improve. It is a self-review guide, not an automated score.</p>
+      <div className="mt-5 grid gap-6 lg:grid-cols-2">
+        <div><h4 className="text-sm font-semibold">A strong response should show</h4><ul className="mt-3 space-y-3">{guide.strongResponse.map((item) => <li key={item.title} className="text-sm leading-6 text-muted"><span className="font-semibold text-foreground">{item.title}: </span>{item.description}</li>)}</ul></div>
+        <div><h4 className="text-sm font-semibold">Common weaknesses</h4><ul className="mt-3 space-y-3">{guide.commonWeaknesses.map((weakness) => <li key={weakness} className="flex gap-2 text-sm leading-6 text-muted"><span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{weakness}</li>)}</ul></div>
+      </div>
+    </section>
   )
 }
 
