@@ -21,7 +21,7 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
         { href: '/interviews', label: 'Overview', icon: <GridIcon /> },
         { href: '/interviews#practice', label: 'Practice', icon: <QuestionIcon /> },
         { href: '/interviews#story-bank', label: 'Stories', icon: <InterviewIcon /> },
-        { href: '/dashboard', label: 'Academic', icon: <ExamIcon /> },
+        { href: '/interviews#resources', label: 'Resources', icon: <ExamIcon /> },
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
         { href: '/account', label: 'Account', icon: <UserIcon /> },
       ]
