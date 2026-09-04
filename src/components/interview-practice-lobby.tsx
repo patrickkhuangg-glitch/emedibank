@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { InterviewPracticeTabs } from '@/components/interview-practice-tabs'
 import { INTERVIEW_STATIONS, type InterviewFormat } from '@/lib/interviews/stations'
 
 export function InterviewPracticeLobby() {
@@ -17,7 +18,8 @@ export function InterviewPracticeLobby() {
 
   return <main className="min-h-screen bg-background pb-16 text-foreground"><div className="mx-auto max-w-[1240px] px-5 pt-10 sm:px-8 sm:pt-14">
     <header className="max-w-3xl"><h1 className="text-balance font-display text-4xl font-semibold leading-[1.03] tracking-tight sm:text-5xl">Practise interview answers with purpose.</h1><p className="mt-4 text-base leading-7 text-muted sm:text-lg">Pick a station, prepare for two minutes, then move through one question at a time while your eight-minute response is recorded privately to your account.</p></header>
-    <section className="mt-9 rounded-3xl border border-border bg-surface p-6 eb-soft sm:p-8">
+    <InterviewPracticeTabs active="stations" />
+    <section className="mt-7 rounded-3xl border border-border bg-surface p-6 eb-soft sm:p-8">
       <div className="flex flex-wrap items-end justify-between gap-5"><div><h2 className="font-display text-2xl font-semibold tracking-tight">Choose a practice format</h2><p className="mt-2 text-sm leading-6 text-muted">Each format has its own station bank.</p></div><div className="flex rounded-full bg-surface-muted p-1" role="group" aria-label="Interview format"><button type="button" onClick={() => switchFormat('mmi')} className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${format === 'mmi' ? 'bg-surface text-foreground eb-soft' : 'text-muted hover:text-foreground'}`}>MMI stations</button><button type="button" onClick={() => switchFormat('panel')} className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${format === 'panel' ? 'bg-surface text-foreground eb-soft' : 'text-muted hover:text-foreground'}`}>Panel questions</button></div></div>
       <label className="mt-7 block text-sm font-semibold" htmlFor="interview-station">{format === 'mmi' ? 'MMI station' : 'Panel interview set'}</label>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row"><select id="interview-station" value={station.id} onChange={(event) => setStationId(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand">{stations.map((item) => <option key={item.id} value={item.id}>{item.title} · {item.category}</option>)}</select><span className="inline-flex items-center rounded-xl bg-surface-muted px-4 py-3 font-mono text-xs text-muted">{stations.length} available</span></div>

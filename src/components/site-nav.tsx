@@ -33,7 +33,7 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
       ]
 
   const active = (item: Item) => {
-    if (item.label === 'Practice') return pathname.startsWith('/practice')
+    if (item.label === 'Practice') return pathname.startsWith('/practice') || pathname.startsWith('/interviews/practice') || pathname.startsWith('/interviews/review')
     if (item.label === 'Mock exams') return pathname.startsWith('/mock')
     if (item.href === '/dashboard') return pathname === '/dashboard'
     if (item.href === '/interviews') return pathname === '/interviews'
