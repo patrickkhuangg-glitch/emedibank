@@ -137,20 +137,6 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* ---------------- Exams ---------------- */}
-      <section id="exams" className="border-t border-border bg-surface/50">
-        <Container className="py-16 sm:py-20">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Four exams, four pathogens.</h2>
-          <p className="mt-2 max-w-xl text-muted">Each assessment becomes a pathogen with its own colour and personality. Pick one and you drop straight into its question bank and mocks. Switch whenever you like.</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <ExamCard name="UCAT" pathogen="Tachynon" accent="#F0503C" blurb="University Clinical Aptitude Test. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement." />
-            <ExamCard name="GAMSAT" pathogen="Cerebrus" accent="#D9911F" blurb="Graduate Medical School Admissions Test across the three reasoning sections." />
-            <ExamCard name="ISAT" pathogen="Enigmoeba" accent="#2789CE" blurb="International Student Admissions Test for undergraduate medicine and dentistry." />
-            <ExamCard name="Interviews" pathogen="Flummox" accent="#DE4E8A" blurb="MMI and panel interview preparation." soon />
-          </div>
-        </Container>
-      </section>
-
       {/* ---------------- Interface ---------------- */}
       <FormatSection />
 
@@ -233,33 +219,6 @@ const FAQS = [
   { q: 'Does it match the real test?', a: 'The runner replicates the layout, fonts, timing and question types of the real interface, including a kiosk mode and on-screen calculator.' },
 ]
 
-function ExamCard({ name, blurb, pathogen, accent, soon }: { name: string; blurb: string; pathogen: string; accent: string; soon?: boolean }) {
-  const inner = (
-    <>
-      <div className="flex items-center gap-3">
-        <span
-          className={`grid h-10 w-10 flex-none place-items-center rounded-lg font-display text-sm font-bold ${soon ? 'bg-surface-muted text-muted' : ''}`}
-          style={soon ? undefined : { backgroundColor: `color-mix(in srgb, ${accent} 14%, transparent)`, color: accent }}
-        >
-          {name.slice(0, 1)}
-        </span>
-        <div className="min-w-0">
-          <span className="font-display text-lg font-semibold">{name}</span>
-          <span className="ml-2 font-mono text-[11px] uppercase tracking-wide" style={{ color: soon ? 'var(--muted)' : accent }}>{pathogen}</span>
-        </div>
-        {soon ? <span className="ml-auto rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-medium text-muted">Coming soon</span> : <ArrowRight className="ml-auto" />}
-      </div>
-      <p className="mt-3 text-sm text-muted">{blurb}</p>
-    </>
-  )
-  if (soon) return <div className="rounded-2xl border border-dashed border-border bg-surface/60 p-5 opacity-80">{inner}</div>
-  return (
-    <Link href="/app" className="eb-press eb-soft-hover group block rounded-2xl border border-border bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40">
-      {inner}
-    </Link>
-  )
-}
-
 function Feature({ title, body, className = '' }: { title: string; body: string; className?: string }) {
   return (
     <div className={`eb-soft-hover rounded-2xl border border-border bg-surface p-7 transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-brand/40 ${className}`}>
@@ -278,9 +237,6 @@ function StethoIcon({ color = 'currentColor', size = 16, strokeWidth = 2 }: { co
 }
 function CheckMini() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
-}
-function ArrowRight({ className = '' }: { className?: string }) {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand ${className}`} aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
 }
 function GameCard({ title, body, icon, delay = 0, className = '' }: { title: string; body: string; icon: ReactNode; delay?: number; className?: string }) {
   return (
