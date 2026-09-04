@@ -7,6 +7,7 @@ import { Cyto } from '@/components/ui/cyto'
 import type { CytoMood } from '@/lib/mascot/mood'
 import { FormatSection } from '@/components/format-section'
 import { LaunchWaitlist } from '@/components/launch-waitlist'
+import { ProgressHero } from '@/components/progress-hero'
 import { SITE_URL } from '@/lib/site'
 
 const LEAD_LINK = 'font-semibold text-brand underline decoration-brand/40 underline-offset-2 transition-colors hover:decoration-brand'
@@ -79,7 +80,7 @@ export default function Home() {
           </div>
 
           <div className="eb-rise" style={{ animationDelay: '140ms' }}>
-            <StudyCellHero />
+            <ProgressHero />
           </div>
         </Container>
       </section>
@@ -264,59 +265,6 @@ function Feature({ title, body, className = '' }: { title: string; body: string;
     <div className={`eb-soft-hover rounded-2xl border border-border bg-surface p-7 transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-brand/40 ${className}`}>
       <h3 className="font-display text-xl font-semibold">{title}</h3>
       <p className="mt-2.5 text-sm leading-relaxed text-muted">{body}</p>
-    </div>
-  )
-}
-
-/* ---- The hero panel: the study cell on a vitals monitor ---- */
-function StudyCellHero() {
-  return (
-    <div
-      className="eb-soft relative aspect-[1/0.92] overflow-hidden rounded-[28px]"
-      style={{
-        background: '#171331',
-        backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-        backgroundSize: '32px 32px',
-      }}
-    >
-      <span className="absolute left-6 top-6 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 font-mono text-[13px] text-[#b39ee8]">
-        <StethoIcon color="#b39ee8" size={15} /> 82% immunity
-      </span>
-
-      {/* heartbeat */}
-      <svg className="absolute inset-x-0 top-1/2 h-[120px] w-full -translate-y-1/2 opacity-55" viewBox="0 0 800 120" preserveAspectRatio="none" aria-hidden>
-        <path className="eb-ekg" d="M0,60 L140,60 L165,60 L180,20 L200,100 L220,40 L240,60 L620,60 L640,60 L655,20 L675,100 L695,40 L715,60 L800,60" fill="none" stroke="#8b6fd8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-
-      {/* orbit + mascot */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div aria-hidden className="absolute h-[52%] w-[52%] rounded-full blur-2xl" style={{ background: 'radial-gradient(circle, rgba(240,72,59,0.28), transparent 70%)' }} />
-        <div aria-hidden className="absolute h-[64%] w-[64%] rounded-full border border-dashed border-white/15" />
-        <svg className="eb-float relative w-[40%]" viewBox="-4 -4 108 108" role="img" aria-label="Cyto, the study-cell mascot">
-          <defs>
-            <radialGradient id="cellBody" cx="42%" cy="34%" r="72%">
-              <stop offset="0%" stopColor="#ff9184" /><stop offset="55%" stopColor="#f0483b" /><stop offset="100%" stopColor="#d61f27" />
-            </radialGradient>
-          </defs>
-          <path d="M36 12 q-3 -8 3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-          <path d="M64 12 q3 -8 -3 -10" stroke="#b3231f" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-          <path d="M50 8 C70 8 80 19 84 35 C88 51 94 60 89 73 C84 88 68 96 50 96 C32 96 16 88 11 73 C6 60 12 51 16 35 C20 19 30 8 50 8 Z" fill="url(#cellBody)" stroke="#b3231f" strokeWidth="3" />
-          <ellipse cx="27" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" /><ellipse cx="73" cy="62" rx="7" ry="4.6" fill="#ffd2c0" opacity="0.85" />
-          <circle cx="37" cy="50" r="11.5" fill="#fff" /><circle cx="63" cy="50" r="11.5" fill="#fff" />
-          <circle cx="38.5" cy="52" r="6" fill="#1d1836" /><circle cx="64.5" cy="52" r="6" fill="#1d1836" />
-          <circle cx="41" cy="49" r="2.4" fill="#fff" /><circle cx="67" cy="49" r="2.4" fill="#fff" />
-          <path d="M40 70 q10 9 20 0" stroke="#8a1c1c" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-        </svg>
-      </div>
-
-      {/* floating stethoscopes */}
-      <span className="absolute left-[12%] top-[22%]"><StethoIcon color="rgba(255,255,255,0.35)" size={34} strokeWidth={1.6} /></span>
-      <span className="absolute bottom-[18%] right-[10%]">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c1.9 0 3.3 1 4 2.3C11.2 6 12.6 5 14.5 5 18 5 20.5 8.5 18.5 12.5 16 16.65 12 21 12 21z" /></svg>
-      </span>
-
-      <span className="absolute bottom-6 right-6 z-10 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 font-mono text-[13px] text-[#B7B4D6]">Lvl 6 · +14 immunity pts</span>
     </div>
   )
 }
