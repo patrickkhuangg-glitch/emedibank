@@ -1,8 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth/dal'
+import { getProfile, requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlanItemKind, StudyPlanStatus } from '@/lib/supabase/types'
 
@@ -10,25 +9,35 @@ const statuses = new Set<StudyPlanStatus>(['active', 'paused', 'completed'])
 const kinds = new Set<StudyPlanItemKind>(['tutoring', 'masterclass', 'workshop', 'other'])
 const unitLabels = new Set(['hours', 'sessions', 'places', 'credits'])
 
-export async function createStudyPlanAction(formData: FormData) {
-  const adminProfile = await requireAdmin()
+export type CreateStudyPlanState = { error?: string; planId?: string }
+
+export async function createStudyPlanAction(_previous: CreateStudyPlanState, formData: FormData): Promise<CreateStudyPlanState> {
+  const adminProfile = await getProfile()
+  if (adminProfile?.role !== 'admin') return { error: 'Only admins can create student packages.' }
   const email = value(formData, 'studentEmail').toLowerCase()
   const name = value(formData, 'name')
-  if (!email || !name) throw new Error('Enter the student email and package name.')
+  if (!email || !name) return { error: 'Enter the student email and package name.' }
 
   const admin = createAdminClient()
   const { data: users, error: usersError } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  if (usersError) throw usersError
+  if (usersError) {
+    console.error('Could not list Studocyte users for a study plan.', usersError)
+    return { error: 'Unable to check student accounts right now. Please refresh and try again.' }
+  }
   const student = users.users.find((user) => user.email?.toLowerCase() === email)
-  if (!student) throw new Error('No Studocyte account matches that email address.')
+  if (!student) return { error: 'No Studocyte account matches that email. Create the student account first, then return here to add their package.' }
 
   const { data: plan, error } = await admin
     .from('study_plans')
     .insert({ user_id: student.id, name, created_by: adminProfile.id })
     .select('id')
     .single()
-  if (error) throw error
-  redirect(`/admin/study-plans/${plan.id}`)
+  if (error || !plan) {
+    console.error('Could not create a student study plan.', error)
+    return { error: 'The package could not be created. Please try again.' }
+  }
+  refresh(plan.id)
+  return { planId: plan.id }
 }
 
 export async function updateStudyPlanAction(formData: FormData) {
