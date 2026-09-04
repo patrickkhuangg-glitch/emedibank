@@ -82,14 +82,27 @@ export function InterviewPracticeRunner({ station }: { station: InterviewStation
   const begin = useCallback(async () => {
     setError('')
     transitionRef.current = false
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      setError('Microphone recording needs a secure, current browser. Open Studocyte in Chrome, Safari or Edge and try again.')
+      setPhase('error')
+      return
+    }
+    if (!window.MediaRecorder) {
+      setError('This browser can access a microphone but cannot record audio. Please use a current version of Chrome, Safari or Edge.')
+      setPhase('error')
+      return
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
       deadlineRef.current = Date.now() + PREPARATION_SECONDS * 1000
       setSecondsLeft(PREPARATION_SECONDS)
       setPhase('preparation')
-    } catch {
-      setError('Microphone access is needed to save your spoken response. Please allow it and try again.')
+    } catch (requestError) {
+      const denied = requestError instanceof DOMException && requestError.name === 'NotAllowedError'
+      setError(denied
+        ? 'Microphone access is blocked. Use the site controls beside the address bar to set Microphone to Allow, then try again.'
+        : 'We could not reach a microphone. Check that one is connected and available, then try again.')
       setPhase('error')
     }
   }, [])
