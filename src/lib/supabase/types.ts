@@ -14,6 +14,8 @@ export type VideoStatus = 'none' | 'processing' | 'ready'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type InterfaceMode = 'playful' | 'clean'
 export type TranscriptionStatus = 'not_requested' | 'processing' | 'ready' | 'failed'
+export type StudyPlanStatus = 'active' | 'paused' | 'completed'
+export type StudyPlanItemKind = 'tutoring' | 'masterclass' | 'workshop' | 'other'
 
 export type Database = {
   public: {
@@ -84,6 +86,74 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      study_plans: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          status: StudyPlanStatus
+          starts_on: string | null
+          ends_on: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          status?: StudyPlanStatus
+          starts_on?: string | null
+          ends_on?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          status?: StudyPlanStatus
+          starts_on?: string | null
+          ends_on?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      study_plan_items: {
+        Row: {
+          id: string
+          plan_id: string
+          kind: StudyPlanItemKind
+          title: string
+          exam_scope: string | null
+          total_units: number
+          used_units: number
+          unit_label: 'hours' | 'sessions' | 'places' | 'credits'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          kind?: StudyPlanItemKind
+          title: string
+          exam_scope?: string | null
+          total_units: number
+          used_units?: number
+          unit_label?: 'hours' | 'sessions' | 'places' | 'credits'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          kind?: StudyPlanItemKind
+          title?: string
+          exam_scope?: string | null
+          total_units?: number
+          used_units?: number
+          unit_label?: 'hours' | 'sessions' | 'places' | 'credits'
+          updated_at?: string
+        }
+        Relationships: []
       }
       subtests: {
         Row: {
@@ -796,3 +866,5 @@ export type Stimulus = Database['public']['Tables']['stimuli']['Row']
 export type EssayPrompt = Database['public']['Tables']['essay_prompts']['Row']
 export type EssayResponse = Database['public']['Tables']['essay_responses']['Row']
 export type EssayMarking = Database['public']['Tables']['essay_markings']['Row']
+export type StudyPlan = Database['public']['Tables']['study_plans']['Row']
+export type StudyPlanItem = Database['public']['Tables']['study_plan_items']['Row']

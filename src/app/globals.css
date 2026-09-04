@@ -232,6 +232,27 @@ body::after {
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 :where(input, textarea, select) { caret-color: var(--brand); }
 
+/* Form fields share a calm, high-contrast surface across tutor controls. */
+.field,
+.field-dark {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.field { background: var(--background); color: var(--foreground); }
+.field:hover { border-color: color-mix(in srgb, var(--brand) 35%, var(--border)); }
+.field:focus { border-color: var(--brand); outline: none; }
+.field-dark { border-color: rgb(255 255 255 / 0.18); background: rgb(255 255 255 / 0.08); color: white; }
+.field-dark::placeholder { color: rgb(255 255 255 / 0.55); }
+.field-dark:hover { border-color: rgb(255 255 255 / 0.32); }
+.field-dark:focus { border-color: var(--mint); outline: none; }
+.field-dark option { background: var(--ink); color: white; }
+
 html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 38%, transparent) transparent; }
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
