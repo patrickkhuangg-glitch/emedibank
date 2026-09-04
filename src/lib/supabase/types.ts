@@ -453,6 +453,36 @@ export type Database = {
           },
         ]
       }
+      interview_attempts: {
+        Row: {
+          id: string
+          user_id: string
+          format: 'mmi' | 'panel'
+          station_id: string
+          station_title: string
+          questions: unknown
+          duration_seconds: number
+          recording_path: string
+          recording_mime_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          format: 'mmi' | 'panel'
+          station_id: string
+          station_title: string
+          questions?: unknown
+          duration_seconds?: number
+          recording_path: string
+          recording_mime_type: string
+          created_at?: string
+        }
+        Update: {
+          duration_seconds?: number
+        }
+        Relationships: []
+      }
       mock_question_assignments: {
         Row: {
           id: string
