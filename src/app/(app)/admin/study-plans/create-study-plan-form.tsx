@@ -5,7 +5,7 @@ import { useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createStudyPlanAction, type CreateStudyPlanState } from '@/lib/study-plans/actions'
 
-export function CreateStudyPlanForm() {
+export function CreateStudyPlanForm({ studentEmail = '' }: { studentEmail?: string }) {
   const router = useRouter()
   const [state, action, pending] = useActionState<CreateStudyPlanState, FormData>(createStudyPlanAction, {})
   useEffect(() => {
@@ -13,7 +13,7 @@ export function CreateStudyPlanForm() {
   }, [router, state.planId])
 
   return <form action={action} className="mt-6 space-y-4">
-    <Field label="Student email"><input required type="email" name="studentEmail" autoComplete="email" placeholder="student@email.com" className="field-dark" /></Field>
+    <Field label="Student email"><input required type="email" name="studentEmail" defaultValue={studentEmail} autoComplete="email" placeholder="student@email.com" className="field-dark" /></Field>
     <Field label="Package name"><input required name="name" placeholder="e.g. UCAT + interview tutoring" className="field-dark" /></Field>
     {state.error ? <p role="alert" className="rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white">{state.error}</p> : null}
     <p className="text-xs leading-5 text-white/60">The student needs a Studocyte account first. You can create one from Students.</p>

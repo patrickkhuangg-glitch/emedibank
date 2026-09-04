@@ -5,7 +5,7 @@ alter table public.profiles
 
 alter table public.profiles
   add constraint profiles_phone_number_format
-  check (phone_number is null or phone_number ~ '^\\+[1-9][0-9]{7,14}$');
+  check (phone_number is null or phone_number ~ '^\+[1-9][0-9]{7,14}$');
 
 create unique index profiles_phone_number_unique
   on public.profiles (phone_number)

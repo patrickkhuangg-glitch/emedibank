@@ -9,8 +9,9 @@ import { CreateStudyPlanForm } from './create-study-plan-form'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin · Study plans' }
 
-export default async function AdminStudyPlansPage() {
+export default async function AdminStudyPlansPage({ searchParams }: { searchParams: Promise<{ student?: string }> }) {
   await requireAdmin()
+  const { student } = await searchParams
   const admin = createAdminClient()
   const { data: plans } = await admin.from('study_plans').select('*').order('updated_at', { ascending: false })
   const planList = plans ?? []
@@ -31,7 +32,7 @@ export default async function AdminStudyPlansPage() {
 
     <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border px-6 py-5"><h2 className="font-display text-2xl font-bold tracking-tight">Packages</h2></div>{planList.length === 0 ? <div className="px-6 py-12 text-center"><p className="font-semibold">No student packages yet.</p><p className="mt-2 text-sm text-muted">Create the first one with the form alongside.</p></div> : <div className="divide-y divide-border">{planList.map((plan) => <PlanRow key={plan.id} plan={plan} studentName={nameById.get(plan.user_id)} email={emailById.get(plan.user_id) ?? 'No email'} items={itemsByPlan.get(plan.id) ?? []} />)}</div>}</div>
-      <section className="h-fit rounded-3xl bg-ink p-6 text-white"><h2 className="font-display text-2xl font-bold tracking-tight">Create a package</h2><p className="mt-2 text-sm leading-6 text-white/70">Start with the student&rsquo;s existing Studocyte account. You can add tutoring hours and other inclusions next.</p><CreateStudyPlanForm /></section>
+      <section className="h-fit rounded-3xl bg-ink p-6 text-white"><h2 className="font-display text-2xl font-bold tracking-tight">Create a package</h2><p className="mt-2 text-sm leading-6 text-white/70">Start with the student&rsquo;s existing Studocyte account. You can add tutoring hours and other inclusions next.</p><CreateStudyPlanForm studentEmail={student} /></section>
     </section>
   </main></Container>
 }
