@@ -16,6 +16,7 @@ export type InterfaceMode = 'playful' | 'clean'
 export type TranscriptionStatus = 'not_requested' | 'processing' | 'ready' | 'failed'
 export type StudyPlanStatus = 'active' | 'paused' | 'completed'
 export type StudyPlanItemKind = 'tutoring' | 'masterclass' | 'workshop' | 'other'
+export type TutoringSessionStatus = 'scheduled' | 'completed' | 'needs_review' | 'cancelled'
 
 export type Database = {
   public: {
@@ -154,6 +155,69 @@ export type Database = {
           total_units?: number
           used_units?: number
           unit_label?: 'hours' | 'sessions' | 'places' | 'credits'
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tutoring_sessions: {
+        Row: {
+          id: string
+          plan_id: string
+          plan_item_id: string
+          student_id: string
+          student_email: string
+          title: string
+          scheduled_for: string
+          booked_minutes: number
+          zoom_meeting_id: string
+          zoom_meeting_uuid: string | null
+          zoom_join_url: string
+          zoom_start_url: string
+          status: TutoringSessionStatus
+          actual_minutes: number | null
+          overrun_minutes: number
+          base_deducted_at: string | null
+          overrun_deducted_at: string | null
+          completed_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          plan_item_id: string
+          student_id: string
+          student_email: string
+          title: string
+          scheduled_for: string
+          booked_minutes: number
+          zoom_meeting_id: string
+          zoom_meeting_uuid?: string | null
+          zoom_join_url: string
+          zoom_start_url: string
+          status?: TutoringSessionStatus
+          actual_minutes?: number | null
+          overrun_minutes?: number
+          base_deducted_at?: string | null
+          overrun_deducted_at?: string | null
+          completed_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          title?: string
+          scheduled_for?: string
+          booked_minutes?: number
+          zoom_meeting_uuid?: string | null
+          zoom_start_url?: string
+          status?: TutoringSessionStatus
+          actual_minutes?: number | null
+          overrun_minutes?: number
+          base_deducted_at?: string | null
+          overrun_deducted_at?: string | null
+          completed_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -849,6 +913,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      complete_tutoring_session: {
+        Args: { p_session_id: string; p_actual_minutes: number; p_student_attended: boolean }
+        Returns: Database['public']['Tables']['tutoring_sessions']['Row']
+      }
+      approve_tutoring_overrun: {
+        Args: { p_session_id: string }
+        Returns: Database['public']['Tables']['tutoring_sessions']['Row']
+      }
     }
     Enums: {
       exam_kind: ExamKind
@@ -879,3 +951,4 @@ export type EssayResponse = Database['public']['Tables']['essay_responses']['Row
 export type EssayMarking = Database['public']['Tables']['essay_markings']['Row']
 export type StudyPlan = Database['public']['Tables']['study_plans']['Row']
 export type StudyPlanItem = Database['public']['Tables']['study_plan_items']['Row']
+export type TutoringSession = Database['public']['Tables']['tutoring_sessions']['Row']

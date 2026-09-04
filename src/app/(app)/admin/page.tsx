@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/dal'
 import { getPendingMarkings } from '@/lib/essays/data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { isZoomConfigured } from '@/lib/zoom/client'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin · Studocyte' }
@@ -45,6 +46,7 @@ export default async function AdminPage() {
         <Workspace href="/admin/interviews" className="lg:col-span-7" eyebrow="Tutor review" title="Review interview stations" description="The review home for submitted MMI stations, tutor notes and approved student feedback." count={0} countLabel="waiting now" icon={<InterviewIcon />} tone="ink" action="Open station reviews" />
         <Workspace href="/admin/study-plans" className="lg:col-span-12" eyebrow="Tutoring packages" title="Manage student study plans" description="Assign one-to-one hours, interview support and masterclass places to each student, then keep their remaining inclusions up to date." count={studyPlans.count ?? 0} countLabel="packages" icon={<PlanIcon />} action="Open study plans" />
         <Workspace href="/admin/students" className="lg:col-span-5" eyebrow="Student accounts" title="Create students" description="Invite a student to Studocyte, then set up their tutoring package and inclusions." count={students.count ?? 0} countLabel="student accounts" icon={<StudentIcon />} action="Open student accounts" />
+        <Workspace href="/admin/zoom" className="lg:col-span-7" eyebrow="Tutoring delivery" title="Connect Zoom Pro" description="Create booked Zoom sessions from student packages and keep any extra tutoring time under your approval." count={isZoomConfigured() ? 1 : 0} countLabel={isZoomConfigured() ? 'host connected' : 'setup needed'} icon={<ZoomIcon />} tone="ink" action="Open Zoom settings" />
       </div>
     </section>
 
@@ -64,3 +66,4 @@ function QuestionIcon() { return <svg width="23" height="23" viewBox="0 0 24 24"
 function InterviewIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg> }
 function PlanIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="m8 9 1.5 1.5L12 8M14 10h2M8 15l1.5 1.5L12 14M14 16h2"/></svg> }
 function StudentIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg> }
+function ZoomIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="7" width="12" height="10" rx="2"/><path d="m15 10 5-3v10l-5-3"/></svg> }

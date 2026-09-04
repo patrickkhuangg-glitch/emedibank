@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlanItem, StudyPlan } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
@@ -17,8 +18,13 @@ export default async function StudyPlanPage() {
   const { data: items } = planIds.length
     ? await supabase.from('study_plan_items').select('*').in('plan_id', planIds).order('created_at')
     : { data: [] as StudyPlanItem[] }
+  const { data: sessions } = planIds.length
+    ? await createAdminClient().from('tutoring_sessions').select('id,plan_id,title,scheduled_for,booked_minutes,zoom_join_url,status').eq('student_id', user.id).in('plan_id', planIds).order('scheduled_for')
+    : { data: [] as StudentTutoringSession[] }
   const itemsByPlan = new Map<string, StudyPlanItem[]>()
   for (const item of items ?? []) itemsByPlan.set(item.plan_id, [...(itemsByPlan.get(item.plan_id) ?? []), item])
+  const sessionsByPlan = new Map<string, StudentTutoringSession[]>()
+  for (const session of sessions ?? []) sessionsByPlan.set(session.plan_id, [...(sessionsByPlan.get(session.plan_id) ?? []), session])
 
   return (
     <Container className="py-10 sm:py-14">
@@ -31,13 +37,23 @@ export default async function StudyPlanPage() {
           <Link href="/dashboard" className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">Open dashboard</Link>
         </header>
 
-        {planList.length === 0 ? <EmptyPlan /> : <div className="mt-8 space-y-5">{planList.map((plan, index) => <PlanCard key={plan.id} plan={plan} items={itemsByPlan.get(plan.id) ?? []} index={index} />)}</div>}
+        {planList.length === 0 ? <EmptyPlan /> : <div className="mt-8 space-y-5">{planList.map((plan, index) => <PlanCard key={plan.id} plan={plan} items={itemsByPlan.get(plan.id) ?? []} sessions={sessionsByPlan.get(plan.id) ?? []} index={index} />)}</div>}
       </main>
     </Container>
   )
 }
 
-function PlanCard({ plan, items, index }: { plan: StudyPlan; items: StudyPlanItem[]; index: number }) {
+type StudentTutoringSession = {
+  id: string
+  plan_id: string
+  title: string
+  scheduled_for: string
+  booked_minutes: number
+  zoom_join_url: string
+  status: 'scheduled' | 'completed' | 'needs_review' | 'cancelled'
+}
+
+function PlanCard({ plan, items, sessions, index }: { plan: StudyPlan; items: StudyPlanItem[]; sessions: StudentTutoringSession[]; index: number }) {
   const active = plan.status === 'active'
   return <section className={`eb-rise overflow-hidden rounded-3xl ${active ? 'bg-ink text-white' : 'border border-border bg-surface text-foreground'}`} style={{ animationDelay: `${index * 75}ms` }}>
     <div className="grid lg:grid-cols-[minmax(0,1fr)_17rem]">
@@ -47,6 +63,7 @@ function PlanCard({ plan, items, index }: { plan: StudyPlan; items: StudyPlanIte
           <StatusPill status={plan.status} inverse={active} />
         </div>
         {items.length === 0 ? <p className={`mt-8 text-sm ${active ? 'text-white/70' : 'text-muted'}`}>Your tutor is setting up the inclusions for this package.</p> : <div className="mt-8 divide-y divide-white/12">{items.map((item) => <Inclusion key={item.id} item={item} active={active} />)}</div>}
+        {sessions.length ? <div className="mt-8 border-t border-white/12 pt-6"><p className="text-sm font-semibold">Your Zoom sessions</p><div className="mt-3 divide-y divide-white/12">{sessions.map((session) => <StudentSession key={session.id} session={session}/>)}</div></div> : null}
       </div>
       <aside className={`p-6 sm:p-8 lg:border-l ${active ? 'border-white/12 bg-white/[0.05]' : 'border-border bg-surface-muted/45'}`}>
         <p className={`text-sm font-semibold ${active ? 'text-white' : 'text-foreground'}`}>Package progress</p>
@@ -56,6 +73,11 @@ function PlanCard({ plan, items, index }: { plan: StudyPlan; items: StudyPlanIte
       </aside>
     </div>
   </section>
+}
+function StudentSession({ session }: { session: StudentTutoringSession }) {
+  const date = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(session.scheduled_for))
+  const canJoin = session.status === 'scheduled'
+  return <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{session.title}</p><p className="mt-1 text-sm text-white/65">{date} <span className="px-1 text-white/25">·</span> {formatMinutes(session.booked_minutes)}</p></div>{canJoin ? <a href={session.zoom_join_url} target="_blank" rel="noreferrer" className="eb-press inline-flex w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5">Join Zoom</a> : <span className="text-sm text-white/60">{session.status === 'completed' ? 'Completed' : 'Awaiting tutor review'}</span>}</div>
 }
 
 function Inclusion({ item, active }: { item: StudyPlanItem; active: boolean }) {
@@ -82,6 +104,7 @@ function inclusionLabel(item: StudyPlanItem, remaining: number) {
   return `${formatUnit(remaining)} of ${formatUnit(item.total_units)} ${item.unit_label} remaining`
 }
 function formatUnit(value: number) { return Number.isInteger(value) ? String(value) : value.toFixed(1) }
+function formatMinutes(minutes: number) { return minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)} h ` : ''}${minutes % 60} min` }
 function progressPercent(items: StudyPlanItem[]) {
   if (items.length === 0) return 0
   const total = items.reduce((sum, item) => sum + item.total_units, 0)
