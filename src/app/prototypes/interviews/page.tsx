@@ -15,7 +15,7 @@ export function InterviewsDashboard({ embedded = false, preview = false }: { emb
           <h1 className="text-balance font-display text-4xl font-semibold leading-[1.03] tracking-tight sm:text-6xl">Your interview dashboard.</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">See your interview preparation at a glance, choose a focused next step and keep the reflection that will sharpen your next answer.</p>
           {preview ? <span className="mt-5 inline-flex rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Illustrative preview</span> : null}
-          <section className="mt-8 grid overflow-hidden rounded-3xl bg-ink text-ink-foreground eb-soft lg:grid-cols-[minmax(0,1fr)_290px]">
+          <section className="mt-8 grid overflow-hidden rounded-3xl bg-ink text-ink-foreground eb-soft lg:grid-cols-2">
             <div className="flex min-h-[278px] flex-col px-6 py-7 sm:px-9 sm:py-8"><div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#d4cbea]"><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-mint" /> Your next focused session</span><span className="font-mono text-xs tabular-nums">5 min</span></div><div className="mt-7 max-w-2xl"><p className="text-sm font-medium text-[#d4cbea]">Start with a guide</p><p className="mt-3 text-pretty font-display text-2xl font-medium leading-snug sm:text-3xl">Choose an MMI or panel prompt, then practise your response out loud.</p><p className="mt-4 text-sm text-[#d4cbea]">One focused question is enough to begin building your preparation habit.</p></div><div className="mt-auto pt-7"><Link href="/interviews/practice" className="eb-press inline-flex items-center gap-2 rounded-full bg-surface px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5">Open practice <ArrowIcon /></Link></div></div>
             <aside className="bg-white/[0.055] p-6 lg:border-l lg:border-white/10"><p className="text-sm font-medium text-[#d4cbea]">Your practice summary</p><dl className="mt-5 space-y-4"><SummaryRow value="0" label="responses recorded" /><SummaryRow value="0" label="reflection notes" /><SummaryRow value="4" label="focus areas to explore" /></dl><p className="mt-6 border-t border-white/10 pt-5 text-xs leading-5 text-[#b5acc9]">Your own completion and reflection trends will appear here as you practise.</p></aside>
           </section>
@@ -23,7 +23,7 @@ export function InterviewsDashboard({ embedded = false, preview = false }: { emb
         <ReadinessPanel />
       </section>
 
-      <section className="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]"><FocusMap preview={preview} /><StudyNotes note={note} savedNote={savedNote} setNote={setNote} onSave={() => setSavedNote(note.trim())} /></section>
+      <section className="mt-7 grid gap-7 xl:grid-cols-2"><FocusMap preview={preview} /><StudyNotes note={note} savedNote={savedNote} setNote={setNote} onSave={() => setSavedNote(note.trim())} /></section>
 
       <section className="mt-7 grid gap-3 md:grid-cols-3"><PathCard href="/interviews/practice" title="Practice" body="Rehearse MMI and panel prompts in a focused response loop." icon={<PracticeIcon />} /><PathCard href="/interviews/stories" title="Stories" body="Find real experiences that show reflection, not a script." icon={<StoryIcon />} /><PathCard href="/interviews/resources" title="Resources" body="Keep answer frameworks and interview-day preparation close." icon={<GuideIcon />} /></section>
     </div>
