@@ -7,6 +7,7 @@ import { requireUser, getProfile } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { BillingButton } from './billing-button'
 import { InterfaceModeToggle } from './interface-mode-toggle'
+import { ProfileForm } from './profile-form'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Account & billing' }
@@ -14,11 +15,11 @@ export const metadata: Metadata = { title: 'Account & billing' }
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>
+  searchParams: Promise<{ checkout?: string; complete?: string }>
 }) {
   const user = await requireUser('/account')
   const profile = await getProfile()
-  const { checkout } = await searchParams
+  const { checkout, complete } = await searchParams
   const supabase = await createClient()
 
   const [{ data: exams }, { data: entitlements }, { data: subscriptions }] = await Promise.all([
@@ -44,6 +45,12 @@ export default async function AccountPage({
         {checkout === 'success' ? (
           <Alert kind="success">Subscription started — your access is unlocked below.</Alert>
         ) : null}
+
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your details</h2>
+          {complete === 'trial' ? <p className="mt-2 text-sm leading-6 text-muted">Add your full name and mobile number before starting a free trial.</p> : null}
+          <ProfileForm fullName={profile?.full_name ?? ''} phoneNumber={profile?.phone_number ?? ''} />
+        </section>
 
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your access</h2>

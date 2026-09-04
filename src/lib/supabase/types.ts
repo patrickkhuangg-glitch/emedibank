@@ -56,6 +56,7 @@ export type Database = {
           interface_mode: InterfaceMode
           essay_credits: number
           mmi_credits: number
+          phone_number: string | null
           created_at: string
         }
         Insert: {
@@ -66,6 +67,7 @@ export type Database = {
           interface_mode?: InterfaceMode
           essay_credits?: number
           mmi_credits?: number
+          phone_number?: string | null
           created_at?: string
         }
         Update: {
@@ -76,6 +78,7 @@ export type Database = {
           interface_mode?: InterfaceMode
           essay_credits?: number
           mmi_credits?: number
+          phone_number?: string | null
           created_at?: string
         }
         Relationships: [
@@ -835,6 +838,14 @@ export type Database = {
           p_benefit: string
           p_period_end: string
           p_amount: number
+        }
+        Returns: boolean
+      }
+      consume_signup_attempt: {
+        Args: {
+          p_key_hash: string
+          p_limit: number
+          p_window_seconds: number
         }
         Returns: boolean
       }

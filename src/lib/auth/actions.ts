@@ -1,8 +1,10 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOrigin } from '@/lib/site'
+import { normalisePhone, verifySignupProtection } from '@/lib/auth/signup-protection'
 
 export type AuthState = { error?: string; message?: string }
 
@@ -28,10 +30,16 @@ export async function signUpAction(
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
   const fullName = String(formData.get('full_name') ?? '').trim()
+  const phoneNumber = normalisePhone(String(formData.get('phone_number') ?? ''))
+  const turnstileToken = String(formData.get('turnstileToken') ?? '')
 
+  if (fullName.length < 2) return { error: 'Enter your full name.' }
+  if (!phoneNumber) return { error: 'Enter a valid mobile number. Use an Australian 04 number or international + format.' }
   if (password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
   }
+  const protection = await verifySignupProtection(email, turnstileToken)
+  if (protection.error) return { error: protection.error }
 
   const origin = await getOrigin()
   const supabase = await createClient()
@@ -39,17 +47,32 @@ export async function signUpAction(
     email,
     password,
     options: {
-      data: { full_name: fullName },
-      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent('/dashboard?signup=success')}`,
+      data: { full_name: fullName, phone_number: phoneNumber },
+      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent('/pricing?signup=success')}`,
     },
   })
   if (error) return { error: error.message }
 
   // If email confirmation is on, there's no session yet.
   if (!data.session) {
-    return { message: 'Check your email to confirm your account, then log in.' }
+    return { message: 'Check your email to verify your account, then choose a plan and start your trial.' }
   }
-  redirect('/dashboard?signup=success')
+  redirect('/pricing?signup=success')
+}
+
+export async function updateProfileAction(_previous: AuthState, formData: FormData): Promise<AuthState> {
+  const fullName = String(formData.get('full_name') ?? '').trim()
+  const phoneNumber = normalisePhone(String(formData.get('phone_number') ?? ''))
+  if (fullName.length < 2) return { error: 'Enter your full name.' }
+  if (!phoneNumber) return { error: 'Enter a valid mobile number. Use an Australian 04 number or international + format.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Sign in to update your details.' }
+  const { error } = await supabase.from('profiles').update({ full_name: fullName, phone_number: phoneNumber }).eq('id', user.id)
+  if (error) return { error: error.message.includes('profiles_phone_number_unique') ? 'That mobile number is already linked to another account.' : 'Your details could not be saved. Please try again.' }
+  revalidatePath('/account')
+  return { message: 'Your details have been saved. You can now start a trial.' }
 }
 
 export async function signInWithGoogleAction(formData: FormData) {

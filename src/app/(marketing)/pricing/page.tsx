@@ -92,8 +92,9 @@ async function loadPlansUnsafe(): Promise<Plan[]> {
     })
 }
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ signup?: string; checkout?: string }> }) {
   const plans = await loadPlans()
+  const { signup, checkout } = await searchParams
   const requestHeaders = await headers()
   const country = requestHeaders.get('x-vercel-ip-country')?.toUpperCase() ?? 'AU'
   const defaultCurrency = COUNTRY_CURRENCY[country] ?? 'aud'
@@ -106,6 +107,8 @@ export default async function PricingPage() {
           Start free with full mock exams. For a limited time, every annual academic plan includes
           Interviews and 25 marked MMI stations free. Local pricing is shown in your currency.
         </p>
+        {signup === 'success' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-mint-muted px-4 py-3 text-sm font-medium text-mint-deep">Your email is verified. Choose a plan to start your 7-day trial. Add card details only if you choose to continue when it ends.</p> : null}
+        {checkout === 'cancelled' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-surface-muted px-4 py-3 text-sm text-muted">Checkout was cancelled. Your account is ready whenever you are.</p> : null}
       </div>
 
       <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-surface p-6 text-center">

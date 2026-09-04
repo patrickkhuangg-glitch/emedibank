@@ -59,16 +59,21 @@ export async function startCheckoutAction(formData: FormData) {
   }
 
   const profile = await getProfile()
+  if (!profile?.full_name || !profile.phone_number) redirect('/account?complete=trial')
   const customerId = await getOrCreateCustomerId(user.id, user.email, profile?.full_name)
   const origin = await getOrigin()
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
+    payment_method_collection: 'if_required',
     customer: customerId,
     line_items: lineItems,
     ...(currency ? { currency } : {}),
     subscription_data: {
       trial_period_days: TRIAL_PERIOD_DAYS,
+      trial_settings: {
+        end_behavior: { missing_payment_method: 'pause' },
+      },
       metadata: { supabase_user_id: user.id },
     },
     success_url: `${origin}/account?checkout=success`,
