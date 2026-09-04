@@ -27,14 +27,14 @@ const FORMAT_COPY: Record<Format, { title: string; description: string; action: 
   },
 }
 
-export default function InterviewPreviewPage() {
+export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
   const [format, setFormat] = useState<Format>('mmi')
   const [saved, setSaved] = useState(false)
   const copy = FORMAT_COPY[format]
 
   return (
     <main className="relative z-[2] min-h-screen bg-background pb-16 text-foreground">
-      <header className="border-b border-border bg-surface/80 backdrop-blur">
+      {!embedded ? <header className="border-b border-border bg-surface/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-8">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-sm font-bold text-white">S</span>
@@ -49,7 +49,7 @@ export default function InterviewPreviewPage() {
           </nav>
           <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span>
         </div>
-      </header>
+      </header> : null}
 
       <div className="mx-auto max-w-[1440px] px-5 pt-9 sm:px-8 sm:pt-12">
         <section className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_325px]">
@@ -59,7 +59,10 @@ export default function InterviewPreviewPage() {
                 <h1 className="max-w-3xl text-balance font-display text-4xl font-semibold leading-[1.03] tracking-tight sm:text-6xl">{copy.title}</h1>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">{copy.description}</p>
               </div>
-              <FormatSwitch format={format} setFormat={setFormat} />
+              <div className="flex flex-wrap items-center gap-2">
+                {embedded ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}
+                <FormatSwitch format={format} setFormat={setFormat} />
+              </div>
             </div>
 
             <section className="mt-8 overflow-hidden rounded-3xl border border-border bg-ink text-ink-foreground eb-soft">
@@ -143,6 +146,10 @@ export default function InterviewPreviewPage() {
       </div>
     </main>
   )
+}
+
+export default function InterviewPreviewPage() {
+  return <InterviewPreview />
 }
 
 function ReadinessPanel() {

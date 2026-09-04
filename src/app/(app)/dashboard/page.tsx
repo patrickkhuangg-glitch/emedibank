@@ -65,6 +65,15 @@ export default async function DashboardPage() {
 
       {/* bento */}
       <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <section className={`${CARD} eb-rise flex flex-col justify-between gap-5 bg-brand-muted/60 p-6 sm:flex-row sm:items-center lg:col-span-12`} style={delay(20)}>
+          <div className="max-w-2xl">
+            <h2 className="font-display text-2xl font-semibold tracking-tight">Interview practice is open.</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Explore the new Australian MMI and panel interview workspace, then shape a practice plan around your own experiences.</p>
+          </div>
+          <Link href="/interviews" className="eb-press inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            Open Interviews <Arrow />
+          </Link>
+        </section>
         {/* Level / XP */}
         <section className={`${CARD} eb-rise p-6 lg:col-span-4`} style={delay(40)}>
           <p className={EYEBROW}>Overall level</p>

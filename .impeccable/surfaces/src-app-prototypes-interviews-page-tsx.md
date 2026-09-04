@@ -7,7 +7,7 @@ related_targets: []
 
 # Interviews preview
 
-Scope: a development-only Operate-mode preview for Australian medical and dental applicants. It demonstrates MMI and panel preparation; it does not imply shipped interview content, data, or enrolment functionality.
+Scope: an Operate-mode preview for signed-in Australian medical and dental applicants. It is reachable from the app dashboard and navigation, demonstrates MMI and panel preparation, and does not imply shipped interview content, data, or enrolment functionality.
 
 ## Direction contract
 

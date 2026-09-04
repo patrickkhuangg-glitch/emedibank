@@ -16,6 +16,7 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
 
   const items: Item[] = [
     { href: '/dashboard', label: 'Dashboard', icon: <GridIcon /> },
+    { href: '/interviews', label: 'Interviews', icon: <InterviewIcon /> },
     { href: practiceHref, label: 'Practice', icon: <QuestionIcon /> },
     { href: mockHref, label: 'Mock exams', icon: <ExamIcon /> },
     ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
@@ -81,6 +82,9 @@ function QuestionIcon() {
 }
 function ExamIcon() {
   return <svg {...P}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18" /><path d="M7 14h5" /><path d="M15 14h2" /></svg>
+}
+function InterviewIcon() {
+  return <svg {...P}><path d="M4 5h16v11H8l-4 4V5Z" /><path d="M8 9h8M8 12h5" /></svg>
 }
 function UserIcon() {
   return <svg {...P}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
