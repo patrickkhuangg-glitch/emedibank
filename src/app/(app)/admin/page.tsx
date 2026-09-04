@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { getPendingMarkings } from '@/lib/essays/data'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -11,13 +12,14 @@ export const metadata: Metadata = { title: 'Admin · Studocyte' }
 export default async function AdminPage() {
   await requireAdmin()
   const supabase = await createClient()
-  const [queue, exams, sections, published, drafts, studyPlans] = await Promise.all([
+  const [queue, exams, sections, published, drafts, studyPlans, students] = await Promise.all([
     getPendingMarkings(),
     supabase.from('exams').select('id', { count: 'exact', head: true }).eq('active', true),
     supabase.from('subtests').select('id,is_free'),
     supabase.from('questions').select('id', { count: 'exact', head: true }).eq('published', true),
     supabase.from('questions').select('id', { count: 'exact', head: true }).eq('published', false),
     supabase.from('study_plans').select('id', { count: 'exact', head: true }),
+    createAdminClient().from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
   ])
   const subtests = sections.data ?? []
   const freeCount = subtests.filter((section) => section.is_free).length
@@ -42,6 +44,7 @@ export default async function AdminPage() {
         <Workspace href="/admin/questions" className="lg:col-span-5" eyebrow="Content library" title="Add and manage questions" description="Author individual questions, import complete banks, publish drafts and remove content in bulk." count={published.count ?? 0} countLabel="questions live" icon={<QuestionIcon />} action="Open question bank" />
         <Workspace href="/admin/interviews" className="lg:col-span-7" eyebrow="Tutor review" title="Review interview stations" description="The review home for submitted MMI stations, tutor notes and approved student feedback." count={0} countLabel="waiting now" icon={<InterviewIcon />} tone="ink" action="Open station reviews" />
         <Workspace href="/admin/study-plans" className="lg:col-span-12" eyebrow="Tutoring packages" title="Manage student study plans" description="Assign one-to-one hours, interview support and masterclass places to each student, then keep their remaining inclusions up to date." count={studyPlans.count ?? 0} countLabel="packages" icon={<PlanIcon />} action="Open study plans" />
+        <Workspace href="/admin/students" className="lg:col-span-5" eyebrow="Student accounts" title="Create students" description="Invite a student to Studocyte, then set up their tutoring package and inclusions." count={students.count ?? 0} countLabel="student accounts" icon={<StudentIcon />} action="Open student accounts" />
       </div>
     </section>
 
@@ -60,3 +63,4 @@ function AccessIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" f
 function QuestionIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M7 3h10a2 2 0 0 1 2 2v14l-7-3-7 3V5a2 2 0 0 1 2-2Z"/><path d="M9.8 8.5a2.3 2.3 0 1 1 3.1 2.2c-.7.3-.9.7-.9 1.3M12 14.5h.01"/></svg> }
 function InterviewIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg> }
 function PlanIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="m8 9 1.5 1.5L12 8M14 10h2M8 15l1.5 1.5L12 14M14 16h2"/></svg> }
+function StudentIcon() { return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg> }
