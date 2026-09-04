@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth/dal'
 import { getInterviewStation, type InterviewFormat } from '@/lib/interviews/stations'
 import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
+import { transcribeInterviewRecording } from '@/lib/interviews/transcription'
 import { createClient } from '@/lib/supabase/server'
 
 const MAX_AUDIO_BYTES = 32 * 1024 * 1024
+export const maxDuration = 60
 
 export async function POST(request: Request) {
   const user = await getUser()
@@ -40,13 +42,30 @@ export async function POST(request: Request) {
     duration_seconds: durationSeconds,
     recording_path: path,
     recording_mime_type: audio.type,
+    transcription_status: 'processing',
   })
   if (insertError) {
     await supabase.storage.from('interview-recordings').remove([path])
     return NextResponse.json({ error: 'Recording history is not ready yet.' }, { status: 503 })
   }
 
-  return NextResponse.json({ ok: true })
+  const transcriptResult = await transcribeInterviewRecording(audio, audio.type, `interview-response.${extension}`)
+  if ('error' in transcriptResult || !transcriptResult.text) {
+    await supabase.from('interview_attempts').update({ transcription_status: 'failed' }).eq('recording_path', path)
+    return NextResponse.json({ ok: true, transcriptionStatus: 'failed' })
+  }
+
+  const { error: transcriptError } = await supabase
+    .from('interview_attempts')
+    .update({ transcript: transcriptResult.text, transcription_status: 'ready', transcription_model: 'gpt-4o-mini-transcribe' })
+    .eq('recording_path', path)
+
+  if (transcriptError) {
+    await supabase.from('interview_attempts').update({ transcription_status: 'failed' }).eq('recording_path', path)
+    return NextResponse.json({ ok: true, transcriptionStatus: 'failed' })
+  }
+
+  return NextResponse.json({ ok: true, transcriptionStatus: 'ready' })
 }
 
 function stringValue(value: FormDataEntryValue | null) {

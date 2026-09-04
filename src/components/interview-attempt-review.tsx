@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { InterviewPracticeTabs } from '@/components/interview-practice-tabs'
+import { InterviewTranscript } from '@/components/interview-transcript'
 import type { ExaminerFeedbackGuide } from '@/lib/interviews/stations'
 
 type InterviewAttempt = {
@@ -11,6 +12,8 @@ type InterviewAttempt = {
   createdAt: string
   audioUrl: string | null
   examinerFeedback?: ExaminerFeedbackGuide
+  transcript: string | null
+  transcriptionStatus: 'not_requested' | 'processing' | 'ready' | 'failed'
 }
 
 export function InterviewAttemptReview({ attempts }: { attempts: InterviewAttempt[] }) {
@@ -60,6 +63,7 @@ function AttemptRow({ attempt }: { attempt: InterviewAttempt }) {
         <span className="shrink-0 text-xs font-semibold text-muted">Private recording</span>
       </div>
       {attempt.audioUrl ? <audio className="mt-6 w-full" controls preload="metadata" src={attempt.audioUrl}>Your browser does not support audio playback.</audio> : <p className="mt-6 text-sm text-muted">This recording is temporarily unavailable. Refresh the page to try again.</p>}
+      <InterviewTranscript attemptId={attempt.id} initialStatus={attempt.transcriptionStatus} initialTranscript={attempt.transcript} />
       {attempt.examinerFeedback ? <ExaminerGuide guide={attempt.examinerFeedback} /> : null}
     </article>
   )

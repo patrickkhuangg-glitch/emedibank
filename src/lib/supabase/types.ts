@@ -13,6 +13,7 @@ export type QuestionKind = 'single_best_answer'
 export type VideoStatus = 'none' | 'processing' | 'ready'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type InterfaceMode = 'playful' | 'clean'
+export type TranscriptionStatus = 'not_requested' | 'processing' | 'ready' | 'failed'
 
 export type Database = {
   public: {
@@ -464,6 +465,9 @@ export type Database = {
           duration_seconds: number
           recording_path: string
           recording_mime_type: string
+          transcript: string | null
+          transcription_status: TranscriptionStatus
+          transcription_model: string | null
           created_at: string
         }
         Insert: {
@@ -476,10 +480,16 @@ export type Database = {
           duration_seconds?: number
           recording_path: string
           recording_mime_type: string
+          transcript?: string | null
+          transcription_status?: TranscriptionStatus
+          transcription_model?: string | null
           created_at?: string
         }
         Update: {
           duration_seconds?: number
+          transcript?: string | null
+          transcription_status?: TranscriptionStatus
+          transcription_model?: string | null
         }
         Relationships: []
       }

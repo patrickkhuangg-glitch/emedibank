@@ -15,7 +15,7 @@ export default async function InterviewReviewPage() {
   const supabase = await createClient()
   const { data: attempts } = await supabase
     .from('interview_attempts')
-    .select('id, format, station_id, station_title, questions, duration_seconds, recording_path, created_at')
+    .select('id, format, station_id, station_title, questions, duration_seconds, recording_path, created_at, transcript, transcription_status')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -33,6 +33,8 @@ export default async function InterviewReviewPage() {
       createdAt: attempt.created_at,
       audioUrl: recording?.signedUrl ?? null,
       examinerFeedback: getInterviewStation(attempt.format, attempt.station_id)?.examinerFeedback,
+      transcript: attempt.transcript,
+      transcriptionStatus: attempt.transcription_status,
     }
   }))
 
