@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { selectExamAction } from '@/lib/exam/actions'
 import { haptic } from '@/lib/haptics'
 import { StudocyteMark } from '@/components/ui/studocyte-mark'
@@ -12,6 +13,9 @@ import type { InterfaceMode } from '@/lib/supabase/types'
  *  The leading mark follows the account interface_mode (playful / clean). */
 export function ExamSwitcher({ current, exams, variant = 'playful' }: { current: ExamLite | null; exams: ExamLite[]; variant?: InterfaceMode }) {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const interviewsActive = pathname.startsWith('/interviews')
+  const label = interviewsActive ? 'Interviews' : current ? current.name : 'Choose exam'
   return (
     <div className="relative">
       <button
@@ -22,7 +26,7 @@ export function ExamSwitcher({ current, exams, variant = 'playful' }: { current:
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-ink-foreground">
           <StudocyteMark variant={variant} size={22} title="Studocyte" />
         </span>
-        <span className="font-display text-sm font-semibold">{current ? current.name : 'Choose exam'}</span>
+        <span className="font-display text-sm font-semibold">{label}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden><path d="m6 9 6 6 6-6" /></svg>
       </button>
 
@@ -32,7 +36,7 @@ export function ExamSwitcher({ current, exams, variant = 'playful' }: { current:
           <div className="eb-expand absolute left-0 top-full z-50 mt-2 min-w-[15rem] rounded-xl border border-border bg-surface p-1.5 shadow-lg">
             <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Switch exam</p>
             {exams.map((e) => {
-              const isCurrent = current?.slug === e.slug
+              const isCurrent = !interviewsActive && current?.slug === e.slug
               return (
                 <form key={e.id} action={selectExamAction.bind(null, e.slug)}>
                   <button type="submit" onClick={() => haptic(8)} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted ${isCurrent ? 'font-medium text-foreground' : 'text-muted'}`}>
@@ -43,8 +47,9 @@ export function ExamSwitcher({ current, exams, variant = 'playful' }: { current:
               )
             })}
             <div className="my-1 border-t border-border" />
-            <Link href="/interviews" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-muted">
-              Interviews
+            <Link href="/interviews" onClick={() => setOpen(false)} aria-current={interviewsActive ? 'page' : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-surface-muted ${interviewsActive ? 'font-medium text-foreground' : 'text-muted'}`}>
+              <span className="flex-1">Interviews</span>
+              {interviewsActive ? <CheckIcon /> : null}
             </Link>
             <Link href="/app" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-muted">
               All exam prep

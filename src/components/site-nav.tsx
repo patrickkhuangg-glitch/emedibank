@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { signOutAction } from '@/lib/auth/actions'
 import { haptic } from '@/lib/haptics'
 
@@ -10,23 +10,36 @@ type Item = { href: string; label: string; icon: ReactNode }
 
 export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; currentExamSlug: string | null }) {
   const pathname = usePathname()
+  const hash = useSyncExternalStore(subscribeToHash, getHash, () => '')
+  const interviewsActive = pathname.startsWith('/interviews')
   // Practice/Mock scope to the chosen exam; without one, send to the picker.
   const practiceHref = currentExamSlug ? `/practice/${currentExamSlug}` : '/app'
   const mockHref = currentExamSlug ? `/mock/${currentExamSlug}` : '/app'
 
-  const items: Item[] = [
-    { href: '/dashboard', label: 'Dashboard', icon: <GridIcon /> },
-    { href: '/interviews', label: 'Interviews', icon: <InterviewIcon /> },
-    { href: practiceHref, label: 'Practice', icon: <QuestionIcon /> },
-    { href: mockHref, label: 'Mock exams', icon: <ExamIcon /> },
-    ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
-    { href: '/account', label: 'Account', icon: <UserIcon /> },
-  ]
+  const items: Item[] = interviewsActive
+    ? [
+        { href: '/interviews', label: 'Overview', icon: <GridIcon /> },
+        { href: '/interviews#practice', label: 'Practice', icon: <QuestionIcon /> },
+        { href: '/interviews#story-bank', label: 'Stories', icon: <InterviewIcon /> },
+        { href: '/dashboard', label: 'Academic', icon: <ExamIcon /> },
+        ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
+        { href: '/account', label: 'Account', icon: <UserIcon /> },
+      ]
+    : [
+        { href: '/dashboard', label: 'Dashboard', icon: <GridIcon /> },
+        { href: '/interviews', label: 'Interviews', icon: <InterviewIcon /> },
+        { href: practiceHref, label: 'Practice', icon: <QuestionIcon /> },
+        { href: mockHref, label: 'Mock exams', icon: <ExamIcon /> },
+        ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
+        { href: '/account', label: 'Account', icon: <UserIcon /> },
+      ]
 
   const active = (item: Item) => {
+    if (item.href.startsWith('/interviews#')) return pathname === '/interviews' && hash === item.href.slice('/interviews'.length)
     if (item.label === 'Practice') return pathname.startsWith('/practice')
     if (item.label === 'Mock exams') return pathname.startsWith('/mock')
     if (item.href === '/dashboard') return pathname === '/dashboard'
+    if (item.href === '/interviews') return pathname === '/interviews' && !hash
     return pathname === item.href || pathname.startsWith(`${item.href}/`)
   }
 
@@ -42,6 +55,15 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
       </form>
     </nav>
   )
+}
+
+function subscribeToHash(onChange: () => void) {
+  window.addEventListener('hashchange', onChange)
+  return () => window.removeEventListener('hashchange', onChange)
+}
+
+function getHash() {
+  return window.location.hash
 }
 
 function PillLink({ href, label, icon, active }: Item & { active: boolean }) {
