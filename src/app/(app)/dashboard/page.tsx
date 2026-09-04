@@ -65,17 +65,8 @@ export default async function DashboardPage() {
 
       {/* bento */}
       <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <section className={`${CARD} eb-rise flex flex-col justify-between gap-5 bg-brand-muted/60 p-6 sm:flex-row sm:items-center lg:col-span-12`} style={delay(20)}>
-          <div className="max-w-2xl">
-            <h2 className="font-display text-2xl font-semibold tracking-tight">The interview workspace is open.</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">Explore Australian MMI and panel interview guidance, then choose the kind of answer you want to practise first.</p>
-          </div>
-          <Link href="/interviews" className="eb-press inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-            Open Interviews <Arrow />
-          </Link>
-        </section>
         {/* Level / XP */}
-        <section className={`${CARD} eb-rise p-6 lg:col-span-4`} style={delay(40)}>
+        <section className={`${CARD} eb-rise p-6 lg:col-span-4`} style={delay(20)}>
           <p className={EYEBROW}>Overall level</p>
           <div className="mt-4 flex items-center gap-5">
             <XpRing level={d.level} into={d.hasData ? d.into : 0.04} />
@@ -88,7 +79,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Streak */}
-        <section className={`${CARD} eb-rise flex flex-col p-6 lg:col-span-3`} style={delay(90)}>
+        <section className={`${CARD} eb-rise flex flex-col p-6 lg:col-span-3`} style={delay(70)}>
           <p className={EYEBROW}>Daily streak</p>
           <div className="mt-4 flex items-center gap-3">
             <Flame active={d.practisedToday} />
@@ -104,7 +95,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Predicted score */}
-        <section className={`${CARD} eb-rise flex flex-col justify-between p-6 lg:col-span-5`} style={delay(140)}>
+        <section className={`${CARD} eb-rise flex flex-col justify-between p-6 lg:col-span-5`} style={delay(120)}>
           <div className="flex items-start justify-between">
             <p className={EYEBROW}>Predicted band</p>
             <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] text-muted">{d.predicted.label}</span>
@@ -117,7 +108,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Section levels + access */}
-        <section className={`${CARD} eb-rise p-6 lg:col-span-7`} style={delay(190)}>
+        <section className={`${CARD} eb-rise p-6 lg:col-span-7`} style={delay(170)}>
           <div className="flex items-center justify-between gap-3">
             <p className={EYEBROW}>Levels by section</p>
             {anyLocked ? (
@@ -165,7 +156,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Review queue */}
-        <section className={`${CARD} eb-rise flex flex-col p-6 lg:col-span-5`} style={delay(240)}>
+        <section className={`${CARD} eb-rise flex flex-col p-6 lg:col-span-5`} style={delay(220)}>
           <p className={EYEBROW}>Review queue</p>
           <div className="mt-3 flex items-end gap-3">
             <span className="eb-pop font-display text-5xl font-semibold tabular-nums">{d.reviewDue.length}</span>
