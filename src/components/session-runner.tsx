@@ -33,8 +33,8 @@ type MostLeastResult = { is_correct: boolean; score: number; correct_most: numbe
 type MLAnswered = { result: MostLeastResult; video: Video | null }
 
 const ARIAL = 'Arial, Helvetica, sans-serif'
-const BAR = 'linear-gradient(#1a78bf,#1268ad)'
-const SUBBAR = '#4e82c4'
+const BAR = 'linear-gradient(#3b80b4,#2e70aa)'
+const SUBBAR = '#5b84bd'
 
 function mmss(sec: number) {
   const m = Math.floor(Math.max(0, sec) / 60)
@@ -292,12 +292,12 @@ export function SessionRunner({
   if (phase === 'intro') {
     return (
       <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
-        <div className="px-5 py-3 text-white" style={{ background: BAR }}><span className="text-lg font-semibold">{label}</span></div>
-        <div className="h-3" style={{ background: SUBBAR }} />
-        <div className="flex-1 overflow-auto p-8 text-[#1b1b1b]"><div className="mx-auto max-w-4xl whitespace-pre-wrap text-[15px] leading-relaxed">{instructions}</div></div>
+        <div className="px-3 py-2 text-white" style={{ background: BAR }}><span className="text-xl font-normal">{label}</span></div>
+        <div className="h-8" style={{ background: SUBBAR }} />
+        <div className="flex-1 overflow-auto px-[18px] py-4 text-[#111]"><div className="max-w-none whitespace-pre-wrap text-[16px] leading-[1.36]">{instructions}</div></div>
         <div className="flex items-center justify-between text-white" style={{ background: BAR }}>
-          <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
-          <button onClick={() => setReadyModal(true)} className="px-6 py-3 hover:bg-white/10">Next →</button>
+          <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-3 py-2 text-[16px] hover:bg-white/10">⤶ End Exam</button>
+          <button onClick={() => setReadyModal(true)} className="border-l border-white/25 px-3 py-2 text-[16px] hover:bg-white/10">Next →</button>
         </div>
         {readyModal ? (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/30">
@@ -421,7 +421,7 @@ export function SessionRunner({
         const correct = answered && answered.result.correct_option_id === o.id
         const wrong = answered && sel && !answered.result.is_correct
         return (
-          <button key={o.id} disabled={!!answered} onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }} className="flex items-start gap-3 py-2.5 text-left text-[15px]">
+          <button key={o.id} disabled={!!answered} onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }} className="flex items-start gap-3 py-2.5 text-left text-[16px]">
             <span className={`mt-0.5 grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-2 ${correct ? 'border-[#157d72]' : wrong ? 'border-[#dc2626]' : sel ? 'border-[#1268ad]' : 'border-gray-500'}`}>
               {sel ? <span className={`h-2 w-2 rounded-full ${correct ? 'bg-[#157d72]' : wrong ? 'bg-[#dc2626]' : 'bg-[#1268ad]'}`} /> : null}
             </span>
@@ -435,9 +435,9 @@ export function SessionRunner({
 
   const Grid = q?.statements ? (
     <div className="mt-2">
-      <p className="mb-4 text-[15px]">Place ‘Yes’ if the conclusion does follow. Place ‘No’ if the conclusion does not follow.</p>
-      <div className="flex items-start gap-6">
-        <div className="flex flex-1 flex-col gap-3">
+      <p className="mb-4 text-[16px]">Place ‘Yes’ if the conclusion does follow. Place ‘No’ if the conclusion does not follow.</p>
+      <div className="flex items-start gap-[10px]">
+        <div className="flex flex-1 flex-col gap-[13px]">
           {q.statements.map((s) => {
             const chosen = gridAnswered ? undefined : gridPending[id]?.[s.index]
             const per = gridAnswered?.result.per_statement.find((p) => p.index === s.index)
@@ -446,13 +446,13 @@ export function SessionRunner({
             if (gridAnswered && per) boxCls = per.correct ? 'border-[#157d72] bg-[#e2efec] text-[#157d72]' : 'border-[#dc2626] bg-[#fdecec] text-[#dc2626]'
             else if (chosen) boxCls = 'border-[#1268ad] bg-[#eef5fb] text-[#1268ad]'
             return (
-              <div key={s.index} className="flex items-stretch gap-3">
-                <div className="flex flex-1 items-center border-2 border-black px-4 py-3 text-center text-[15px]">{s.text}</div>
+              <div key={s.index} className="flex items-stretch gap-[13px]">
+                <div className="flex flex-1 items-center border border-black px-4 py-[17px] text-center text-[16px]">{s.text}</div>
                 <div
                   onClick={() => { if (!gridAnswered) cycleGrid(s.index) }}
                   onDragOver={(e) => { if (!gridAnswered) e.preventDefault() }}
                   onDrop={(e) => { if (!gridAnswered) { const v = e.dataTransfer.getData('text/plain') as YesNo; if (v === 'Yes' || v === 'No') setGrid(s.index, v) } }}
-                  className={`grid w-24 flex-none cursor-pointer place-items-center border-2 font-semibold ${boxCls}`}
+                  className={`grid w-[100px] flex-none cursor-pointer place-items-center border font-semibold ${boxCls}`}
                 >
                   {shown}
                   {gridAnswered && per && !per.correct ? <span className="ml-1 text-[10px] font-normal">(→ {per.correct_answer})</span> : null}
@@ -462,9 +462,9 @@ export function SessionRunner({
           })}
         </div>
         {!gridAnswered ? (
-          <div className="flex flex-col gap-3 bg-gray-200 p-3">
+          <div className="flex flex-col gap-[13px] bg-[#dedede] p-[10px]">
             {(['Yes', 'No'] as YesNo[]).map((v) => (
-              <div key={v} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', v)} className="grid h-16 w-20 cursor-grab place-items-center border-2 border-black bg-white text-[15px] active:cursor-grabbing">{v}</div>
+              <div key={v} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', v)} className="grid h-[58px] w-[100px] cursor-grab place-items-center border border-black bg-white text-[16px] active:cursor-grabbing">{v}</div>
             ))}
           </div>
         ) : null}
@@ -526,7 +526,7 @@ export function SessionRunner({
   ) : null
 
   const Content = (
-    <div className="flex-1 overflow-auto p-6 text-[#1b1b1b]">
+    <div className="flex-1 overflow-auto bg-white px-[18px] py-4 text-[#111]">
       {!loaded && q === undefined ? (
         <div className="flex flex-col items-center justify-center gap-3 py-24">
           <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1268ad]/25 border-t-[#1268ad]" />
@@ -537,14 +537,14 @@ export function SessionRunner({
       ) : q === null ? (
         <p className="text-gray-500">This question isn&rsquo;t available.</p>
       ) : isGrid ? (
-        <div className="mx-auto max-w-6xl">
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+        <div>
+          <p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
           {Images}{Tables}{Grid}
           {Explanation(gridAnswered?.result, gridAnswered?.video, answeredIds.has(id))}
         </div>
       ) : isML ? (
-        <div className="mx-auto max-w-4xl">
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+        <div>
+          <p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
           {Images}{ML}
           {Explanation(mlAnswered?.result, mlAnswered?.video, answeredIds.has(id))}
         </div>
@@ -558,9 +558,9 @@ export function SessionRunner({
           </div>
         </div>
       ) : (
-        <div className="mx-auto max-w-3xl">
+        <div>
           {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
-          <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed">{q.stem}</p>
+          <p className="mt-2 whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
           {Images}{Tables}
           <div className="mt-5">{Options}</div>
           {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
@@ -578,16 +578,16 @@ export function SessionRunner({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between px-5 py-2.5 text-white" style={{ background: BAR }}>
-        <span className="text-lg font-semibold">{reviewing ? `${label} · Review` : label}</span>
+      <div className="flex items-center justify-between px-3 py-2 text-white" style={{ background: BAR }}>
+        <span className="text-xl font-normal">{reviewing ? `${label} · Review` : label}</span>
         <div className="flex items-center gap-5">
-          {timed && !reviewing ? <span className={`text-sm tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
-          <span className="flex items-center gap-2 text-sm tabular-nums"><CounterIcon />{activeIndex + 1} of {total}</span>
+          {timed && !reviewing ? <span className={`text-[16px] tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
+          <span className="flex items-center gap-2 text-[16px] tabular-nums"><CounterIcon />{activeIndex + 1} of {total}</span>
         </div>
       </div>
 
       {reviewing ? (
-        <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
+        <div className="flex items-center justify-between px-3 py-1.5 text-[16px] text-white" style={{ background: SUBBAR }}>
           <button onClick={() => setPhase('summary')} className="hover:underline">← Back to results</button>
           <span>{(() => {
             if (!answeredIds.has(id)) return 'Not answered'
@@ -596,8 +596,11 @@ export function SessionRunner({
           })()}</span>
         </div>
       ) : (
-        <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}>
-          <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><span>Calculator</span></button>
+        <div className="flex items-center justify-between px-3 py-1.5 text-[16px] text-white" style={{ background: SUBBAR }}>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5"><span aria-hidden>☼</span><span>Explain Answer</span></span>
+            <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><span>Calculator</span></button>
+          </div>
           <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><span>Flag for Review</span></button>
         </div>
       )}
@@ -605,20 +608,20 @@ export function SessionRunner({
       {Content}
 
       {reviewing ? (
-        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
-          <button onClick={() => setPhase('summary')} className="px-5 py-3 hover:bg-white/10">⤶ Back to results</button>
+        <div className="flex items-center justify-between text-[16px] text-white" style={{ background: BAR }}>
+          <button onClick={() => setPhase('summary')} className="px-3 py-2 hover:bg-white/10">⤶ Back to results</button>
           <div className="flex">
-            {reviewPos > 0 ? <button onClick={() => reviewGo(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
-            {reviewPos < reviewList.length - 1 ? <button onClick={() => reviewGo(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button> : null}
+            {reviewPos > 0 ? <button onClick={() => reviewGo(-1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">← Previous</button> : null}
+            {reviewPos < reviewList.length - 1 ? <button onClick={() => reviewGo(1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">Next →</button> : null}
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
-          <button onClick={() => setConfirmFinish(true)} className="px-5 py-3 hover:bg-white/10">⤶ End Exam</button>
+        <div className="flex items-center justify-between text-[16px] text-white" style={{ background: BAR }}>
+          <button onClick={() => setConfirmFinish(true)} className="px-3 py-2 hover:bg-white/10">⤶ End Exam</button>
           <div className="flex">
-            {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">← Previous</button> : null}
-            <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-5 py-3">✧ Navigator</button>
-            {i >= total - 1 ? <button onClick={() => setConfirmFinish(true)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-5 py-3 text-[#ffd21e]">Next →</button>}
+            {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">← Previous</button> : null}
+            <button onClick={() => setNavOpen(true)} className="border-l border-white/25 px-3 py-2">✧ Navigator</button>
+            {i >= total - 1 ? <button onClick={() => setConfirmFinish(true)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">Finish →</button> : <button onClick={() => go(1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">Next →</button>}
           </div>
         </div>
       )}

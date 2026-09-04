@@ -92,7 +92,11 @@ Keyboard shortcuts: Alt+N next, Alt+P previous, Alt+F flag, Alt+C calculator, A-
 Please click the Next (N) button to proceed.`
 
   const Runner = passageStyle ? GamsatRunner : SessionRunner
-  const label = passageStyle ? `Practice Session – ${exam.name}${subLabel}` : `${exam.name} · Practice`
+  const label = passageStyle
+    ? `Practice Session – ${exam.name}${subLabel}`
+    : selectedSubtest?.name
+      ? `${selectedSubtest.name} Question Bank 1`
+      : `${exam.name} Practice`
 
   return (
     <Runner
