@@ -22,6 +22,7 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
         { href: '/interviews/stories', label: 'Stories', icon: <InterviewIcon /> },
         { href: '/interviews/resources', label: 'Resources', icon: <ExamIcon /> },
         { href: '/study-plan', label: 'Study Plan', icon: <PlanIcon /> },
+        { href: '/bookings', label: 'Bookings', icon: <CalendarIcon /> },
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
         { href: '/account', label: 'Account', icon: <UserIcon /> },
       ]
@@ -30,6 +31,7 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
         { href: practiceHref, label: 'Practice', icon: <QuestionIcon /> },
         { href: mockHref, label: 'Mock exams', icon: <ExamIcon /> },
         { href: '/study-plan', label: 'Study Plan', icon: <PlanIcon /> },
+        { href: '/bookings', label: 'Bookings', icon: <CalendarIcon /> },
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),
         { href: '/account', label: 'Account', icon: <UserIcon /> },
       ]
@@ -106,4 +108,7 @@ function ShieldIcon() {
 }
 function PlanIcon() {
   return <svg {...P}><rect x="5" y="3" width="14" height="18" rx="2" /><path d="m8 9 1.5 1.5L12 8M14.5 10H16M8 15l1.5 1.5L12 14M14.5 16H16" /></svg>
+}
+function CalendarIcon() {
+  return <svg {...P}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16M8 14h2M14 14h2" /></svg>
 }

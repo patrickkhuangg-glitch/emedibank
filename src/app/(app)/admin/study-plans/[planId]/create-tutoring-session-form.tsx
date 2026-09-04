@@ -34,7 +34,7 @@ export function CreateTutoringSessionForm({ planId, items }: { planId: string; i
     <DarkLabel label="Session title">
       <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark"/>
     </DarkLabel>
-    <DarkLabel label="Start time">
+    <DarkLabel label="Start time (Brisbane)">
       <input required type="datetime-local" name="scheduledFor" className="field-dark"/>
     </DarkLabel>
     <p className="sm:col-span-2 text-xs leading-5 text-white/65">The booked time is automatically deducted once Zoom confirms the student attended—even if they join late. Any time beyond the booking is held for your approval.</p>

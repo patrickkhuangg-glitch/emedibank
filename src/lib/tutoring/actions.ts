@@ -23,7 +23,7 @@ export async function createTutoringSessionAction(
     return { error: 'Add a title, date, time and a 15-minute booking length.' }
   }
 
-  const startsAt = new Date(scheduledFor)
+  const startsAt = parseBrisbaneDateTime(scheduledFor)
   if (Number.isNaN(startsAt.getTime()) || startsAt.getTime() < Date.now() - 60_000) return { error: 'Choose a future session time.' }
 
   const admin = createAdminClient()
@@ -94,13 +94,42 @@ export async function approveTutoringOverrunAction(formData: FormData) {
   refresh(planId)
 }
 
+export async function updateTutoringSessionFollowUpAction(formData: FormData) {
+  await requireAdmin()
+  const sessionId = value(formData, 'sessionId')
+  const planId = value(formData, 'planId')
+  if (!sessionId || !planId) return
+
+  const { error } = await createAdminClient()
+    .from('tutoring_sessions')
+    .update({
+      tutor_notes: value(formData, 'tutorNotes') || null,
+      homework: value(formData, 'homework') || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', sessionId)
+    .eq('plan_id', planId)
+
+  if (error) throw error
+  refresh(planId)
+}
+
 function refresh(planId: string) {
   revalidatePath('/admin')
   revalidatePath('/admin/study-plans')
   revalidatePath(`/admin/study-plans/${planId}`)
   revalidatePath('/study-plan')
+  revalidatePath('/bookings')
 }
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
+}
+
+// `datetime-local` intentionally has no timezone. Tutoring is booked in the
+// Australian product timezone so a Vercel server running in UTC cannot shift
+// the booked start by ten hours.
+function parseBrisbaneDateTime(dateTime: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateTime)) return new Date('invalid')
+  return new Date(`${dateTime}:00+10:00`)
 }

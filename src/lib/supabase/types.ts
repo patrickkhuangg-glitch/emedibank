@@ -173,6 +173,8 @@ export type Database = {
           zoom_meeting_uuid: string | null
           zoom_join_url: string
           zoom_start_url: string
+          tutor_notes: string | null
+          homework: string | null
           status: TutoringSessionStatus
           actual_minutes: number | null
           overrun_minutes: number
@@ -196,6 +198,8 @@ export type Database = {
           zoom_meeting_uuid?: string | null
           zoom_join_url: string
           zoom_start_url: string
+          tutor_notes?: string | null
+          homework?: string | null
           status?: TutoringSessionStatus
           actual_minutes?: number | null
           overrun_minutes?: number
@@ -212,6 +216,8 @@ export type Database = {
           booked_minutes?: number
           zoom_meeting_uuid?: string | null
           zoom_start_url?: string
+          tutor_notes?: string | null
+          homework?: string | null
           status?: TutoringSessionStatus
           actual_minutes?: number | null
           overrun_minutes?: number
