@@ -526,7 +526,7 @@ export function SessionRunner({
   ) : null
 
   const Content = (
-    <div className="flex-1 overflow-auto bg-white px-[18px] py-4 text-[#111]">
+    <div className={`flex-1 overflow-auto bg-white text-[#111] ${q?.passage ? 'p-0' : 'px-[18px] py-4'}`}>
       {!loaded && q === undefined ? (
         <div className="flex flex-col items-center justify-center gap-3 py-24">
           <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1268ad]/25 border-t-[#1268ad]" />
@@ -549,11 +549,11 @@ export function SessionRunner({
           {Explanation(mlAnswered?.result, mlAnswered?.video, answeredIds.has(id))}
         </div>
       ) : q.passage ? (
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:divide-x md:divide-gray-300">
-          <div className="md:pr-8"><p className="whitespace-pre-wrap text-[15px] leading-relaxed">{q.passage}</p>{Images}{Tables}</div>
-          <div className="md:pl-8">
-            <p className="text-[15px] leading-relaxed">{q.stem}</p>
-            <div className="mt-6">{Options}</div>
+        <div className="grid min-h-full md:grid-cols-[3fr_2fr] md:divide-x-[6px] md:divide-[#3b78aa]">
+          <div className="px-[18px] py-4"><p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.passage}</p>{Images}{Tables}</div>
+          <div className="px-[18px] py-4">
+            <p className="text-[16px] leading-[1.36]">{q.stem}</p>
+            <div className="mt-5">{Options}</div>
             {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
           </div>
         </div>
