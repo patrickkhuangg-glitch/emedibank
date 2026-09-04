@@ -4,32 +4,40 @@ import { useState } from 'react'
 
 type Format = 'mmi' | 'panel'
 
-const FORMAT_COPY: Record<Format, { title: string; description: string; action: string; label: string; minutes: string; station: string; prompt: string; detail: string }> = {
+const FORMAT_COPY: Record<Format, { title: string; description: string; action: string; label: string; minutes: string; station: string; prompt: string; detail: string; practiceTitle: string; practiceDescription: string; practiceTags: string[]; listeningFor: string[] }> = {
   mmi: {
     title: 'Your interview practice, made personal.',
     description: 'Build the calm, evidence-led answers Australian medical and dental schools look for.',
-    action: 'Start a 7-station circuit',
-    label: 'MMI circuit',
+    action: 'Explore an MMI circuit',
+    label: 'MMI circuit guide',
     minutes: '56 min',
     station: 'Station 03',
     prompt: 'A patient with capacity declines a treatment you believe would be beneficial. How would you respond?',
     detail: 'Ethics · autonomy · communication',
+    practiceTitle: 'How would you respond when a patient declines treatment?',
+    practiceDescription: 'Use this MMI scenario to practise balancing autonomy, empathy and clear communication.',
+    practiceTags: ['Ethics', 'MMI', 'Scenario'],
+    listeningFor: ['Acknowledge the patient\'s right to decide', 'Explain options with empathy and clarity', 'Show the boundaries of your role'],
   },
   panel: {
     title: 'Practise the conversation, not a script.',
     description: 'Prepare for Australian panel interviews with questions that draw out your own experiences and judgement.',
-    action: 'Start a panel rehearsal',
-    label: 'Panel rehearsal',
+    action: 'Explore a panel rehearsal',
+    label: 'Panel rehearsal guide',
     minutes: '18 min',
     station: 'Question 01',
     prompt: 'What has confirmed that medicine is the right path for you, and what have you learnt about the work itself?',
     detail: 'Motivation · reflection · clinical exposure',
+    practiceTitle: 'Why do you want to study medicine?',
+    practiceDescription: 'A common panel question that tests your insight into the profession—not how compelling your script sounds.',
+    practiceTags: ['Motivation', 'Panel', 'Core question'],
+    listeningFor: ['A specific, reflected reason', 'Evidence you understand the role', 'Values that show up in your choices'],
   },
 }
 
-export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
+export function InterviewsDashboard({ embedded = false, preview = false }: { embedded?: boolean; preview?: boolean }) {
   const [format, setFormat] = useState<Format>('mmi')
-  const [saved, setSaved] = useState(false)
+  const [highlighted, setHighlighted] = useState(false)
   const copy = FORMAT_COPY[format]
 
   return (
@@ -43,11 +51,11 @@ export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
             <span className="hidden text-sm font-medium text-muted sm:block">Interviews</span>
           </div>
           <nav aria-label="Preview navigation" className="hidden items-center gap-1 rounded-full bg-surface-muted p-1 md:flex">
-            <NavItem active label="Practice" />
-            <NavItem label="Story bank" />
-            <NavItem label="Mock circuits" />
+            <NavItem active href="#practice" label="Practice" />
+            <NavItem href="#story-bank" label="Story bank" />
+            <NavItem href="#circuits" label="Mock circuits" />
           </nav>
-          <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span>
+          {preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}
         </div>
       </header> : null}
 
@@ -60,16 +68,16 @@ export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">{copy.description}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {embedded ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}
+                {preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}
                 <FormatSwitch format={format} setFormat={setFormat} />
               </div>
             </div>
 
-            <section className="mt-8 overflow-hidden rounded-3xl border border-border bg-ink text-ink-foreground eb-soft">
+            <section id="circuits" className="mt-8 scroll-mt-24 overflow-hidden rounded-3xl border border-border bg-ink text-ink-foreground eb-soft">
               <div className="grid min-h-[412px] lg:grid-cols-[minmax(0,1fr)_285px]">
                 <div className="flex flex-col px-6 py-7 sm:px-9 sm:py-9">
                   <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#d4cbea]">
-                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-mint" /> Next up · {copy.label}</span>
+                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-mint" /> Start here · {copy.label}</span>
                     <span className="font-mono text-xs tabular-nums">{copy.minutes}</span>
                   </div>
                   <div className="mt-8 max-w-2xl">
@@ -78,22 +86,22 @@ export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
                     <p className="mt-5 text-sm text-[#d4cbea]">{copy.detail}</p>
                   </div>
                   <div className="mt-auto pt-8">
-                    <button className="eb-press inline-flex items-center gap-2 rounded-full bg-surface px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5" type="button">
+                    <a href="#practice" className="eb-press inline-flex items-center gap-2 rounded-full bg-surface px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5">
                       <PlayIcon /> {copy.action} <ArrowIcon />
-                    </button>
+                    </a>
                   </div>
                 </div>
                 <div className="border-t border-white/10 bg-white/[0.055] p-6 lg:border-l lg:border-t-0">
-                  <p className="text-sm font-medium text-[#d4cbea]">Your circuit</p>
+                  <p className="text-sm font-medium text-[#d4cbea]">Inside this circuit</p>
                   <ol className="mt-5 space-y-3">
                     {['Motivation', 'Teamwork', 'Ethics', 'Rural health'].map((item, index) => (
-                      <li key={item} className={`flex items-center gap-3 text-sm ${index === 2 ? 'text-white' : 'text-[#b5acc9]'}`}>
-                        <span className={`grid h-7 w-7 place-items-center rounded-full border text-xs ${index === 2 ? 'border-mint bg-mint text-mint-foreground' : 'border-white/15'}`}>{index < 2 ? <CheckIcon /> : index + 1}</span>
+                      <li key={item} className={`flex items-center gap-3 text-sm ${index === 0 ? 'text-white' : 'text-[#b5acc9]'}`}>
+                        <span className={`grid h-7 w-7 place-items-center rounded-full border text-xs ${index === 0 ? 'border-mint bg-mint text-mint-foreground' : 'border-white/15'}`}>{index + 1}</span>
                         <span>{item}</span>
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-8 border-t border-white/10 pt-5 text-xs leading-5 text-[#b5acc9]">A realistic station flow, quiet preparation time and space to reflect after every answer.</p>
+                  <p className="mt-8 border-t border-white/10 pt-5 text-xs leading-5 text-[#b5acc9]">A guide to station flow, quiet preparation time and one reflection point for each answer.</p>
                 </div>
               </div>
             </section>
@@ -102,40 +110,38 @@ export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
           <ReadinessPanel />
         </section>
 
-        <section className="mt-12 grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section id="practice" className="mt-12 scroll-mt-24 grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h2 className="font-display text-3xl font-semibold tracking-tight">Practise a question with purpose.</h2>
                 <p className="mt-2 text-sm text-muted">Move from context to a natural, well-reasoned response.</p>
               </div>
-              <button type="button" onClick={() => setSaved((value) => !value)} className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${saved ? 'border-brand bg-brand-muted text-brand' : 'border-border bg-surface text-foreground hover:border-brand/40'}`}>
-                <BookmarkIcon filled={saved} /> {saved ? 'Saved to your plan' : 'Save for later'}
+              <button type="button" onClick={() => setHighlighted((value) => !value)} className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${highlighted ? 'border-brand bg-brand-muted text-brand' : 'border-border bg-surface text-foreground hover:border-brand/40'}`}>
+                <BookmarkIcon filled={highlighted} /> {highlighted ? 'Highlighted for this session' : 'Highlight this prompt'}
               </button>
             </div>
             <div className="mt-5 overflow-hidden rounded-3xl border border-border bg-surface eb-soft">
               <div className="grid border-b border-border md:grid-cols-[1.15fr_.85fr]">
                 <div className="p-6 sm:p-8">
-                  <p className="font-display text-2xl font-semibold tracking-tight">Why do you want to study medicine?</p>
-                  <p className="mt-4 max-w-xl text-sm leading-6 text-muted">A common panel question that tests your insight into the profession—not how compelling your script sounds.</p>
+                  <p className="font-display text-2xl font-semibold tracking-tight">{copy.practiceTitle}</p>
+                  <p className="mt-4 max-w-xl text-sm leading-6 text-muted">{copy.practiceDescription}</p>
                   <div className="mt-7 flex flex-wrap gap-2">
-                    {['Motivation', 'Panel', 'Core question'].map((tag) => <span key={tag} className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted">{tag}</span>)}
+                    {copy.practiceTags.map((tag) => <span key={tag} className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted">{tag}</span>)}
                   </div>
                 </div>
                 <div className="bg-brand-muted/55 p-6 sm:p-8">
                   <p className="text-sm font-semibold text-brand">What interviewers are listening for</p>
                   <ul className="mt-4 space-y-3 text-sm leading-5 text-foreground">
-                    <li className="flex gap-3"><CheckIcon className="mt-0.5 shrink-0 text-mint-deep" /> A specific, reflected reason</li>
-                    <li className="flex gap-3"><CheckIcon className="mt-0.5 shrink-0 text-mint-deep" /> Evidence you understand the role</li>
-                    <li className="flex gap-3"><CheckIcon className="mt-0.5 shrink-0 text-mint-deep" /> Values that show up in your choices</li>
+                    {copy.listeningFor.map((item) => <li key={item} className="flex gap-3"><CheckIcon className="mt-0.5 shrink-0 text-mint-deep" /> {item}</li>)}
                   </ul>
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 sm:px-8">
                 <span className="inline-flex items-center gap-2 text-sm text-muted"><ClockIcon /> 2 min preparation · 3 min response</span>
                 <div className="flex gap-2">
-                  <button type="button" className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-muted">Learn first</button>
-                  <button type="button" className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground">Rehearse <ArrowIcon /></button>
+                  <a href="#answer-studio" className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-muted">Use the guide</a>
+                  <a href="#answer-studio" className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground">Plan your response <ArrowIcon /></a>
                 </div>
               </div>
             </div>
@@ -143,51 +149,69 @@ export function InterviewPreview({ embedded = false }: { embedded?: boolean }) {
 
           <StoryBank />
         </section>
+
+        <section id="answer-studio" className="mt-7 scroll-mt-24 rounded-3xl border border-border bg-surface p-6 eb-soft sm:p-8">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+            <div>
+              <h2 className="font-display text-3xl font-semibold tracking-tight">Keep each answer moving.</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Use the prompt, prepare under realistic timing, then reflect on one thing to carry into the next attempt.</p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <PracticeStep title="Pick a prompt" body="Choose MMI or panel." />
+                <PracticeStep title="Rehearse out loud" body="Keep the response natural." />
+                <PracticeStep title="Review one point" body="Return with a clear focus." />
+              </div>
+            </div>
+            <div className="rounded-2xl bg-surface-muted p-5">
+              <p className="text-sm font-semibold">Your first session</p>
+              <p className="mt-2 text-sm leading-6 text-muted">Start with a question you can answer honestly, then add the experience you want to remember to your story bank.</p>
+              <a href="#circuits" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand">Choose a practice format <ArrowIcon /></a>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   )
 }
 
 export default function InterviewPreviewPage() {
-  return <InterviewPreview />
+  return <InterviewsDashboard preview />
 }
 
 function ReadinessPanel() {
   const rows = [
-    ['Motivation', 'Ready', 88],
-    ['Communication', 'Build next', 58],
-    ['Ethics', 'Build next', 46],
-    ['Clinical exposure', 'New', 18],
+    ['Motivation', 'Choose a prompt'],
+    ['Communication', 'Practise one answer'],
+    ['Ethics', 'Reflect on a scenario'],
+    ['Clinical exposure', 'Collect an example'],
   ] as const
   return <aside className="rounded-3xl border border-border bg-surface p-6 eb-soft">
     <div className="flex items-center justify-between gap-3">
       <h2 className="font-display text-xl font-semibold tracking-tight">Readiness plan</h2>
-      <span className="rounded-full bg-mint-muted px-2.5 py-1 text-xs font-semibold text-mint-deep">Sample view</span>
+      <span className="rounded-full bg-mint-muted px-2.5 py-1 text-xs font-semibold text-mint-deep">Starter plan</span>
     </div>
-    <p className="mt-2 text-sm leading-6 text-muted">Your plan gets clearer as you practise and receive feedback.</p>
+    <p className="mt-2 text-sm leading-6 text-muted">Choose the part of your preparation you want to practise first.</p>
     <div className="mt-6 space-y-4">
-      {rows.map(([name, status, value]) => <div key={name}>
+      {rows.map(([name, status]) => <div key={name}>
         <div className="flex items-center justify-between gap-3 text-sm"><span className="font-medium">{name}</span><span className="text-xs text-muted">{status}</span></div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full rounded-full bg-mint" style={{ width: `${value}%` }} /></div>
       </div>)}
     </div>
     <div className="mt-7 rounded-2xl bg-surface-muted p-4">
       <p className="text-sm font-semibold">One focused next step</p>
-      <p className="mt-1 text-sm leading-6 text-muted">Rehearse an ethics station, then review one feedback point before your next circuit.</p>
+      <p className="mt-1 text-sm leading-6 text-muted">Pick one prompt and finish with a clear response you want to improve.</p>
     </div>
   </aside>
 }
 
 function StoryBank() {
-  return <aside className="rounded-3xl border border-border bg-surface p-6 eb-soft">
-    <div className="flex items-center justify-between gap-3"><h2 className="font-display text-xl font-semibold tracking-tight">Your story bank</h2><BookIcon /></div>
-    <p className="mt-2 text-sm leading-6 text-muted">Keep the experiences that make your answers unmistakably yours.</p>
+  return <aside id="story-bank" className="scroll-mt-24 rounded-3xl border border-border bg-surface p-6 eb-soft">
+    <div className="flex items-center justify-between gap-3"><h2 className="font-display text-xl font-semibold tracking-tight">Story prompts</h2><BookIcon /></div>
+    <p className="mt-2 text-sm leading-6 text-muted">Use these prompts to identify the experiences you may want to bring to an answer.</p>
     <div className="mt-6 space-y-3">
-      <StoryRow title="A difficult team conversation" tags="Teamwork · reflection" />
-      <StoryRow title="Volunteering at the community kitchen" tags="Equity · service" />
-      <StoryRow title="A lesson from caring for family" tags="Motivation · boundaries" />
+      <StoryRow title="A difficult team conversation" tags="Prompt · teamwork and reflection" />
+      <StoryRow title="A community or service experience" tags="Prompt · equity and service" />
+      <StoryRow title="A lesson from caring for someone" tags="Prompt · motivation and boundaries" />
     </div>
-    <button type="button" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand">Open story bank <ArrowIcon /></button>
+    <p className="mt-6 text-sm font-semibold text-brand">Save your own examples as the story-bank workspace opens.</p>
   </aside>
 }
 
@@ -201,7 +225,8 @@ function FormatSwitch({ format, setFormat }: { format: Format; setFormat: (forma
   </div>
 }
 
-function NavItem({ label, active = false }: { label: string; active?: boolean }) { return <span className={`rounded-full px-3 py-2 text-sm font-medium ${active ? 'bg-surface text-foreground eb-soft' : 'text-muted'}`}>{label}</span> }
+function PracticeStep({ title, body }: { title: string; body: string }) { return <div className="rounded-2xl bg-background p-4"><p className="text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted">{body}</p></div> }
+function NavItem({ href, label, active = false }: { href: string; label: string; active?: boolean }) { return <a href={href} className={`rounded-full px-3 py-2 text-sm font-medium ${active ? 'bg-surface text-foreground eb-soft' : 'text-muted hover:text-foreground'}`}>{label}</a> }
 
 function ArrowIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h11M11 5l5 5-5 5" /></svg> }
 function PlayIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="m6.5 4 8 6-8 6V4Z" /></svg> }

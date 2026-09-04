@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Container } from './container'
 
@@ -28,7 +29,7 @@ const EXAMS: Record<string, Exam> = {
     ['MMI stations', 'Timed scenario-based rotations'],
     ['Panel interview', 'Structured behavioural questions'],
     ['Situational prompts', 'Ethical and clinical judgement calls'],
-    ['Video practice', 'Record, review and get feedback'],
+    ['Guided rehearsal', 'Prepare, answer and reflect on your response'],
   ] },
 }
 const CHECKS = [
@@ -39,17 +40,27 @@ const CHECKS = [
   'Expert-written exam questions',
   'Percentile benchmarking',
 ]
+const INTERVIEW_CHECKS = [
+  'MMI and panel practice modes',
+  'Structured response frameworks',
+  'Ethical and personal prompts',
+  'Practice timing guidance',
+  'Story prompts',
+  'Structured reflection guidance',
+]
 
 export function FormatSection() {
   const [tab, setTab] = useState<keyof typeof EXAMS>('ucat')
+  const interviews = tab === 'interviews'
+  const checks = interviews ? INTERVIEW_CHECKS : CHECKS
   return (
     <section id="interface" className="border-t border-border bg-surface/50">
       <Container className="grid items-start gap-12 py-16 sm:py-20 lg:grid-cols-2">
         <div>
-          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Timed like the real exam, explained like a tutor.</h2>
-          <p className="mt-4 max-w-md text-muted">Every mock exam matches the real exam platform, and every question is written by exam experts. Finish a mock and get an instant results breakdown, with written and video explanations for every question.</p>
+          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{interviews ? 'Practise answers with a clear structure.' : 'Timed like the real exam, explained like a tutor.'}</h2>
+          <p className="mt-4 max-w-md text-muted">{interviews ? 'Move between MMI and panel prompts, prepare under realistic timing, then reflect on the experience and response you want to improve next.' : 'Every mock exam matches the real exam platform, and every question is written by exam experts. Finish a mock and get an instant results breakdown, with written and video explanations for every question.'}</p>
           <div className="mt-8 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-            {CHECKS.map((c) => (
+            {checks.map((c) => (
               <div key={c} className="flex items-center gap-2.5 text-sm"><Tick /> {c}</div>
             ))}
           </div>
@@ -72,7 +83,7 @@ export function FormatSection() {
               )
             })}
           </div>
-          <p className="mt-3 text-[13px] text-muted">Exact timing and format, plus feedback the moment you finish.</p>
+          <p className="mt-3 text-sm text-muted">{interviews ? 'Build confident answers through realistic prompts, structured reflection and repeat practice.' : 'Exact timing and format, plus feedback the moment you finish.'}</p>
           <div className="eb-soft mt-3 rounded-2xl border border-border bg-surface px-6">
             {EXAMS[tab].rows.map(([name, detail]) => (
               <div key={name} className="flex flex-col justify-between gap-1 border-b border-border py-5 last:border-b-0 sm:flex-row sm:items-baseline sm:gap-6">
@@ -81,11 +92,14 @@ export function FormatSection() {
               </div>
             ))}
           </div>
+          {interviews ? <Link href="/interviews" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand">Open Interviews <Arrow /></Link> : null}
         </div>
       </Container>
     </section>
   )
 }
+
+function Arrow() { return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg> }
 
 function Tick(): ReactNode {
   return (

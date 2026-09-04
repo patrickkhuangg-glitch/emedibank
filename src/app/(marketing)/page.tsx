@@ -36,7 +36,7 @@ const studocyteJsonLd = {
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Web',
       description:
-        'Exam-style UCAT, GAMSAT and ISAT practice with written and video explanations, timed mock exams and performance analytics.',
+        'Exam-style UCAT, GAMSAT and ISAT practice, plus Australian MMI and panel interview preparation, with written explanations, timed practice and performance analytics.',
       provider: { '@id': 'https://emeducate.com.au/#organization' },
       isPartOf: { '@id': `${SITE_URL}/#website` },
     },
@@ -56,7 +56,7 @@ export default function Home() {
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(58rem 30rem at 88% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
         <Container className="relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div className="eb-rise">
-            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-muted px-3.5 py-2 text-[13px] text-brand">
+            <span className="eb-soft inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-muted px-3.5 py-2 text-sm text-brand">
               <StethoIcon color="#6a45c9" />
               <span><b className="font-semibold">Coming soon.</b> Built for future doctors.</span>
             </span>
@@ -70,7 +70,7 @@ export default function Home() {
               ))}
             </div>
             <p className="mt-5 max-w-md text-muted">
-              Whatever stage you&rsquo;re at, sitting the <Link href="/#exams" className={LEAD_LINK}>UCAT</Link>, prepping for <Link href="/#exams" className={LEAD_LINK}>GAMSAT</Link> or <Link href="/#exams" className={LEAD_LINK}>ISAT</Link>, or getting ready for your <Link href="/#exams" className={LEAD_LINK}>interviews</Link>, Studocyte gives you the practice and feedback to walk in ready.
+              Whatever stage you&rsquo;re at, sitting the <Link href="/#exams" className={LEAD_LINK}>UCAT</Link>, prepping for <Link href="/#exams" className={LEAD_LINK}>GAMSAT</Link> or <Link href="/#exams" className={LEAD_LINK}>ISAT</Link>, or getting ready for your <Link href="/interviews" className={LEAD_LINK}>interviews</Link>, Studocyte gives you the practice and feedback to walk in ready.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a href="#opening-list" className="eb-press eb-soft-hover inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 font-semibold text-brand-foreground transition-all duration-300 hover:-translate-y-0.5">Join the opening list <ArrowUpRight /></a>
@@ -163,7 +163,7 @@ export default function Home() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <Feature className="md:col-span-2" title="Every answer, worked through" body="Written rationales on every question, plus video explanations that show exactly how to reach the answer under time." />
             <Feature title="Practice that targets your gaps" body="Flag questions, revisit weak topics, and build custom quizzes from any section so your study time goes where it's needed most." />
-            <Feature title="Timed full mocks, free" body="Sit complete, section-timed mocks for UCAT, GAMSAT, ISAT and interviews at no cost. Upgrade for the full bank and video." />
+            <Feature title="Practice that suits the format" body="Sit complete, section-timed mocks for UCAT, GAMSAT and ISAT, or explore MMI circuit and panel rehearsal guidance for interviews." />
             <Feature className="md:col-span-2" title="See where you stand" body="Every attempt is tracked, so your accuracy per section shows against the Studocyte cohort average." />
           </div>
         </Container>
@@ -206,14 +206,14 @@ export default function Home() {
 }
 
 const STEPS = [
-  { title: 'Pick your exam', body: 'Choose UCAT, GAMSAT or ISAT. The whole app scopes to it.' },
+  { title: 'Pick your focus', body: 'Choose UCAT, GAMSAT, ISAT or Interviews. Your next action is ready when you are.' },
   { title: 'Practise by set', body: 'Drill a section or category, timed or untimed, one set at a time.' },
   { title: 'Sit a mock', body: 'Full, section-timed exams in the real interface.' },
   { title: 'Review and repeat', body: 'Read the rationale, watch the video, track your accuracy.' },
 ]
 
 const FAQS = [
-  { q: 'Which exams are covered?', a: 'UCAT, GAMSAT and ISAT are live, with Interviews coming next.' },
+  { q: 'Which exams are covered?', a: 'UCAT, GAMSAT and ISAT practice are available, alongside an Australian MMI and panel interview preparation workspace.' },
   { q: 'Is there a free option?', a: 'Yes. Full, timed mock exams are free for every exam. A subscription unlocks the full question bank and video explanations.' },
   { q: 'Do explanations include video?', a: 'Every question has a written rationale, and paid plans add a video walkthrough for each one.' },
   { q: 'Does it match the real test?', a: 'The runner replicates the layout, fonts, timing and question types of the real interface, including a kiosk mode and on-screen calculator.' },

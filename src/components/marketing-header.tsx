@@ -34,7 +34,7 @@ export function MarketingHeader() {
             <MenuLink href="/#exams">UCAT</MenuLink>
             <MenuLink href="/#exams">GAMSAT</MenuLink>
             <MenuLink href="/#exams">ISAT</MenuLink>
-            <MenuLink href="/#exams">Interviews <Soon /></MenuLink>
+            <MenuLink href="/interviews">Interviews</MenuLink>
           </Dropdown>
           <NavLink href="/pricing">Pricing</NavLink>
           <Dropdown label="Resources">
@@ -109,10 +109,6 @@ function MenuLink({ href, children, external }: { href: string; children: ReactN
       {children}
     </Link>
   )
-}
-
-function Soon() {
-  return <span className="ml-auto rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-medium text-muted">Soon</span>
 }
 
 function Chevron() {

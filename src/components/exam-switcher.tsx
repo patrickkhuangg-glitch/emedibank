@@ -43,8 +43,11 @@ export function ExamSwitcher({ current, exams, variant = 'playful' }: { current:
               )
             })}
             <div className="my-1 border-t border-border" />
+            <Link href="/interviews" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-muted">
+              Interviews
+            </Link>
             <Link href="/app" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-muted">
-              All exams &amp; Interviews
+              All exam prep
             </Link>
           </div>
         </>

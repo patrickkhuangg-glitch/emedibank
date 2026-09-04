@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
@@ -10,7 +10,7 @@ import Link from 'next/link'
 // header's backdrop-filter doesn't trap its fixed positioning. Motion collapses
 // to a plain cross-fade under reduced-motion (see globals.css).
 
-type LinkItem = { label: string; href: string; badge?: string; external?: boolean }
+type LinkItem = { label: string; href: string; external?: boolean }
 type Group = { title: string; items: LinkItem[] }
 
 const GROUPS: Group[] = [
@@ -18,7 +18,7 @@ const GROUPS: Group[] = [
     { label: 'UCAT', href: '/#exams' },
     { label: 'GAMSAT', href: '/#exams' },
     { label: 'ISAT', href: '/#exams' },
-    { label: 'Interviews', href: '/#exams', badge: 'Soon' },
+    { label: 'Interviews', href: '/interviews' },
   ] },
   { title: 'Explore', items: [
     { label: 'Pricing', href: '/pricing' },
@@ -40,8 +40,7 @@ const GROUPS: Group[] = [
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   // Lock scroll, wire Escape, and close if the viewport grows to desktop.
   useEffect(() => {
@@ -93,7 +92,7 @@ export function MobileNav() {
               href="/app"
               onClick={() => setOpen(false)}
               className="mx-1.5 mt-2 flex items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-3.5 font-display text-base font-semibold text-brand-foreground"
-              style={{ opacity: 0, animation: open ? `eb-rise 0.5s var(--ease-spring) both` : undefined, animationDelay: `${0.05 + idx * 0.035}s` }}
+              style={{ opacity: 0, animation: open ? `eb-rise 0.5s var(--ease-out) both` : undefined, animationDelay: `${0.05 + idx * 0.035}s` }}
             >
               Open Studocyte <ArrowUpRight />
             </Link>
@@ -106,9 +105,6 @@ export function MobileNav() {
 }
 
 function SheetLink({ item, delay, onNavigate }: { item: LinkItem; delay: number; onNavigate: () => void }) {
-  const badge: ReactNode = item.badge ? (
-    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-  ) : null
   return (
     <Link
       href={item.href}
@@ -117,7 +113,7 @@ function SheetLink({ item, delay, onNavigate }: { item: LinkItem; delay: number;
       className="eb-item"
       style={{ animationDelay: `${delay}s` }}
     >
-      {item.label}{badge}
+      {item.label}
     </Link>
   )
 }
