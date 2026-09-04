@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { selectExamAction } from '@/lib/exam/actions'
 import { haptic } from '@/lib/haptics'
 import { Wordmark } from '@/components/ui/wordmark'
@@ -20,6 +21,7 @@ export function ExamPicker({ first, exams, variant = 'playful' }: { first: strin
   const [greeting, setGreeting] = useState('Welcome back')
   const [leaving, setLeaving] = useState<string | null>(null)
   const [, start] = useTransition()
+  const router = useRouter()
 
   useEffect(() => {
     const h = new Date().getHours()
@@ -34,6 +36,13 @@ export function ExamPicker({ first, exams, variant = 'playful' }: { first: strin
     setLeaving(slug)
     // let the overlay fade before the navigation begins
     setTimeout(() => start(() => { selectExamAction(slug) }), 460)
+  }
+
+  function pickInterviews() {
+    if (leaving) return
+    haptic(12)
+    setLeaving('interviews')
+    setTimeout(() => start(() => { router.push('/interviews') }), 460)
   }
 
   return (
@@ -76,16 +85,23 @@ export function ExamPicker({ first, exams, variant = 'playful' }: { first: strin
             )
           })}
 
-          <div className="eb-rise flex items-center gap-4 rounded-3xl border border-dashed border-border bg-surface/60 p-5 opacity-70" style={{ animationDelay: `${90 + exams.length * 70}ms` }}>
-            <span className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-surface-muted font-display text-base font-bold text-muted">I</span>
+          <button
+            type="button"
+            onClick={pickInterviews}
+            disabled={!!leaving}
+            style={{ animationDelay: `${90 + exams.length * 70}ms` }}
+            className={`eb-rise eb-press eb-soft group flex items-center gap-4 rounded-3xl border bg-surface p-5 text-left transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:border-brand/40 disabled:cursor-default ${leaving === 'interviews' ? 'border-brand ring-2 ring-brand' : 'border-border'}`}
+          >
+            <span className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-brand-muted font-display text-base font-bold text-brand transition-transform duration-300 group-hover:scale-110">I</span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
-                <span className="font-display text-lg font-semibold text-muted">Interviews</span>
-                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">Coming soon</span>
+                <span className="font-display text-lg font-semibold">Interviews</span>
+                <span className="rounded-full bg-success-muted px-2 py-0.5 text-[11px] font-medium text-success">Unlocked</span>
               </span>
               <span className="mt-0.5 block text-sm text-muted">MMI &amp; panel interview prep</span>
             </span>
-          </div>
+            {leaving === 'interviews' ? <Spinner size={20} /> : <Arrow />}
+          </button>
         </div>
 
         <p className="eb-rise mt-6 text-xs text-muted" style={{ animationDelay: '420ms' }}>You can switch exams any time from the top-left.</p>
