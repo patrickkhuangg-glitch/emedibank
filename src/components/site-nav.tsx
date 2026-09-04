@@ -27,7 +27,6 @@ export function SiteNav({ isAdmin, currentExamSlug }: { isAdmin: boolean; curren
       ]
     : [
         { href: '/dashboard', label: 'Dashboard', icon: <GridIcon /> },
-        { href: '/interviews', label: 'Interviews', icon: <InterviewIcon /> },
         { href: practiceHref, label: 'Practice', icon: <QuestionIcon /> },
         { href: mockHref, label: 'Mock exams', icon: <ExamIcon /> },
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: <ShieldIcon /> }] : []),

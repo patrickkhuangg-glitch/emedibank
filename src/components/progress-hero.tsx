@@ -82,17 +82,18 @@ function MarkedEssayScreen() {
 function UcatScreen() {
   return (
     <div className={styles.ucat}>
-      <header className={styles.ucatHeader}><b>UCAT · Practice</b><strong>▤&nbsp; 1 of 1</strong></header>
+      <header className={styles.ucatHeader}><b>UCAT · Practice</b><strong>▤&nbsp; 1 of 5</strong></header>
       <div className={styles.ucatTools}><span>▭&nbsp; Calculator</span><span>⚑ Flag for Review</span></div>
       <main className={styles.ucatBody}>
-        <div className={styles.ucatMeta}><span>Probability</span></div>
-        <h2>A clinic offers an appointment in either the morning or afternoon to every patient it books.</h2>
-        <p>Which conclusion must follow?</p>
+        <div className={styles.ucatMeta}><span>Situational Judgement</span></div>
+        <p className={styles.ucatScenario}>Aisha, a final-year medical student, is assisting in a busy emergency department. A registrar asks her to close a deep forearm wound while he reviews another patient. Aisha has practised simple suturing in simulation and has closed small superficial wounds under direct supervision, but she has never assessed or closed a wound of this depth. The registrar says he will be nearby and tells her to begin preparing the patient.</p>
+        <h2>How important is it for Aisha to take the following consideration into account when deciding how to respond?</h2>
+        <p className={styles.ucatConsideration}>That she has not previously assessed or closed a wound of this depth</p>
         <div className={styles.ucatOptions}>
-          <div><i /><b>A.</b><span>No patient has more than one appointment.</span></div>
-          <div><i /><b>B.</b><span>Every patient has an appointment in the morning.</span></div>
-          <div><i /><b>C.</b><span>Every patient has been assigned an appointment.</span></div>
-          <div><i /><b>D.</b><span>At least one patient has an afternoon appointment.</span></div>
+          <div><i /><b>A.</b><span>Very important</span></div>
+          <div><i /><b>B.</b><span>Important</span></div>
+          <div><i /><b>C.</b><span>Of minor importance</span></div>
+          <div><i /><b>D.</b><span>Not important at all</span></div>
         </div>
       </main>
       <footer className={styles.ucatFooter}><span>↪ End Exam</span><i>⌘ Navigator</i><strong>Finish →</strong></footer>
