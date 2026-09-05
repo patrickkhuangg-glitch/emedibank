@@ -1,9 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getProfile, requireAdmin } from '@/lib/auth/dal'
+import { getProfile, requireAdmin, requireUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createZoomMeeting } from '@/lib/zoom/client'
+import { createHostCalendarEvent, deleteHostCalendarEvent } from '@/lib/google-calendar'
+import { createZoomMeeting, deleteZoomMeeting } from '@/lib/zoom/client'
 
 export type CreateTutoringSessionState = { error?: string; message?: string }
 
@@ -35,22 +36,30 @@ export async function createTutoringSessionAction(
   if (!item || item.kind !== 'tutoring' || item.unit_label !== 'hours') return { error: 'Choose an hours-based tutoring inclusion.' }
   if (item.total_units - item.used_units < bookedMinutes / 60) return { error: 'There are not enough tutoring hours remaining for this booking.' }
 
-  const { data: userResult } = await admin.auth.admin.getUserById(plan.user_id)
+  const [{ data: userResult }, { data: studentProfile }] = await Promise.all([
+    admin.auth.admin.getUserById(plan.user_id),
+    admin.from('profiles').select('full_name').eq('id', plan.user_id).maybeSingle(),
+  ])
   const email = userResult.user?.email
   if (!email) return { error: 'This student account does not have an email address.' }
+  const lessonTitle = formatLessonTitle({
+    studentName: studentProfile?.full_name || nameFromEmail(email),
+    tutorName: adminProfile.full_name || 'Tutor',
+    subject: title,
+  })
 
   try {
     const meeting = await createZoomMeeting({
-      topic: `Studocyte · ${title}`,
+      topic: lessonTitle,
       scheduledFor: startsAt.toISOString(),
       durationMinutes: bookedMinutes,
     })
-    const { error } = await admin.from('tutoring_sessions').insert({
+    const { data: session, error } = await admin.from('tutoring_sessions').insert({
       plan_id: planId,
       plan_item_id: item.id,
       student_id: plan.user_id,
       student_email: email.toLowerCase(),
-      title,
+      title: lessonTitle,
       scheduled_for: startsAt.toISOString(),
       booked_minutes: bookedMinutes,
       zoom_meeting_id: String(meeting.id),
@@ -58,15 +67,74 @@ export async function createTutoringSessionAction(
       zoom_join_url: meeting.join_url,
       zoom_start_url: meeting.start_url,
       created_by: adminProfile.id,
-    })
+    }).select('id').single()
     if (error) return { error: 'Zoom created the meeting, but Studocyte could not save it. Please do not schedule a duplicate yet; refresh and check the session list.' }
+    let calendarMessage = ''
+    try {
+      const calendar = await createHostCalendarEvent({
+        hostUserId: adminProfile.id,
+        title: lessonTitle,
+        scheduledFor: startsAt.toISOString(),
+        durationMinutes: bookedMinutes,
+        zoomStartUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://studocyte.emeducate.com.au'}/api/zoom/sessions/${session.id}/start`,
+      })
+      if (calendar.status === 'added') {
+        await admin.from('tutoring_sessions').update({ google_calendar_event_id: calendar.eventId }).eq('id', session.id)
+        calendarMessage = ' It was also added to your Google Calendar.'
+      }
+      if (calendar.status === 'not_connected') calendarMessage = ' Connect Google Calendar in Zoom settings to add future lessons automatically.'
+    } catch (calendarError) {
+      console.error('Could not add tutoring session to host calendar.', calendarError)
+      calendarMessage = ' Google Calendar could not be updated; the Zoom lesson is still booked.'
+    }
+    refresh(planId)
+    return { message: `Zoom session scheduled.${calendarMessage}` }
   } catch (error) {
     console.error('Could not create Zoom tutoring meeting.', error)
     return { error: error instanceof Error ? error.message : 'Zoom could not create this meeting.' }
   }
+}
 
-  refresh(planId)
-  return { message: 'Zoom session scheduled. The student can now join from their Study Plan.' }
+export async function cancelTutoringSessionAction(formData: FormData) {
+  const user = await requireUser('/bookings')
+  const profile = await getProfile()
+  const sessionId = value(formData, 'sessionId')
+  if (!sessionId) return
+
+  const admin = createAdminClient()
+  const { data: session } = await admin
+    .from('tutoring_sessions')
+    .select('id,plan_id,student_id,created_by,status,scheduled_for,zoom_meeting_id,google_calendar_event_id')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (!session || (profile?.role !== 'admin' && session.student_id !== user.id)) return
+  if (session.status !== 'scheduled' && session.status !== 'cancelled') return
+  if (profile?.role !== 'admin' && session.status === 'scheduled' && new Date(session.scheduled_for).getTime() <= Date.now()) return
+
+  if (session.status !== 'cancelled') {
+    const { error } = await admin
+      .from('tutoring_sessions')
+      .update({
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', session.id)
+      .eq('status', 'scheduled')
+    if (error) throw error
+  }
+
+  const cleanup = await Promise.allSettled([
+    deleteZoomMeeting(session.zoom_meeting_id),
+    session.created_by
+      ? deleteHostCalendarEvent({ hostUserId: session.created_by, eventId: session.google_calendar_event_id })
+      : Promise.resolve({ status: 'not_available' as const }),
+  ])
+  for (const result of cleanup) if (result.status === 'rejected') console.error('Could not fully remove a cancelled lesson from an external calendar or meeting provider.', result.reason)
+
+  refresh(session.plan_id)
 }
 
 export async function confirmBookedTutoringSessionAction(formData: FormData) {
@@ -132,4 +200,12 @@ function value(formData: FormData, key: string) {
 function parseBrisbaneDateTime(dateTime: string) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateTime)) return new Date('invalid')
   return new Date(`${dateTime}:00+10:00`)
+}
+
+function formatLessonTitle({ studentName, tutorName, subject }: { studentName: string; tutorName: string; subject: string }) {
+  return `${studentName.trim()}/${tutorName.trim()} - ${subject.trim()} Private Tutoring`.slice(0, 160)
+}
+
+function nameFromEmail(email: string) {
+  return email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 }

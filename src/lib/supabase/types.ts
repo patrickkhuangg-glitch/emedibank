@@ -173,6 +173,7 @@ export type Database = {
           zoom_meeting_uuid: string | null
           zoom_join_url: string
           zoom_start_url: string
+          google_calendar_event_id: string | null
           tutor_notes: string | null
           homework: string | null
           status: TutoringSessionStatus
@@ -181,6 +182,8 @@ export type Database = {
           base_deducted_at: string | null
           overrun_deducted_at: string | null
           completed_at: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_by: string | null
           created_at: string
           updated_at: string
@@ -198,6 +201,7 @@ export type Database = {
           zoom_meeting_uuid?: string | null
           zoom_join_url: string
           zoom_start_url: string
+          google_calendar_event_id?: string | null
           tutor_notes?: string | null
           homework?: string | null
           status?: TutoringSessionStatus
@@ -206,6 +210,8 @@ export type Database = {
           base_deducted_at?: string | null
           overrun_deducted_at?: string | null
           completed_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -216,6 +222,7 @@ export type Database = {
           booked_minutes?: number
           zoom_meeting_uuid?: string | null
           zoom_start_url?: string
+          google_calendar_event_id?: string | null
           tutor_notes?: string | null
           homework?: string | null
           status?: TutoringSessionStatus
@@ -224,6 +231,8 @@ export type Database = {
           base_deducted_at?: string | null
           overrun_deducted_at?: string | null
           completed_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -651,6 +660,28 @@ export type Database = {
         }
         Update: {
           body?: string
+        }
+        Relationships: []
+      }
+      google_calendar_connections: {
+        Row: {
+          user_id: string
+          refresh_token: string
+          calendar_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          refresh_token: string
+          calendar_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          refresh_token?: string
+          calendar_id?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -13,10 +13,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ sess
   const admin = createAdminClient()
   const { data: session } = await admin
     .from('tutoring_sessions')
-    .select('zoom_meeting_id')
+    .select('zoom_meeting_id,status')
     .eq('id', sessionId)
     .maybeSingle()
-  if (!session) return NextResponse.redirect(new URL('/admin/study-plans', request.url))
+  if (!session || session.status !== 'scheduled') return NextResponse.redirect(new URL('/bookings', request.url))
 
   try {
     const startUrl = await getZoomMeetingStartUrl(session.zoom_meeting_id)

@@ -31,7 +31,7 @@ export function CreateTutoringSessionForm({ planId, items }: { planId: string; i
         <option value="180">3 hours</option>
       </select>
     </DarkLabel>
-    <DarkLabel label="Session title">
+    <DarkLabel label="Lesson subject">
       <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark"/>
     </DarkLabel>
     <DarkLabel label="Start time (Brisbane)">

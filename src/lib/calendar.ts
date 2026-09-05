@@ -11,7 +11,7 @@ export function googleCalendarUrl(event: TutoringCalendarEvent) {
   const endsAt = new Date(startsAt.getTime() + event.bookedMinutes * 60_000)
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `Studocyte tutoring · ${event.title}`,
+    text: event.title,
     dates: `${calendarDate(startsAt)}/${calendarDate(endsAt)}`,
     details: `Start your Zoom lesson securely in Studocyte:\n${event.launchUrl}`,
   })
@@ -32,7 +32,7 @@ export function tutoringCalendarIcs(event: TutoringCalendarEvent) {
     `DTSTAMP:${calendarDate(new Date())}`,
     `DTSTART:${calendarDate(startsAt)}`,
     `DTEND:${calendarDate(endsAt)}`,
-    `SUMMARY:${escapeIcs(`Studocyte tutoring · ${event.title}`)}`,
+    `SUMMARY:${escapeIcs(event.title)}`,
     `DESCRIPTION:${escapeIcs(description)}`,
     'END:VEVENT',
     'END:VCALENDAR',

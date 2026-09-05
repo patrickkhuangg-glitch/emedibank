@@ -39,7 +39,7 @@ export function BookingForm({ plans }: { plans: BookingPlanOption[] }) {
         </select>
       </label>
       <label className="block text-sm font-semibold text-white">
-        <span>Lesson title</span>
+        <span>Lesson subject</span>
         <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark mt-2" />
       </label>
       <label className="block text-sm font-semibold text-white">

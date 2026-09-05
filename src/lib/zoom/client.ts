@@ -101,3 +101,16 @@ export async function getZoomMeetingStartUrl(meetingId: string) {
   if (!body.start_url) throw new Error('Zoom did not return a host link for this meeting.')
   return body.start_url
 }
+
+export async function deleteZoomMeeting(meetingId: string) {
+  const token = await accessToken()
+  const response = await fetch(`https://api.zoom.us/v2/meetings/${encodeURIComponent(meetingId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  })
+  if (!response.ok && response.status !== 404) {
+    const body = await response.text()
+    throw new Error(`Zoom request failed: ${body || response.statusText}`)
+  }
+}
