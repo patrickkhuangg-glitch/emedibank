@@ -9,6 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export type InviteStudentState = { error?: string; message?: string }
 export type SendAccountAccessState = { error?: string; message?: string }
 export type ManualExamAccessState = { error?: string; message?: string }
+export type ManageAccountState = { error?: string; message?: string; deleted?: boolean }
 
 export async function inviteStudentAction(_previous: InviteStudentState, formData: FormData): Promise<InviteStudentState> {
   const profile = await getProfile()
@@ -83,6 +84,130 @@ export async function sendAccountAccessAction(_previous: SendAccountAccessState,
   return { message: delivery === 'login' ? `Secure sign-in link sent to ${requestedEmail}.` : `Password setup link sent to ${requestedEmail}.` }
 }
 
+export async function updateManagedAccountAction(_previous: ManageAccountState, formData: FormData): Promise<ManageAccountState> {
+  const requestingProfile = await getProfile()
+  if (requestingProfile?.role !== 'admin') return { error: 'Only admins can update accounts.' }
+
+  const userId = String(formData.get('userId') ?? '').trim()
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const fullName = String(formData.get('fullName') ?? '').trim()
+  const phoneNumber = normalisePhone(String(formData.get('phoneNumber') ?? ''))
+  const accountRole = String(formData.get('accountRole') ?? '')
+  if (!userId) return { error: 'This account could not be identified. Refresh and try again.' }
+  if (!isEmail(email)) return { error: 'Enter a valid email address.' }
+  if (fullName.length < 2 || fullName.length > 120) return { error: 'Enter a full name between 2 and 120 characters.' }
+  if (!phoneNumber) return { error: 'Enter a valid mobile number. Use an Australian 04 number or international + format.' }
+  if (accountRole !== 'student' && accountRole !== 'tutor') return { error: 'Choose either Student or Tutor.' }
+
+  const admin = createAdminClient()
+  const [{ data: userResult, error: userError }, { data: targetProfile, error: profileError }] = await Promise.all([
+    admin.auth.admin.getUserById(userId),
+    admin.from('profiles').select('id,role').eq('id', userId).maybeSingle(),
+  ])
+  const account = userResult?.user
+  if (userError || profileError || !account?.email) return { error: 'That account could not be verified. Refresh and try again.' }
+  if (account.id === requestingProfile.id || targetProfile?.role === 'admin') return { error: 'Administrator accounts can only be changed from their own Account page.' }
+  if (targetProfile && targetProfile.role !== 'student' && targetProfile.role !== 'tutor') return { error: 'Only student and tutor accounts can be changed here.' }
+
+  const { data: existingPhone, error: phoneError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('phone_number', phoneNumber)
+    .neq('id', userId)
+    .limit(1)
+    .maybeSingle()
+  if (phoneError) return { error: 'The mobile number could not be checked. Try again.' }
+  if (existingPhone) return { error: 'That mobile number is already linked to another account.' }
+
+  const previousEmail = account.email
+  const previousMetadata = account.user_metadata
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+    email,
+    user_metadata: { ...previousMetadata, full_name: fullName, phone_number: phoneNumber },
+  })
+  if (authError) {
+    if (/already|registered|exists/i.test(authError.message)) return { error: 'That email is already linked to another Studocyte account.' }
+    return { error: 'The sign-in details could not be updated. Check the email and try again.' }
+  }
+
+  const profileRequest = targetProfile
+    ? admin.from('profiles').update({ full_name: fullName, phone_number: phoneNumber, role: accountRole }).eq('id', userId)
+    : admin.from('profiles').insert({ id: userId, full_name: fullName, phone_number: phoneNumber, role: accountRole })
+  const { error: updateError } = await profileRequest
+  if (updateError) {
+    const { error: rollbackError } = await admin.auth.admin.updateUserById(userId, { email: previousEmail, user_metadata: previousMetadata })
+    if (rollbackError) console.error('Account update rollback failed.', rollbackError)
+    if (updateError.message.includes('profiles_phone_number_unique')) return { error: 'That mobile number is already linked to another account.' }
+    console.error('Could not update account profile.', updateError)
+    return { error: 'The profile could not be updated. No changes were saved.' }
+  }
+
+  revalidateManagedAccountPaths()
+  return { message: email === previousEmail.toLowerCase() ? 'Account details saved.' : `Account updated. Future access emails will go to ${email}.` }
+}
+
+export async function deleteManagedAccountAction(_previous: ManageAccountState, formData: FormData): Promise<ManageAccountState> {
+  const requestingProfile = await getProfile()
+  if (requestingProfile?.role !== 'admin') return { error: 'Only admins can delete accounts.' }
+
+  const userId = String(formData.get('userId') ?? '').trim()
+  const confirmationEmail = String(formData.get('confirmationEmail') ?? '').trim().toLowerCase()
+  if (!userId || !confirmationEmail) return { error: 'Type the account email to confirm deletion.' }
+
+  const admin = createAdminClient()
+  const [{ data: userResult, error: userError }, { data: targetProfile, error: profileError }] = await Promise.all([
+    admin.auth.admin.getUserById(userId),
+    admin.from('profiles').select('role').eq('id', userId).maybeSingle(),
+  ])
+  const account = userResult?.user
+  if (userError || profileError || !account?.email || !targetProfile) return { error: 'That account could not be verified. Refresh and try again.' }
+  if (account.id === requestingProfile.id || targetProfile.role === 'admin') return { error: 'Administrator accounts cannot be deleted here.' }
+  if (targetProfile.role !== 'student' && targetProfile.role !== 'tutor') return { error: 'Only student and tutor accounts can be deleted here.' }
+  if (confirmationEmail !== account.email.toLowerCase()) return { error: 'The email does not match this account.' }
+
+  const sessionColumn = targetProfile.role === 'tutor' ? 'tutor_id' : 'student_id'
+  const { data: futureLesson, error: lessonError } = await admin
+    .from('tutoring_sessions')
+    .select('id')
+    .eq(sessionColumn, userId)
+    .eq('status', 'scheduled')
+    .limit(1)
+    .maybeSingle()
+  if (lessonError) return { error: 'Future bookings could not be checked. Try again.' }
+  if (futureLesson) return { error: 'Cancel or reassign this account’s future lessons from Bookings before deleting it.' }
+
+  const [{ data: recordings, error: recordingsReadError }, { data: markings, error: markingsReadError }] = await Promise.all([
+    admin.from('interview_attempts').select('recording_path').eq('user_id', userId),
+    admin.from('essay_markings').select('id').eq('marked_by', userId),
+  ])
+  if (recordingsReadError) return { error: 'Saved recordings could not be prepared for deletion. Try again.' }
+  if (markingsReadError) return { error: 'Tutor history could not be prepared for deletion. Try again.' }
+  const markingIds = (markings ?? []).map((marking) => marking.id)
+  if (markingIds.length) {
+    const { error: releaseError } = await admin.from('essay_markings').update({ marked_by: null }).in('id', markingIds)
+    if (releaseError) return { error: 'Tutor marking history could not be preserved. Try again.' }
+  }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(userId)
+  if (deleteError) {
+    if (markingIds.length) {
+      const { error: restoreError } = await admin.from('essay_markings').update({ marked_by: userId }).in('id', markingIds)
+      if (restoreError) console.error('Tutor marking attribution rollback failed.', restoreError)
+    }
+    console.error('Could not delete managed account.', deleteError)
+    return { error: 'The account could not be deleted. No account data was removed.' }
+  }
+
+  const recordingPaths = (recordings ?? []).map((recording) => recording.recording_path).filter(Boolean)
+  for (let index = 0; index < recordingPaths.length; index += 100) {
+    const { error: storageError } = await admin.storage.from('interview-recordings').remove(recordingPaths.slice(index, index + 100))
+    if (storageError) console.error('Deleted account left interview recording files to clean up.', storageError)
+  }
+
+  revalidateManagedAccountPaths()
+  return { message: `${account.email} was permanently deleted.`, deleted: true }
+}
+
 export async function setManualExamAccessAction(_previous: ManualExamAccessState, formData: FormData): Promise<ManualExamAccessState> {
   const requestingProfile = await getProfile()
   if (requestingProfile?.role !== 'admin') return { error: 'Only admins can change Studocyte access.' }
@@ -148,4 +273,17 @@ function endOfSydneyDay(value: string) {
   const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((item) => item.type === type)?.value)
   const offset = Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute'), part('second')) - wallClockUtc
   return new Date(wallClockUtc - offset + 999).toISOString()
+}
+
+function isEmail(value: string) {
+  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function revalidateManagedAccountPaths() {
+  revalidatePath('/admin/students')
+  revalidatePath('/admin/study-plans')
+  revalidatePath('/bookings')
+  revalidatePath('/students')
+  revalidatePath('/dashboard')
+  revalidatePath('/study-plan')
 }

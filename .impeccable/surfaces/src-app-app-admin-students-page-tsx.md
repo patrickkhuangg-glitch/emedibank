@@ -7,7 +7,7 @@ related_targets: ["src/app/(app)/admin/students/account-access-actions.tsx", "sr
 
 # Accounts workspace
 
-Scope: an Operate-mode admin workspace for creating student and tutor accounts, scanning account state, restoring non-admin access and continuing into student package management. The route remains `/admin/students`, but the surface and admin navigation are named **Accounts** because the workspace serves learners and staff.
+Scope: an Operate-mode admin workspace for creating, editing and deleting student and tutor accounts, scanning account state, restoring non-admin access and continuing into student package management. The route remains `/admin/students`, but the surface and admin navigation are named **Accounts** because the workspace serves learners and staff.
 
 ## Direction contract
 
@@ -21,7 +21,9 @@ FIRST VIEWPORT: The **Accounts** heading and separate Students / Tutors & admins
 
 FORM: Code-led refinement of the existing admin workspace. The hierarchy is a wide two-panel roster plus a narrow dark creation rail; no new global visual pattern or design-system token is introduced.
 
-CONTENT TRUTH: Student rows retain the package action and a compact **Manage Studocyte access** disclosure that is collapsed by default. When opened, it lists every active exam, reports the current paid, manual, combined, expired or no-full-access state, and shows an active-access count that refreshes after a mutation. Administrators may grant, update or remove only manual `comp` entitlements, optionally ending at the close of a Sydney-local date. Subscription and bundle access is visible but never mutated here; removing manual access must preserve any paid access for the same exam. Success and error feedback stays local to the affected exam control.
+CONTENT TRUTH: Student rows retain the package action and a compact **Manage Studocyte access** disclosure that is collapsed by default. When opened, it lists every active exam, reports the current paid, manual, combined, expired or no-full-access state, and shows an active-access count that refreshes after a mutation. Administrators may grant, update or remove only manual `comp` entitlements, optionally ending at the close of a Sydney-local date. Subscription and bundle access is visible but never mutated here; removing manual access must preserve any paid access for the same exam. Success and error feedback stays local to the affected exam control. Each student or tutor row also offers a compact account editor for full name, email, mobile number and student/tutor role. Administrator rows remain protected from row-level editing.
+
+Account deletion is a permanent, deliberately interrupted task inside the editor. The admin must reveal the destructive controls and type the target account's exact email before the delete action becomes available; the server repeats the identity, role and email challenge checks. The warning names the data removed. Accounts with future scheduled lessons cannot be deleted until those lessons are cancelled or reassigned, and administrator accounts cannot be deleted from this workspace.
 
 Student and tutor rows with an email may receive either a secure magic-login email or a password setup/reset email; the two actions lock together while either request is pending and report success or failure inline on that row. Admin rows do not expose those email actions: their login security is managed from the administrator's own Account page. Account status is derived from Supabase timestamps: no email confirmation is **Invite pending**; confirmed without a recorded sign-in is **Ready to sign in**; a recorded last sign-in is **Active**. Failure to load authentication accounts, profiles, active exams or entitlements must render an explicit retryable load-error state and must never appear as an empty roster or an empty access list.
 
