@@ -28,7 +28,7 @@ export default async function AdminPage() {
   return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl">
     <header className="grid gap-8 border-b border-border pb-9 lg:grid-cols-[1fr_auto] lg:items-end">
       <div><p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-brand">Studocyte operations</p><h1 className="mt-3 max-w-2xl font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">Everything that needs your judgement, in one place.</h1><p className="mt-4 max-w-2xl text-base leading-7 text-muted">Control student access, review submitted work and maintain the question bank without moving through the student-facing platform.</p></div>
-      <Link href="/dashboard" className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">View student dashboard</Link>
+      <Link href="/bookings" className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">Open bookings</Link>
     </header>
 
     <section aria-label="Admin overview" className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getUser } from '@/lib/auth/dal'
+import { getProfile, getUser } from '@/lib/auth/dal'
+import { homeForRole, safeInternalPath } from '@/lib/auth/roles'
 import { GoogleButton } from '@/components/ui/google-button'
 import { Alert } from '@/components/ui/alert'
 import { LoginForm } from './login-form'
@@ -13,8 +14,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ redirectTo?: string; error?: string }>
 }) {
-  if (await getUser()) redirect('/dashboard')
-  const { redirectTo = '/dashboard', error } = await searchParams
+  if (await getUser()) redirect(homeForRole((await getProfile())?.role))
+  const { redirectTo, error } = await searchParams
+  const safeRedirect = safeInternalPath(redirectTo) ?? undefined
 
   return (
     <div className="space-y-6">
@@ -23,9 +25,9 @@ export default async function LoginPage({
         <p className="mt-1 text-sm text-muted">Log in to your account.</p>
       </div>
       {error ? <Alert>Sign-in failed. Please try again.</Alert> : null}
-      <GoogleButton redirectTo={redirectTo} />
+      <GoogleButton redirectTo={safeRedirect} />
       <Divider />
-      <LoginForm redirectTo={redirectTo} />
+      <LoginForm redirectTo={safeRedirect} />
       <p className="text-center text-sm text-muted">
         No account?{' '}
         <Link href="/signup" className="font-medium text-foreground hover:underline">

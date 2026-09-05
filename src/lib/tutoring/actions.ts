@@ -17,11 +17,12 @@ export async function createTutoringSessionAction(
 
   const planId = value(formData, 'planId')
   const planItemId = value(formData, 'planItemId')
+  const tutorId = value(formData, 'tutorId')
   const title = value(formData, 'title')
   const scheduledFor = value(formData, 'scheduledFor')
   const bookedMinutes = Number(value(formData, 'bookedMinutes'))
-  if (!planId || !planItemId || !title || !scheduledFor || !Number.isInteger(bookedMinutes) || bookedMinutes < 15 || bookedMinutes > 480 || bookedMinutes % 15 !== 0) {
-    return { error: 'Add a title, date, time and a 15-minute booking length.' }
+  if (!planId || !planItemId || !tutorId || !title || !scheduledFor || !Number.isInteger(bookedMinutes) || bookedMinutes < 15 || bookedMinutes > 480 || bookedMinutes % 15 !== 0) {
+    return { error: 'Choose a tutor and add a title, date, time and a 15-minute booking length.' }
   }
 
   const startsAt = parseBrisbaneDateTime(scheduledFor)
@@ -36,15 +37,17 @@ export async function createTutoringSessionAction(
   if (!item || item.kind !== 'tutoring' || item.unit_label !== 'hours') return { error: 'Choose an hours-based tutoring inclusion.' }
   if (item.total_units - item.used_units < bookedMinutes / 60) return { error: 'There are not enough tutoring hours remaining for this booking.' }
 
-  const [{ data: userResult }, { data: studentProfile }] = await Promise.all([
+  const [{ data: userResult }, { data: studentProfile }, { data: tutorProfile }] = await Promise.all([
     admin.auth.admin.getUserById(plan.user_id),
     admin.from('profiles').select('full_name').eq('id', plan.user_id).maybeSingle(),
+    admin.from('profiles').select('id,full_name,role').eq('id', tutorId).maybeSingle(),
   ])
+  if (!tutorProfile || (tutorProfile.role !== 'tutor' && tutorProfile.role !== 'admin')) return { error: 'Choose a valid tutor.' }
   const email = userResult.user?.email
   if (!email) return { error: 'This student account does not have an email address.' }
   const lessonTitle = formatLessonTitle({
     studentName: studentProfile?.full_name || nameFromEmail(email),
-    tutorName: adminProfile.full_name || 'Tutor',
+    tutorName: tutorProfile.full_name || 'Tutor',
     subject: title,
   })
 
@@ -58,6 +61,7 @@ export async function createTutoringSessionAction(
       plan_id: planId,
       plan_item_id: item.id,
       student_id: plan.user_id,
+      tutor_id: tutorProfile.id,
       student_email: email.toLowerCase(),
       title: lessonTitle,
       scheduled_for: startsAt.toISOString(),
@@ -72,7 +76,7 @@ export async function createTutoringSessionAction(
     let calendarMessage = ''
     try {
       const calendar = await createHostCalendarEvent({
-        hostUserId: adminProfile.id,
+        hostUserId: tutorProfile.id,
         title: lessonTitle,
         scheduledFor: startsAt.toISOString(),
         durationMinutes: bookedMinutes,
@@ -104,13 +108,14 @@ export async function cancelTutoringSessionAction(formData: FormData) {
   const admin = createAdminClient()
   const { data: session } = await admin
     .from('tutoring_sessions')
-    .select('id,plan_id,student_id,created_by,status,scheduled_for,zoom_meeting_id,google_calendar_event_id')
+    .select('id,plan_id,student_id,tutor_id,created_by,status,scheduled_for,zoom_meeting_id,google_calendar_event_id')
     .eq('id', sessionId)
     .maybeSingle()
 
-  if (!session || (profile?.role !== 'admin' && session.student_id !== user.id)) return
+  const canManage = profile?.role === 'admin' || session?.student_id === user.id || (profile?.role === 'tutor' && session?.tutor_id === user.id)
+  if (!session || !canManage) return
   if (session.status !== 'scheduled' && session.status !== 'cancelled') return
-  if (profile?.role !== 'admin' && session.status === 'scheduled' && new Date(session.scheduled_for).getTime() <= Date.now()) return
+  if (profile?.role === 'student' && session.status === 'scheduled' && new Date(session.scheduled_for).getTime() <= Date.now()) return
 
   if (session.status !== 'cancelled') {
     const { error } = await admin
@@ -128,8 +133,8 @@ export async function cancelTutoringSessionAction(formData: FormData) {
 
   const cleanup = await Promise.allSettled([
     deleteZoomMeeting(session.zoom_meeting_id),
-    session.created_by
-      ? deleteHostCalendarEvent({ hostUserId: session.created_by, eventId: session.google_calendar_event_id })
+    session.tutor_id || session.created_by
+      ? deleteHostCalendarEvent({ hostUserId: session.tutor_id || session.created_by!, eventId: session.google_calendar_event_id })
       : Promise.resolve({ status: 'not_available' as const }),
   ])
   for (const result of cleanup) if (result.status === 'rejected') console.error('Could not fully remove a cancelled lesson from an external calendar or meeting provider.', result.reason)
@@ -163,12 +168,17 @@ export async function approveTutoringOverrunAction(formData: FormData) {
 }
 
 export async function updateTutoringSessionFollowUpAction(formData: FormData) {
-  await requireAdmin()
+  const user = await requireUser('/bookings')
+  const profile = await getProfile()
   const sessionId = value(formData, 'sessionId')
   const planId = value(formData, 'planId')
   if (!sessionId || !planId) return
 
-  const { error } = await createAdminClient()
+  const admin = createAdminClient()
+  const { data: session } = await admin.from('tutoring_sessions').select('tutor_id').eq('id', sessionId).eq('plan_id', planId).maybeSingle()
+  if (!session || (profile?.role !== 'admin' && !(profile?.role === 'tutor' && session.tutor_id === user.id))) return
+
+  const { error } = await admin
     .from('tutoring_sessions')
     .update({
       tutor_notes: value(formData, 'tutorNotes') || null,

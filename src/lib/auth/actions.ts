@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOrigin } from '@/lib/site'
 import { normalisePhone, verifySignupProtection } from '@/lib/auth/signup-protection'
+import { homeForRole, safeInternalPath } from '@/lib/auth/roles'
 
 export type AuthState = { error?: string; message?: string }
 
@@ -14,13 +15,15 @@ export async function signInAction(
 ): Promise<AuthState> {
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
-  const redirectTo = String(formData.get('redirectTo') ?? '') || '/dashboard'
+  const redirectTo = safeInternalPath(String(formData.get('redirectTo') ?? ''))
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: error.message }
 
-  redirect(redirectTo)
+  if (redirectTo) redirect(redirectTo)
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle()
+  redirect(homeForRole(profile?.role))
 }
 
 export async function signUpAction(
@@ -76,14 +79,14 @@ export async function updateProfileAction(_previous: AuthState, formData: FormDa
 }
 
 export async function signInWithGoogleAction(formData: FormData) {
-  const redirectTo = String(formData.get('redirectTo') ?? '') || '/dashboard'
+  const redirectTo = safeInternalPath(String(formData.get('redirectTo') ?? ''))
   const origin = await getOrigin()
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+      redirectTo: `${origin}/auth/callback${redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : ''}`,
     },
   })
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`)

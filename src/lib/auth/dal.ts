@@ -58,3 +58,11 @@ export async function requireAdmin() {
   if (profile.role !== 'admin') redirect('/dashboard')
   return profile
 }
+
+/** Require a tutor or admin. Students are returned to their own dashboard. */
+export async function requireStaff(redirectTo = '/students') {
+  const profile = await getProfile()
+  if (!profile) redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`)
+  if (profile.role !== 'tutor' && profile.role !== 'admin') redirect('/dashboard')
+  return profile
+}

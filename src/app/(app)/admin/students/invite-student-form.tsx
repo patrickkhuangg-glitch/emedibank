@@ -11,6 +11,7 @@ export function InviteStudentForm() {
   }, [state.message])
 
   return <form ref={formRef} action={action} className="mt-6 space-y-4">
+    <label className="block text-sm font-semibold text-white"><span>Account type</span><select name="accountRole" defaultValue="student" className="field-dark mt-2"><option value="student">Student</option><option value="tutor">Tutor</option></select></label>
     <label className="block text-sm font-semibold text-white"><span>Full name</span><input required name="fullName" autoComplete="name" placeholder="e.g. Jordan Smith" className="field-dark mt-2" /></label>
     <label className="block text-sm font-semibold text-white"><span>Email address</span><input required type="email" name="email" autoComplete="email" placeholder="student@email.com" className="field-dark mt-2" /></label>
     <label className="block text-sm font-semibold text-white"><span>Mobile number</span><input required type="tel" name="phoneNumber" autoComplete="tel" placeholder="04xx xxx xxx" className="field-dark mt-2" /></label>

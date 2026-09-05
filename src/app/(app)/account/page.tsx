@@ -10,7 +10,7 @@ import { InterfaceModeToggle } from './interface-mode-toggle'
 import { ProfileForm } from './profile-form'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Account & billing' }
+export const metadata: Metadata = { title: 'Account · Studocyte' }
 
 export default async function AccountPage({
   searchParams,
@@ -29,15 +29,17 @@ export default async function AccountPage({
   ])
 
   const entitledExamIds = new Set((entitlements ?? []).map((e) => e.exam_id))
-  const hasBilling = Boolean(profile?.stripe_customer_id)
+  const studentView = profile?.role === 'student'
+  const hasBilling = studentView && Boolean(profile?.stripe_customer_id)
 
   return (
     <Container className="py-16">
       <div className="mx-auto max-w-3xl space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Account &amp; billing</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Account</h1>
             <p className="mt-1 text-muted">{profile?.full_name ?? user.email}</p>
+            {!studentView ? <span className="mt-3 inline-flex rounded-full bg-brand-muted px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-brand">{profile?.role} workspace</span> : null}
           </div>
           {hasBilling ? <BillingButton /> : null}
         </div>
@@ -48,10 +50,11 @@ export default async function AccountPage({
 
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your details</h2>
-          {complete === 'trial' ? <p className="mt-2 text-sm leading-6 text-muted">Add your full name and mobile number before starting a free trial.</p> : null}
+          {studentView && complete === 'trial' ? <p className="mt-2 text-sm leading-6 text-muted">Add your full name and mobile number before starting a free trial.</p> : null}
           <ProfileForm fullName={profile?.full_name ?? ''} phoneNumber={profile?.phone_number ?? ''} />
         </section>
 
+        {studentView ? <>
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your access</h2>
           <div className="mt-3 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
@@ -86,8 +89,9 @@ export default async function AccountPage({
             <span className="rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.mmi_credits ?? 0} MMI credits</span>
           </div>
         </section>
+        </> : null}
 
-        {(subscriptions ?? []).length > 0 ? (
+        {studentView ? ((subscriptions ?? []).length > 0 ? (
           <section>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Subscriptions</h2>
             <div className="mt-3 space-y-2">
@@ -110,6 +114,11 @@ export default async function AccountPage({
           <section className="rounded-lg border border-border bg-surface p-6 text-center">
             <p className="text-muted">You&rsquo;re on the free tier.</p>
             <ButtonLink href="/pricing" className="mt-4">See plans</ButtonLink>
+          </section>
+        )) : (
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Staff access</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Your navigation and permissions are set by your {profile?.role} role. Student subscriptions, exam access and marking credits are kept out of this workspace.</p>
           </section>
         )}
 

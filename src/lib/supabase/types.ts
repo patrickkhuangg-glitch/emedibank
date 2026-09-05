@@ -165,6 +165,7 @@ export type Database = {
           plan_id: string
           plan_item_id: string
           student_id: string
+          tutor_id: string | null
           student_email: string
           title: string
           scheduled_for: string
@@ -193,6 +194,7 @@ export type Database = {
           plan_id: string
           plan_item_id: string
           student_id: string
+          tutor_id?: string | null
           student_email: string
           title: string
           scheduled_for: string
@@ -217,6 +219,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          tutor_id?: string | null
           title?: string
           scheduled_for?: string
           booked_minutes?: number

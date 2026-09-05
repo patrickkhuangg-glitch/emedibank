@@ -4,10 +4,10 @@ import { signInWithGoogleAction } from '@/lib/auth/actions'
 import { trackAnalyticsEvent } from '@/components/analytics'
 import { Button } from './button'
 
-export function GoogleButton({ redirectTo = '/dashboard', intent = 'login' }: { redirectTo?: string; intent?: 'login' | 'signup' }) {
+export function GoogleButton({ redirectTo, intent = 'login' }: { redirectTo?: string; intent?: 'login' | 'signup' }) {
   return (
     <form action={signInWithGoogleAction} onSubmit={() => intent === 'signup' && trackAnalyticsEvent('signup_started', { method: 'google' })}>
-      <input type="hidden" name="redirectTo" value={redirectTo} />
+      {redirectTo ? <input type="hidden" name="redirectTo" value={redirectTo} /> : null}
       <Button type="submit" variant="secondary" className="w-full">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09Z" />

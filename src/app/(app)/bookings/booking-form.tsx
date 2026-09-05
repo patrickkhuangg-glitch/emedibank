@@ -11,9 +11,11 @@ export type BookingPlanOption = {
   inclusions: Array<{ id: string; title: string; remainingHours: number }>
 }
 
+export type BookingTutorOption = { id: string; name: string; role: 'tutor' | 'admin' }
+
 const initialState: CreateTutoringSessionState = {}
 
-export function BookingForm({ plans }: { plans: BookingPlanOption[] }) {
+export function BookingForm({ plans, tutors }: { plans: BookingPlanOption[]; tutors: BookingTutorOption[] }) {
   const [planId, setPlanId] = useState(plans[0]?.id ?? '')
   const [state, formAction, pending] = useActionState(createTutoringSessionAction, initialState)
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === planId), [planId, plans])
@@ -33,12 +35,18 @@ export function BookingForm({ plans }: { plans: BookingPlanOption[] }) {
         {selectedPlan ? <span className="mt-2 block text-xs font-normal text-white/60">{selectedPlan.studentEmail}</span> : null}
       </label>
       <label className="block text-sm font-semibold text-white">
+        <span>Assigned tutor</span>
+        <select required name="tutorId" className="field-dark mt-2">
+          {tutors.map((tutor) => <option key={tutor.id} value={tutor.id}>{tutor.name}{tutor.role === 'admin' ? ' · admin' : ''}</option>)}
+        </select>
+      </label>
+      <label className="block text-sm font-semibold text-white">
         <span>Tutoring inclusion</span>
         <select key={planId} required name="planItemId" className="field-dark mt-2">
           {(selectedPlan?.inclusions ?? []).map((item) => <option key={item.id} value={item.id}>{item.title} · {formatHours(item.remainingHours)} left</option>)}
         </select>
       </label>
-      <label className="block text-sm font-semibold text-white">
+      <label className="block text-sm font-semibold text-white sm:col-span-2">
         <span>Lesson subject</span>
         <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark mt-2" />
       </label>
