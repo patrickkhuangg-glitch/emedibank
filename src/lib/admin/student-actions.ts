@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export type InviteStudentState = { error?: string; message?: string }
 export type SendAccountAccessState = { error?: string; message?: string }
+export type ManualExamAccessState = { error?: string; message?: string }
 
 export async function inviteStudentAction(_previous: InviteStudentState, formData: FormData): Promise<InviteStudentState> {
   const profile = await getProfile()
@@ -80,4 +81,71 @@ export async function sendAccountAccessAction(_previous: SendAccountAccessState,
   }
 
   return { message: delivery === 'login' ? `Secure sign-in link sent to ${requestedEmail}.` : `Password setup link sent to ${requestedEmail}.` }
+}
+
+export async function setManualExamAccessAction(_previous: ManualExamAccessState, formData: FormData): Promise<ManualExamAccessState> {
+  const requestingProfile = await getProfile()
+  if (requestingProfile?.role !== 'admin') return { error: 'Only admins can change Studocyte access.' }
+
+  const userId = String(formData.get('userId') ?? '').trim()
+  const examId = String(formData.get('examId') ?? '').trim()
+  const intent = String(formData.get('intent') ?? '')
+  const expiryDate = String(formData.get('expiryDate') ?? '').trim()
+  if (!userId || !examId || !['grant', 'remove'].includes(intent)) return { error: 'Check the account and exam, then try again.' }
+  if (expiryDate && !isIsoDate(expiryDate)) return { error: 'Choose a valid access end date.' }
+  const expiresAt = expiryDate ? endOfSydneyDay(expiryDate) : null
+  if (intent === 'grant' && expiresAt && new Date(expiresAt).getTime() <= Date.now()) return { error: 'The access end date must be today or later.' }
+
+  const admin = createAdminClient()
+  const [{ data: student, error: studentError }, { data: exam, error: examError }] = await Promise.all([
+    admin.from('profiles').select('role').eq('id', userId).maybeSingle(),
+    admin.from('exams').select('id,name').eq('id', examId).eq('active', true).maybeSingle(),
+  ])
+  if (studentError || student?.role !== 'student') return { error: 'That student account could not be verified.' }
+  if (examError || !exam) return { error: 'That exam is not currently available.' }
+
+  const request = intent === 'remove'
+    ? admin.from('entitlements').delete().eq('user_id', userId).eq('exam_id', examId).eq('source', 'comp')
+    : admin.from('entitlements').upsert({
+      user_id: userId,
+      exam_id: examId,
+      source: 'comp',
+      expires_at: expiresAt,
+    }, { onConflict: 'user_id,exam_id,source' })
+  const { error } = await request
+  if (error) {
+    console.error('Could not update manual Studocyte access.', error)
+    return { error: 'Studocyte access could not be updated. Try again.' }
+  }
+
+  revalidatePath('/admin/students')
+  revalidatePath('/dashboard')
+  revalidatePath('/study-plan')
+  return { message: intent === 'remove' ? `${exam.name} manual access removed.` : `${exam.name} manual access granted.` }
+}
+
+function isIsoDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const [year, month, day] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+function endOfSydneyDay(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  const wallClockUtc = Date.UTC(year, month - 1, day, 23, 59, 59)
+  const probe = new Date(wallClockUtc)
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(probe)
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((item) => item.type === type)?.value)
+  const offset = Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute'), part('second')) - wallClockUtc
+  return new Date(wallClockUtc - offset + 999).toISOString()
 }
