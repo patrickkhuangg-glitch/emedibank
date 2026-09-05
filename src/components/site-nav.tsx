@@ -53,7 +53,7 @@ function navItems(role: UserRole, currentExamSlug: string | null): Item[] {
   if (role === 'admin') return [
     { href: '/bookings', label: 'Bookings', icon: <CalendarIcon /> },
     { href: '/account', label: 'Account', icon: <UserIcon /> },
-    { href: '/admin/students', label: 'Students', icon: <StudentsIcon /> },
+    { href: '/admin/students', label: 'Accounts', icon: <StudentsIcon /> },
     { href: '/admin', label: 'Admin', icon: <ShieldIcon /> },
   ]
   if (role === 'tutor') return [

@@ -159,6 +159,59 @@ export type Database = {
         }
         Relationships: []
       }
+      study_plan_exam_dates: {
+        Row: {
+          id: string
+          user_id: string
+          exam_id: string
+          label: string
+          exam_date: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          exam_id: string
+          label?: string
+          exam_date: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          label?: string
+          exam_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      study_plan_tasks: {
+        Row: {
+          id: string
+          user_id: string
+          exam_id: string | null
+          body: string
+          is_completed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          exam_id?: string | null
+          body: string
+          is_completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          exam_id?: string | null
+          body?: string
+          is_completed?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tutoring_sessions: {
         Row: {
           id: string
@@ -991,4 +1044,6 @@ export type EssayResponse = Database['public']['Tables']['essay_responses']['Row
 export type EssayMarking = Database['public']['Tables']['essay_markings']['Row']
 export type StudyPlan = Database['public']['Tables']['study_plans']['Row']
 export type StudyPlanItem = Database['public']['Tables']['study_plan_items']['Row']
+export type StudyPlanExamDate = Database['public']['Tables']['study_plan_exam_dates']['Row']
+export type StudyPlanTask = Database['public']['Tables']['study_plan_tasks']['Row']
 export type TutoringSession = Database['public']['Tables']['tutoring_sessions']['Row']
