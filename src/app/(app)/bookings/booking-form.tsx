@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState } from 'react'
 import { createTutoringSessionAction, type CreateTutoringSessionState } from '@/lib/tutoring/actions'
+import { BookingDateTimeFields } from '@/components/bookings/booking-date-time-fields'
 
 export type BookingPlanOption = {
   id: string
@@ -46,18 +47,15 @@ export function BookingForm({ plans, tutors }: { plans: BookingPlanOption[]; tut
           {(selectedPlan?.inclusions ?? []).map((item) => <option key={item.id} value={item.id}>{item.title} · {formatHours(item.remainingHours)} left</option>)}
         </select>
       </label>
-      <label className="block text-sm font-semibold text-white sm:col-span-2">
+      <label className="block text-sm font-semibold text-white">
         <span>Lesson subject</span>
         <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark mt-2" />
-      </label>
-      <label className="block text-sm font-semibold text-white">
-        <span>Date and time (Brisbane)</span>
-        <input required type="datetime-local" name="scheduledFor" className="field-dark mt-2" />
       </label>
       <label className="block text-sm font-semibold text-white">
         <span>Booked length</span>
         <select name="bookedMinutes" defaultValue="60" className="field-dark mt-2"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1 hour 30 min</option><option value="120">2 hours</option></select>
       </label>
+      <BookingDateTimeFields />
       <div className="sm:col-span-2">
         {state.error ? <p role="alert" className="mb-3 rounded-xl bg-danger/15 px-4 py-3 text-sm text-danger-foreground">{state.error}</p> : null}
         {state.message ? <p role="status" className="mb-3 rounded-xl bg-mint-muted px-4 py-3 text-sm text-mint-deep">{state.message}</p> : null}
