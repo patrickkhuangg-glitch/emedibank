@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react'
 import { createTutoringSessionAction, type CreateTutoringSessionState } from '@/lib/tutoring/actions'
+import { BookingDateTimeFields } from '@/components/bookings/booking-date-time-fields'
 
 type TutoringItem = { id: string; title: string; exam_scope: string | null; total_units: number; used_units: number }
 
@@ -34,9 +35,7 @@ export function CreateTutoringSessionForm({ planId, items }: { planId: string; i
     <DarkLabel label="Lesson subject">
       <input required name="title" placeholder="e.g. UCAT decision making" className="field-dark"/>
     </DarkLabel>
-    <DarkLabel label="Start time (Brisbane)">
-      <input required type="datetime-local" name="scheduledFor" className="field-dark"/>
-    </DarkLabel>
+    <BookingDateTimeFields />
     <p className="sm:col-span-2 text-xs leading-5 text-white/65">The booked time is automatically deducted once Zoom confirms the student attended—even if they join late. Any time beyond the booking is held for your approval.</p>
     {state.error ? <p role="alert" className="sm:col-span-2 rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white">{state.error}</p> : null}
     {state.message ? <p role="status" className="sm:col-span-2 rounded-2xl bg-mint-muted px-4 py-3 text-sm leading-6 text-mint-deep">{state.message}</p> : null}
