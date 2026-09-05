@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useId, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import {
   addStudyPlanTaskAction,
@@ -19,13 +19,41 @@ export type StudyPlanExamOption = {
   kind: ExamKind
 }
 
-export function StudyPlanExamDates({ exams, dates }: { exams: StudyPlanExamOption[]; dates: StudyPlanExamDate[] }) {
+export function StudyPlanExamDateDialog({ exams, dates, hasNextExam }: { exams: StudyPlanExamOption[]; dates: StudyPlanExamDate[]; hasNextExam: boolean }) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
+
+  return <>
+    <button
+      type="button"
+      disabled={exams.length === 0}
+      onClick={() => dialogRef.current?.showModal()}
+      className="eb-press mt-5 inline-flex min-h-10 w-fit items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white transition-colors hover:bg-brand disabled:cursor-not-allowed disabled:opacity-45"
+    >
+      <CalendarIcon /> {hasNextExam ? 'Manage dates' : 'Set exam date'}
+    </button>
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onClick={(event) => { if (event.target === event.currentTarget) dialogRef.current?.close() }}
+      className="eb-soft m-auto max-h-[calc(100dvh-2rem)] w-[min(56rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl bg-surface p-0 text-foreground backdrop:bg-ink/50 backdrop:backdrop-blur-[2px] open:animate-[eb-pop_180ms_cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none"
+    >
+      <div className="sticky top-0 z-10 flex items-start justify-between gap-6 border-b border-border bg-surface px-5 py-4 sm:px-7 sm:py-5">
+        <div><h2 id={titleId} className="font-display text-2xl font-semibold tracking-tight">Set your exam dates</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-muted">Choose one date for each written exam, or add each university interview separately.</p></div>
+        <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close exam dates" className="eb-press grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface transition-colors hover:bg-surface-muted"><CloseIcon /></button>
+      </div>
+      <StudyPlanExamDates exams={exams} dates={dates} embedded />
+    </dialog>
+  </>
+}
+
+export function StudyPlanExamDates({ exams, dates, embedded = false }: { exams: StudyPlanExamOption[]; dates: StudyPlanExamDate[]; embedded?: boolean }) {
   if (exams.length === 0) {
-    return <section className="rounded-3xl border border-dashed border-border bg-surface px-6 py-8"><h2 className="font-display text-2xl font-semibold tracking-tight">Exam dates</h2><p className="mt-3 max-w-xl text-sm leading-6 text-muted">Your exam date controls will appear here when an exam is unlocked on your account.</p></section>
+    return <section className="px-6 py-8"><p className="max-w-xl text-sm leading-6 text-muted">Your exam date controls will appear here when an exam is unlocked on your account.</p></section>
   }
 
-  return <section className="overflow-hidden rounded-3xl border border-border bg-surface eb-soft">
-    <header className="flex flex-col gap-2 border-b border-border px-6 py-5 sm:px-7"><h2 className="font-display text-2xl font-semibold tracking-tight">Exam dates</h2><p className="max-w-2xl text-sm leading-6 text-muted">Set one date for each written exam. Add every university interview as a separate date.</p></header>
+  return <section className={embedded ? 'bg-surface' : 'overflow-hidden rounded-3xl border border-border bg-surface eb-soft'}>
+    {!embedded ? <header className="flex flex-col gap-2 border-b border-border px-6 py-5 sm:px-7"><h2 className="font-display text-2xl font-semibold tracking-tight">Exam dates</h2><p className="max-w-2xl text-sm leading-6 text-muted">Set one date for each written exam. Add every university interview as a separate date.</p></header> : null}
     <div className="divide-y divide-border">
       {exams.map((exam) => {
         const examDates = dates.filter((date) => date.exam_id === exam.id)
@@ -111,3 +139,5 @@ function ActionMessage({ state, className = '' }: { state: StudyPlanActionState;
 
 function ExamMonogram({ name }: { name: string }) { return <span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-muted font-display text-sm font-bold text-brand" aria-hidden>{name.slice(0, 1)}</span> }
 function CheckIcon() { return <svg aria-hidden width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 10 3 3 7-7" /></svg> }
+function CalendarIcon() { return <svg aria-hidden width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 2.5v3M15 2.5v3M3 7.5h14M4.5 4h11A1.5 1.5 0 0 1 17 5.5v10A1.5 1.5 0 0 1 15.5 17h-11A1.5 1.5 0 0 1 3 15.5v-10A1.5 1.5 0 0 1 4.5 4Z" /></svg> }
+function CloseIcon() { return <svg aria-hidden width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="m5 5 10 10M15 5 5 15" /></svg> }
