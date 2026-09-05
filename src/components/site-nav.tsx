@@ -17,7 +17,7 @@ export function SiteNav({ role, currentExamSlug }: { role: UserRole; currentExam
   const active = (item: Item) => {
     if (item.label === 'Practice') return pathname.startsWith('/practice') || pathname.startsWith('/interviews/practice') || pathname.startsWith('/interviews/review')
     if (item.label === 'Mock exams') return pathname.startsWith('/mock')
-    if (item.href === '/dashboard' || item.href === '/admin') return pathname === item.href
+    if (item.label === 'Dashboard' || item.href === '/admin') return pathname === item.href
     return pathname === item.href || pathname.startsWith(`${item.href}/`)
   }
 
@@ -61,6 +61,15 @@ function navItems(role: UserRole, currentExamSlug: string | null): Item[] {
     { href: '/account', label: 'Account', icon: <UserIcon /> },
     { href: '/students', label: 'Students', icon: <StudentsIcon /> },
   ]
+  if (currentExamSlug === 'interviews') return [
+    { href: '/interviews', label: 'Dashboard', icon: <GridIcon /> },
+    { href: '/interviews/practice', label: 'Practice', icon: <QuestionIcon /> },
+    { href: '/interviews/stories', label: 'Stories', icon: <StoryIcon /> },
+    { href: '/interviews/resources', label: 'Resources', icon: <ResourceIcon /> },
+    { href: '/study-plan', label: 'Study Plan', icon: <PlanIcon /> },
+    { href: '/bookings', label: 'Bookings', icon: <CalendarIcon /> },
+    { href: '/account', label: 'Account', icon: <UserIcon /> },
+  ]
   const practiceHref = currentExamSlug ? `/practice/${currentExamSlug}` : '/app'
   const mockHref = currentExamSlug ? `/mock/${currentExamSlug}` : '/app'
   return [
@@ -95,5 +104,7 @@ function StudentsIcon() { return <svg {...P}><circle cx="9" cy="8" r="3" /><path
 function ShieldIcon() { return <svg {...P}><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" /></svg> }
 function PlanIcon() { return <svg {...P}><rect x="5" y="3" width="14" height="18" rx="2" /><path d="m8 9 1.5 1.5L12 8M14.5 10H16M8 15l1.5 1.5L12 14M14.5 16H16" /></svg> }
 function CalendarIcon() { return <svg {...P}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16M8 14h2M14 14h2" /></svg> }
+function StoryIcon() { return <svg {...P}><path d="M4 5h16v12H8l-4 3V5Z" /><path d="M8 9h8M8 13h5" /></svg> }
+function ResourceIcon() { return <svg {...P}><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z" /><path d="M8 4v13a3 3 0 0 0-3 3M11 8h5M11 12h5" /></svg> }
 function LogoutIcon() { return <svg {...P}><path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /></svg> }
 function MenuIcon() { return <svg {...P}><path d="M4 7h16M4 12h16M4 17h16" /></svg> }

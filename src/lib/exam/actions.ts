@@ -11,5 +11,5 @@ export async function selectExamAction(slug: string) {
     maxAge: 60 * 60 * 24 * 180,
     sameSite: 'lax',
   })
-  redirect('/dashboard')
+  redirect(slug === 'interviews' ? '/interviews' : '/dashboard')
 }

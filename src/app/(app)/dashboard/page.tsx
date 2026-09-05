@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { CSSProperties, ReactNode } from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Container } from '@/components/container'
 import { requireStudent } from '@/lib/auth/dal'
 import { getCurrentExam, listExams } from '@/lib/exam/current'
@@ -20,8 +21,9 @@ export default async function DashboardPage() {
   const first = profile?.full_name?.split(' ')[0] ?? 'there'
   // Prefer the pinned exam; otherwise the one they've practised most recently.
   let exam = await getCurrentExam()
+  if (exam?.kind === 'interview') redirect('/interviews')
   if (!exam) {
-    const exams = await listExams()
+    const exams = (await listExams()).filter((candidate) => candidate.kind === 'mcq')
     const recent = await mostRecentExamId(profile.id)
     exam = exams.find((e) => e.id === recent) ?? exams[0]
   }
