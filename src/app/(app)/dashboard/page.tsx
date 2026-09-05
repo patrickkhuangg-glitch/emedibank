@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import type { CSSProperties, ReactNode } from 'react'
 import Link from 'next/link'
 import { Container } from '@/components/container'
-import { requireUser, getProfile } from '@/lib/auth/dal'
+import { requireStudent } from '@/lib/auth/dal'
 import { getCurrentExam, listExams } from '@/lib/exam/current'
 import { getDashboard, mostRecentExamId, type HeatCell, type MasterySection } from '@/lib/dashboard/stats'
 import { getSectionAccess } from '@/lib/access'
@@ -16,14 +16,13 @@ const CARD = 'eb-soft rounded-3xl border border-border bg-surface'
 const EYEBROW = 'text-[11px] font-semibold uppercase tracking-[0.18em] text-muted'
 
 export default async function DashboardPage() {
-  const user = await requireUser('/dashboard')
-  const profile = await getProfile()
+  const profile = await requireStudent('/dashboard')
   const first = profile?.full_name?.split(' ')[0] ?? 'there'
   // Prefer the pinned exam; otherwise the one they've practised most recently.
   let exam = await getCurrentExam()
   if (!exam) {
     const exams = await listExams()
-    const recent = await mostRecentExamId(user.id)
+    const recent = await mostRecentExamId(profile.id)
     exam = exams.find((e) => e.id === recent) ?? exams[0]
   }
 
@@ -37,8 +36,8 @@ export default async function DashboardPage() {
   }
 
   const [d, sectionAccess] = await Promise.all([
-    getDashboard(user.id, exam.slug, exam.id),
-    getSectionAccess(user.id, exam.id),
+    getDashboard(profile.id, exam.slug, exam.id),
+    getSectionAccess(profile.id, exam.id),
   ])
   const statBySub = new Map(d.sections.map((s) => [s.id, s]))
   const anyLocked = sectionAccess.some((s) => s.locked)

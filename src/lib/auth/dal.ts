@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Profile, InterfaceMode } from '@/lib/supabase/types'
+import { homeForRole } from '@/lib/auth/roles'
 
 /** The current authenticated user, or null. Cached per request. */
 export const getUser = cache(async () => {
@@ -23,6 +24,15 @@ export async function requireUser(redirectTo?: string) {
     redirect(target)
   }
   return user
+}
+
+/** Require the student workspace. Staff are sent to their own operational home
+ * instead of falling through to exam practice screens. */
+export async function requireStudent(redirectTo = '/dashboard') {
+  const profile = await getProfile()
+  if (!profile) redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`)
+  if (profile.role !== 'student') redirect(homeForRole(profile.role))
+  return profile
 }
 
 /** The current user's profile row (role, name), or null if not signed in. */
