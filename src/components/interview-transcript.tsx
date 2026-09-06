@@ -15,7 +15,8 @@ export function InterviewTranscript({ attemptId, initialStatus, initialTranscrip
     try {
       const response = await fetch(`/api/interviews/attempts/${attemptId}/transcript`, { method: 'POST' })
       const payload = await response.json()
-      if (!response.ok || typeof payload.transcript !== 'string') throw new Error(payload.error || 'The transcript could not be created. Please try again.')
+      if (!response.ok) throw new Error(payload.error || 'The transcript could not be created. Please try again.')
+      if (payload.status === 'processing') { setStatus('processing'); return }
       setTranscript(payload.transcript)
       setStatus('ready')
     } catch (requestError) {
@@ -24,7 +25,7 @@ export function InterviewTranscript({ attemptId, initialStatus, initialTranscrip
     }
   }
 
-  if (status === 'ready' && transcript) return <section className="mt-7 border-t border-border pt-6"><h3 className="font-display text-xl font-semibold tracking-tight">Transcript</h3><p className="mt-2 text-sm leading-6 text-muted">A private transcript of this recording. Review it with the audio—it may contain minor transcription errors.</p><p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{transcript}</p></section>
+  if (status === 'ready' && transcript) return <section className="mt-7 border-t border-border pt-6"><h3 className="font-display text-xl font-semibold tracking-tight">Transcript</h3><p className="mt-2 text-sm leading-6 text-muted">A private transcript of this recording. Review it with the recording—it may contain minor transcription errors.</p><p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{transcript}</p></section>
 
   if (status === 'processing') return <section className="mt-7 border-t border-border pt-6"><h3 className="font-display text-xl font-semibold tracking-tight">Transcript</h3><p className="mt-2 text-sm leading-6 text-muted">Your transcript is being prepared automatically. Refresh this page in a moment if it is not ready yet.</p></section>
 

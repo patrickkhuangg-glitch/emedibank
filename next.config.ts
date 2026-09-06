@@ -8,8 +8,8 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // Interview practice records audio after an explicit student action. Keep the
-  // camera and location locked down while allowing this origin to request a mic.
-  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
+  // location locked down while allowing this origin to request camera and mic.
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
 ];
 

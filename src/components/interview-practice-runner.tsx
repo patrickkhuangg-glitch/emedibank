@@ -1,165 +1,112 @@
 'use client'
-
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback,useEffect,useRef,useState } from 'react'
 import type { InterviewStation } from '@/lib/interviews/stations'
-import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
+import { getInterviewQuestions,getInterviewTiming } from '@/lib/interviews/timing'
+import { CAPTURE_CONSTRAINTS,prepareRecorders,startRecording,type LocalRecording } from '@/lib/interviews/recording'
+import { uploadInterviewMedia } from '@/lib/interviews/video-upload'
+import { validateMedia,type QuestionEvent } from '@/lib/interviews/video-validation'
 
-type Phase = 'ready' | 'preparation' | 'response' | 'saving' | 'complete' | 'error'
-type TranscriptStatus = 'processing' | 'ready' | 'failed'
-
-export function InterviewPracticeRunner({ station }: { station: InterviewStation }) {
-  const timing = getInterviewTiming(station.format)
-  const questions = getInterviewQuestions(station)
-  const [phase, setPhase] = useState<Phase>('ready')
-  const [secondsLeft, setSecondsLeft] = useState(timing.preparationSeconds)
-  const [questionIndex, setQuestionIndex] = useState(0)
-  const [error, setError] = useState('')
-  const [transcriptStatus, setTranscriptStatus] = useState<TranscriptStatus>('processing')
-  const deadlineRef = useRef<number | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const transitionRef = useRef(false)
-
-  const uploadRecording = useCallback(async (blob: Blob, durationSeconds: number) => {
-    try {
-      const formData = new FormData()
-      formData.set('audio', new File([blob], 'interview-response.webm', { type: blob.type || 'audio/webm' }))
-      formData.set('format', station.format)
-      formData.set('stationId', station.id)
-      formData.set('durationSeconds', String(durationSeconds))
-      const response = await fetch('/api/interviews/recordings', { method: 'POST', body: formData })
-      if (!response.ok) throw new Error('Recording could not be saved.')
-      const payload: unknown = await response.json()
-      if (typeof payload === 'object' && payload && 'transcriptionStatus' in payload && (payload.transcriptionStatus === 'ready' || payload.transcriptionStatus === 'failed')) setTranscriptStatus(payload.transcriptionStatus)
-      setPhase('complete')
-    } catch {
-      setError('Your recording could not be saved. Check your connection and try the station again.')
-      setPhase('error')
-    }
-  }, [station.format, station.id])
-
-  const finishRecording = useCallback(() => {
-    if (phase !== 'response') return
-    setPhase('saving')
-    const durationSeconds = Math.max(0, timing.responseSeconds - secondsLeft)
-    const recorder = recorderRef.current
-    if (recorder && recorder.state !== 'inactive') {
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
-        streamRef.current?.getTracks().forEach((track) => track.stop())
-        void uploadRecording(blob, durationSeconds)
-      }
-      recorder.stop()
-    } else {
-      streamRef.current?.getTracks().forEach((track) => track.stop())
-      setError('We could not complete the audio recording. Please try this station again.')
-      setPhase('error')
-    }
-  }, [phase, secondsLeft, timing.responseSeconds, uploadRecording])
-
-  const startResponse = useCallback(() => {
-    const stream = streamRef.current
-    if (!stream || !window.MediaRecorder) {
-      setError('Your browser could not start the microphone. Try a current browser and allow microphone access.')
-      setPhase('error')
-      return
-    }
-    try {
-      const preferredType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : undefined
-      const recorder = preferredType ? new MediaRecorder(stream, { mimeType: preferredType }) : new MediaRecorder(stream)
-      chunksRef.current = []
-      recorder.ondataavailable = (event) => { if (event.data.size) chunksRef.current.push(event.data) }
-      recorder.start(1000)
-      recorderRef.current = recorder
-      deadlineRef.current = Date.now() + timing.responseSeconds * 1000
-      setSecondsLeft(timing.responseSeconds)
-      setPhase('response')
-    } catch {
-      stream.getTracks().forEach((track) => track.stop())
-      setError('The microphone could not start. Please allow microphone access and try again.')
-      setPhase('error')
-    }
-  }, [timing.responseSeconds])
-
-  const begin = useCallback(async () => {
-    setError('')
-    transitionRef.current = false
-    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setError('Microphone recording needs a secure, current browser. Open Studocyte in Chrome, Safari or Edge and try again.')
-      setPhase('error')
-      return
-    }
-    if (!window.MediaRecorder) {
-      setError('This browser can access a microphone but cannot record audio. Please use a current version of Chrome, Safari or Edge.')
-      setPhase('error')
-      return
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      deadlineRef.current = Date.now() + timing.preparationSeconds * 1000
-      setSecondsLeft(timing.preparationSeconds)
-      setPhase('preparation')
-    } catch (requestError) {
-      const denied = requestError instanceof DOMException && requestError.name === 'NotAllowedError'
-      setError(denied
-        ? 'Microphone access is blocked. Use the site controls beside the address bar to set Microphone to Allow, then try again.'
-        : 'We could not reach a microphone. Check that one is connected and available, then try again.')
-      setPhase('error')
-    }
-  }, [timing.preparationSeconds])
-
-  const nextQuestion = useCallback(() => {
-    if (phase !== 'response') return
-    if (questionIndex < questions.length - 1) setQuestionIndex((index) => index + 1)
-    else finishRecording()
-  }, [finishRecording, phase, questionIndex, questions.length])
-
-  useEffect(() => {
-    if (phase !== 'preparation' && phase !== 'response') return
-    const tick = () => {
-      const remaining = Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000))
-      setSecondsLeft(remaining)
-      if (remaining === 0) {
-        if (transitionRef.current) return
-        transitionRef.current = true
-        if (phase === 'preparation') startResponse()
-        else finishRecording()
-      }
-    }
-    tick()
-    const timer = window.setInterval(tick, 250)
-    return () => window.clearInterval(timer)
-  }, [finishRecording, phase, startResponse])
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== 'Space' || phase !== 'response' || event.repeat) return
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
-      event.preventDefault()
-      nextQuestion()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [nextQuestion, phase])
-
-  useEffect(() => () => streamRef.current?.getTracks().forEach((track) => track.stop()), [])
-
-  const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
-  const seconds = String(secondsLeft % 60).padStart(2, '0')
-
-  if (phase === 'ready' || phase === 'error') return <RunnerShell><section className="mx-auto max-w-2xl text-center"><span className="inline-flex rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">{station.format === 'mmi' ? 'MMI station' : 'Panel interview'}</span><h1 className="mt-7 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{station.title}</h1><p className="mt-4 text-base leading-7 text-muted">You will have {station.format === 'mmi' ? 'two minutes to read the station. Your eight-minute spoken response begins once the questions appear' : '30 seconds to read the question. Your three-minute spoken response begins automatically'} and is saved privately to your account.</p><div className="mt-8 rounded-3xl bg-surface p-6 text-left eb-soft"><p className="font-display text-xl font-semibold tracking-tight">Before you begin</p><ul className="mt-4 space-y-3 text-sm leading-6 text-muted"><li className="flex gap-3"><CheckIcon /> Find a quiet place and check your microphone.</li><li className="flex gap-3"><CheckIcon /> Your audio is recorded only during the {station.format === 'mmi' ? 'eight-minute' : 'three-minute'} response.</li><li className="flex gap-3"><CheckIcon /> A private transcript is created automatically when your recording is saved.</li><li className="flex gap-3"><CheckIcon /> {station.format === 'mmi' ? 'Press Space or select Next question to move through the station.' : 'There is one question. Press Space or select Finish & save when you are done.'}</li></ul></div>{error ? <p role="alert" className="mt-5 text-sm font-semibold text-red-700">{error}</p> : null}<button type="button" onClick={begin} className="eb-press mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground">Allow microphone &amp; begin <ArrowIcon /></button><Link href="/interviews/practice" className="mt-5 block text-sm font-semibold text-muted hover:text-foreground">Back to stations</Link></section></RunnerShell>
-
-  if (phase === 'preparation') return <RunnerShell><section className="mx-auto max-w-4xl"><RunnerTop label="Preparation time" time={`${minutes}:${seconds}`} live={false} /><div className="mt-10 rounded-3xl bg-surface p-7 eb-soft sm:p-10"><p className="text-sm font-semibold text-brand">{station.category}</p><h1 className="mt-5 font-display text-3xl font-semibold tracking-tight sm:text-5xl">{station.preparation}</h1><p className="mt-8 text-sm leading-6 text-muted">Read the station carefully. The first question appears automatically when preparation time ends.</p></div></section></RunnerShell>
-
-  if (phase === 'response' || phase === 'saving') return <RunnerShell><section className="mx-auto max-w-4xl"><RunnerTop label={phase === 'saving' ? 'Saving recording & transcript' : 'Recording response'} time={phase === 'saving' ? '…' : `${minutes}:${seconds}`} live={phase === 'response'} /><div className="mt-10 rounded-3xl bg-surface p-7 eb-soft sm:p-10"><div className="flex flex-wrap items-center justify-between gap-4"><span className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs text-muted">Question {questionIndex + 1} of {questions.length}</span><span className="text-xs text-muted">Audio is recording</span></div><h1 className="mt-9 max-w-3xl font-display text-3xl font-semibold tracking-tight sm:text-5xl">{questions[questionIndex]}</h1><p className="mt-6 text-sm leading-6 text-muted">{station.format === 'mmi' ? 'Take the time you need to answer naturally. Move on when you are ready.' : 'Take the time to give a clear, considered answer.'}</p><div className="mt-10 flex flex-wrap items-center justify-between gap-4"><span className="text-sm text-muted">{station.format === 'mmi' ? 'Press Space to continue' : 'Press Space to finish'}</span><button type="button" disabled={phase === 'saving'} onClick={nextQuestion} className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground disabled:opacity-50">{questionIndex === questions.length - 1 ? 'Finish & save' : 'Next question'} <ArrowIcon /></button></div></div></section></RunnerShell>
-
-  return <RunnerShell><section className="mx-auto max-w-xl text-center"><span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-mint-muted text-mint-deep"><CheckIcon /></span><h1 className="mt-6 font-display text-4xl font-semibold tracking-tight">Recording saved.</h1><p className="mt-4 text-base leading-7 text-muted">{transcriptStatus === 'ready' ? 'Your private transcript is ready to review with the recording.' : 'Your audio is saved. The transcript could not be prepared automatically, but you can retry it from review.'}</p><div className="mt-8 flex flex-wrap justify-center gap-3"><Link href="/interviews/review" className="eb-press inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground">Review recording <ArrowIcon /></Link><Link href="/interviews/practice" className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold text-foreground hover:bg-surface-muted">Choose another station</Link></div></section></RunnerShell>
+type Phase='ready'|'preview'|'preparation'|'response'|'stopping'|'review'|'saving'|'complete'
+type Shell={attemptId:string;videoPath:string;audioPath:string|null}
+const button='rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground disabled:opacity-50'
+export function InterviewPracticeRunner({station,enabled=false}:{station:InterviewStation;enabled?:boolean}) {
+ const timing=getInterviewTiming(station.format),questions=getInterviewQuestions(station)
+ const [phase,setPhase]=useState<Phase>('ready'),[seconds,setSeconds]=useState<number>(timing.preparationSeconds),[question,setQuestion]=useState(0)
+ const [error,setError]=useState(''),[progress,setProgress]=useState(0),[uploadStage,setUploadStage]=useState(''),[local,setLocal]=useState<LocalRecording|null>(null),[localUrl,setLocalUrl]=useState('')
+ const urlRef=useRef('')
+ const stream=useRef<MediaStream|null>(null),preview=useRef<HTMLVideoElement|null>(null),prepared=useRef<ReturnType<typeof prepareRecorders>|null>(null)
+ const active=useRef<ReturnType<typeof startRecording>|null>(null),deadline=useRef(0),events=useRef<QuestionEvent[]>([]),shell=useRef<Shell|null>(null),videoUploaded=useRef(false),audioUploaded=useRef(false),abort=useRef<AbortController|null>(null),busy=useRef(false),mounted=useRef(true)
+ const releaseTracks=useCallback(()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null},[])
+ const finish=useCallback(async()=>{
+ if(!active.current||busy.current)return
+ busy.current=true;setPhase('stopping')
+ try{const recording=await active.current.stop();validateMedia(recording.video.type,recording.video.size,'video');if(urlRef.current)URL.revokeObjectURL(urlRef.current);urlRef.current=URL.createObjectURL(recording.video);setLocalUrl(urlRef.current);setLocal(recording);setPhase('review');if(!recording.audio)setError('Your video is safe. Automatic transcription is unavailable for this recording; a reviewer can still mark it manually.')}
+ catch{setError('The video could not be completed. Please try again.');setPhase('ready')}
+ finally{active.current=null;releaseTracks();busy.current=false}
+ },[releaseTracks])
+ const beginResponse=useCallback(()=>{
+ if(!prepared.current)return
+ try{active.current=startRecording(prepared.current,()=>{setError('Recording was interrupted. Review the captured video before saving.');void finish()});events.current=[{question_index:0,offset_seconds:0}];deadline.current=performance.now()+timing.responseSeconds*1000;setSeconds(timing.responseSeconds);setPhase('response')}
+ catch{releaseTracks();setError('The camera could not start recording. Check permissions and try again.');setPhase('ready')}
+ },[finish,releaseTracks,timing.responseSeconds])
+ async function allowCamera(){
+ if(busy.current)return;busy.current=true;setError('')
+ try{
+ if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)throw new Error('Use a secure page in a current Chrome, Safari or Edge browser with camera recording support.')
+ const media=await navigator.mediaDevices.getUserMedia(CAPTURE_CONSTRAINTS)
+ if(!mounted.current){media.getTracks().forEach(t=>t.stop());return}
+ stream.current=media;prepared.current=prepareRecorders(media);if(!prepared.current.audio)setError('This browser can save video but cannot create a separate transcription copy. You can still self-review and request manual marking.');setPhase('preview')
+ }catch(e){releaseTracks();setError(e instanceof DOMException&&e.name==='NotAllowedError'?'Camera or microphone access is blocked. In the site controls beside the address bar, set Camera and Microphone to Allow, then try again.':e instanceof Error?e.message:'Check your camera and microphone, then try again.')}
+ finally{busy.current=false}
+ }
+ function prepare(){deadline.current=performance.now()+timing.preparationSeconds*1000;setSeconds(timing.preparationSeconds);setPhase('preparation')}
+ const nextQuestion=useCallback(()=>{
+ if(question===questions.length-1){void finish();return}
+ const index=question+1;events.current.push({question_index:index,offset_seconds:(performance.now()-(active.current?.started??performance.now()))/1000});setQuestion(index)
+ },[finish,question,questions.length])
+ useEffect(()=>{
+ if(phase!=='preparation'&&phase!=='response')return
+ const timer=setInterval(()=>{const remaining=Math.max(0,Math.ceil((deadline.current-performance.now())/1000));setSeconds(remaining);if(!remaining){clearInterval(timer);if(phase==='preparation')beginResponse();else void finish()}},200)
+ return()=>clearInterval(timer)
+ },[phase,beginResponse,finish])
+ useEffect(()=>{if(preview.current&&stream.current)preview.current.srcObject=stream.current},[phase])
+ useEffect(()=>{
+ function key(e:KeyboardEvent){if(phase==='response'&&e.code==='Space'&&!e.repeat&&!(e.target instanceof HTMLElement&&e.target.closest('button,a,input,textarea,select,video'))){e.preventDefault();nextQuestion()}}
+ window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)
+ },[nextQuestion,phase])
+ useEffect(()=>{
+ const hidden=()=>{if(document.hidden&&phase==='response'){setError('Recording stopped because this tab was hidden. Preview the captured response before saving.');void finish()}}
+ document.addEventListener('visibilitychange',hidden)
+ return()=>document.removeEventListener('visibilitychange',hidden)
+ },[phase,finish])
+ useEffect(()=>{
+ const unsafe=['preview','preparation','response','stopping','review','saving'].includes(phase)
+ const leave=(e:BeforeUnloadEvent)=>{if(unsafe){e.preventDefault();e.returnValue=''}}
+ const navigate=(event:MouseEvent)=>{
+ if(!unsafe||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return
+ const link=event.target instanceof Element?event.target.closest('a'):null
+ if(!link||link.target==='_blank'||link.hasAttribute('download'))return
+ const target=new URL(link.href,window.location.href)
+ if(target.pathname===window.location.pathname&&target.search===window.location.search)return
+ if(!window.confirm('Leave this recording? Unsaved local video will be lost. Keep this tab open to finish saving.')){event.preventDefault();event.stopImmediatePropagation()}
+ }
+ window.addEventListener('beforeunload',leave)
+ document.addEventListener('click',navigate,true)
+ return()=>{window.removeEventListener('beforeunload',leave);document.removeEventListener('click',navigate,true)}
+ },[phase])
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;if(urlRef.current)URL.revokeObjectURL(urlRef.current);abort.current?.abort();void active.current?.stop();releaseTracks()}},[releaseTracks])
+ async function save(){
+ if(!local||busy.current)return;busy.current=true;setError('');setPhase('saving');abort.current=new AbortController()
+ try{
+ if(!shell.current){const response=await fetch('/api/interviews/attempts/initiate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stationId:station.id,format:station.format,videoType:local.video.type,audioType:local.audio?.type??null})});const result=await response.json();if(!response.ok)throw new Error(result.error);shell.current=result}
+ const current=shell.current!
+ if(!videoUploaded.current){setUploadStage('Saving video');setProgress(0);await uploadInterviewMedia(local.video,current.videoPath,setProgress,abort.current.signal);videoUploaded.current=true}
+ if(local.audio&&current.audioPath&&!audioUploaded.current){setUploadStage('Saving transcription audio');setProgress(0);try{await uploadInterviewMedia(local.audio,current.audioPath,setProgress,abort.current.signal);audioUploaded.current=true}catch{if(abort.current.signal.aborted)throw new Error('Upload paused. Your saved video is safe. Select Save attempt to resume.');setError('Your video was saved. The audio copy could not upload; staff can review the video manually.')}}
+ setUploadStage('Finishing save')
+ const response=await fetch(`/api/interviews/attempts/${current.attemptId}/finalise`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({durationSeconds:local.durationSeconds,questionEvents:events.current})})
+ const result=await response.json();if(!response.ok)throw new Error(result.error)
+ setLocal(null);if(urlRef.current)URL.revokeObjectURL(urlRef.current);urlRef.current='';setPhase('complete')
+ }catch(e){setError(e instanceof Error?e.message:'Save interrupted. Keep this tab open and try again.');setPhase('review')}
+ finally{busy.current=false}
+ }
+ async function discard(){
+ if(busy.current)return;busy.current=true
+ try{if(shell.current){const response=await fetch(`/api/interviews/attempts/${shell.current.attemptId}`,{method:'DELETE'});if(!response.ok)throw new Error('The unfinished upload could not be deleted. Try again before discarding.')}
+ releaseTracks();setLocal(null);if(urlRef.current)URL.revokeObjectURL(urlRef.current);urlRef.current='';setLocalUrl('');shell.current=null;videoUploaded.current=false;audioUploaded.current=false;setQuestion(0);setError('');setPhase('ready')
+ }catch(e){setError(e instanceof Error?e.message:'Discard failed. Try again.')}finally{busy.current=false}
+ }
+ return <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:px-8"><section className="mx-auto max-w-4xl space-y-6">
+ <p className="text-sm font-semibold text-brand">Mock Interviews · {station.format==='mmi'?'MMI station':'Panel interview'}</p><h1 className="font-display text-3xl font-semibold sm:text-5xl">{station.title}</h1>
+ {!enabled?<><p>New mock recordings are being prepared. Your previous recordings remain available.</p><Link href="/interviews/mock-interviews/review">Review saved attempts</Link></>:<>
+ {phase==='ready'&&<><p className="max-w-2xl leading-7 text-muted">Record with your camera and microphone, then preview before saving. Your recording is private. Self-review is free; submitting for human-reviewed marking costs one Interview marking credit and allows EMeducate admins to review your recording and approved AI services to process its transcript.</p><p className="text-sm text-muted">Videos expire after 90 days by default; pending reviews are protected. Transcripts and approved feedback remain until you delete the attempt. Recording starts only after preparation.</p><button className={button} onClick={allowCamera}>Allow camera and microphone</button></>}
+ {phase==='preview'&&<><video ref={preview} autoPlay muted playsInline className="max-h-[50vh] w-full rounded-2xl bg-black" aria-label="Live camera preview"/><p>Check that you are visible and your microphone is connected. Preparation lasts {timing.preparationLabel}; your response is limited to {timing.responseLabel}.</p><button className={button} onClick={prepare}>Begin preparation</button><button className="ml-3 rounded-full border px-5 py-3" onClick={discard}>Cancel</button></>}
+ {(phase==='preparation'||phase==='response')&&<><div className="flex flex-wrap justify-between gap-3"><p role="status">{phase==='preparation'?'Preparation — not recording':'● Recording video and microphone'}</p><p className="font-mono text-3xl tabular-nums" aria-label={`${seconds} seconds remaining`}>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2,'0')}</p></div><div className="rounded-3xl bg-surface p-6 sm:p-10"><p className="text-sm text-muted">{phase==='preparation'?station.category:`Question ${question+1} of ${questions.length}`}</p><h2 className="mt-5 font-display text-2xl leading-snug sm:text-4xl">{phase==='preparation'?station.preparation:questions[question]}</h2>{phase==='response'&&<div className="mt-8 flex flex-wrap items-center gap-4"><button className={button} onClick={nextQuestion}>{question===questions.length-1?'Finish and preview':'Next question'}</button><p className="text-sm text-muted">Space also continues</p></div>}</div></>}
+ {phase==='stopping'&&<p role="status">Preparing your local preview…</p>}
+ {(phase==='review'||phase==='saving')&&<><video src={localUrl} controls playsInline className="max-h-[55vh] w-full rounded-2xl bg-black"/><p>This preview is on your device. Saving keeps it privately in your account without spending a marking credit.</p>{phase==='saving'?<div role="status"><p>{uploadStage} — {progress}%</p><progress className="w-full" max={100} value={progress} aria-label={uploadStage}/><button className="rounded-full border px-5 py-3" onClick={()=>abort.current?.abort()}>Pause upload</button></div>:<div className="flex flex-wrap gap-3"><button className={button} onClick={save}>Save attempt</button><button className="rounded-full border px-5 py-3" onClick={discard}>Discard and try again</button></div>}<p className="text-sm text-muted">Keep this tab open until saving finishes. Interrupted uploads resume when you select Save attempt. Closing the tab loses the local recording.</p></>}
+ {phase==='complete'&&<><h2 className="font-display text-2xl">Recording saved privately</h2><p>Your transcript will be prepared in the background. You can choose human-reviewed marking from your saved attempt.</p><Link className={button} href="/interviews/mock-interviews/review">Review recording</Link></>}
+ {error&&<p role="alert" className="rounded-2xl border border-border p-4">{error}</p>}
+ {['ready','complete'].includes(phase)&&<p><Link href="/interviews/mock-interviews" className="text-sm font-semibold">Back to Mock Interviews</Link></p>}
+ </>}
+ </section></main>
 }
-
-function RunnerShell({ children }: { children: React.ReactNode }) { return <main className="min-h-[calc(100vh-4rem)] bg-background px-5 py-10 text-foreground sm:px-8 sm:py-16">{children}</main> }
-function RunnerTop({ label, time, live }: { label: string; time: string; live: boolean }) { return <div className="flex items-center justify-between gap-4 border-b border-border pb-5"><span className="inline-flex items-center gap-2 text-sm font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${live ? 'bg-red-500 animate-pulse' : 'bg-brand'}`} /> {label}</span><span className="font-mono text-2xl font-medium tabular-nums">{time}</span></div> }
-function ArrowIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h11M11 5l5 5-5 5" /></svg> }
-function CheckIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="mt-0.5 h-4 w-4 shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m4 10 3.5 3.5L16 5.5" /></svg> }

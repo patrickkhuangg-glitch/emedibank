@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { InterviewPracticeRunner } from '@/components/interview-practice-runner'
+import { InterviewRehearsalRunner } from '@/components/interviews/rehearsal-runner'
 import { requireUser } from '@/lib/auth/dal'
 import { getInterviewStation, type InterviewFormat } from '@/lib/interviews/stations'
 import { redirect } from 'next/navigation'
@@ -12,5 +12,5 @@ export default async function InterviewPracticeSessionPage({ searchParams }: { s
   const format: InterviewFormat = params.format === 'panel' ? 'panel' : 'mmi'
   const station = getInterviewStation(format, params.station)
   if (!station) redirect('/interviews/practice')
-  return <InterviewPracticeRunner station={station} />
+  return <InterviewRehearsalRunner key={station.id} station={station} />
 }

@@ -1,8 +1,8 @@
-import { InterviewPracticeRunner } from '@/components/interview-practice-runner'
+import { InterviewRehearsalRunner } from '@/components/interviews/rehearsal-runner'
 import { getInterviewStation } from '@/lib/interviews/stations'
 
 export default function InterviewPracticeSessionPrototypePage() {
   const station = getInterviewStation('panel', 'panel-motivation')
   if (!station) return null
-  return <InterviewPracticeRunner station={station} />
+  return <InterviewRehearsalRunner station={station} />
 }

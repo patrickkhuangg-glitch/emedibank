@@ -1,3 +1,4 @@
+import { interviewWaitingCount } from '@/lib/interviews/marking-data'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Container } from '@/components/container'
@@ -22,6 +23,7 @@ export default async function AdminPage() {
     supabase.from('study_plans').select('id', { count: 'exact', head: true }),
     createAdminClient().from('profiles').select('id', { count: 'exact', head: true }),
   ])
+  const interviewCount = await interviewWaitingCount()
   const subtests = sections.data ?? []
   const freeCount = subtests.filter((section) => section.is_free).length
 
@@ -43,7 +45,7 @@ export default async function AdminPage() {
         <Workspace href="/admin/essays" className="lg:col-span-7" eyebrow="Review queue" title="Mark essays" description="Generate an AI draft, edit it in your own voice, then approve the final feedback for the student." count={queue.length} countLabel="awaiting review" icon={<EssayIcon />} tone="brand" action="Open marking queue" />
         <Workspace href="/admin/access" className="lg:col-span-5" eyebrow="Student access" title="Free content controls" description="Choose which exam sections students can open without a paid entitlement. Changes apply immediately." count={freeCount} countLabel="currently free" icon={<AccessIcon />} action="Manage access" />
         <Workspace href="/admin/questions" className="lg:col-span-5" eyebrow="Content library" title="Add and manage questions" description="Author individual questions, import complete banks, publish drafts and remove content in bulk." count={published.count ?? 0} countLabel="questions live" icon={<QuestionIcon />} action="Open question bank" />
-        <Workspace href="/admin/interviews" className="lg:col-span-7" eyebrow="Tutor review" title="Review interview stations" description="The review home for submitted MMI stations, tutor notes and approved student feedback." count={0} countLabel="waiting now" icon={<InterviewIcon />} tone="ink" action="Open station reviews" />
+        <Workspace href="/admin/interviews" className="lg:col-span-7" eyebrow="Tutor review" title="Review mock interviews" description="Review submitted mock interviews, prepare feedback, and approve it for students." count={interviewCount} countLabel="waiting now" icon={<InterviewIcon />} tone="ink" action="Open mock reviews" />
         <Workspace href="/admin/study-plans" className="lg:col-span-12" eyebrow="Tutoring packages" title="Manage student study plans" description="Assign one-to-one hours, interview support and masterclass places to each student, then keep their remaining inclusions up to date." count={studyPlans.count ?? 0} countLabel="packages" icon={<PlanIcon />} action="Open study plans" />
         <Workspace href="/admin/students" className="lg:col-span-5" title="Manage accounts" description="Create students and tutors, separate staff from learners, and resend secure access emails." count={accounts.count ?? 0} countLabel="accounts" icon={<StudentIcon />} action="Open accounts" />
         <Workspace href="/admin/zoom" className="lg:col-span-7" eyebrow="Tutoring delivery" title="Connect Zoom Pro" description="Create booked Zoom sessions from student packages and keep any extra tutoring time under your approval." count={isZoomConfigured() ? 1 : 0} countLabel={isZoomConfigured() ? 'host connected' : 'setup needed'} icon={<ZoomIcon />} tone="ink" action="Open Zoom settings" />

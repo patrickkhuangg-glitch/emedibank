@@ -1,0 +1,27 @@
+'use client'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { MockInterviewTabs } from './mock-tabs'
+import { listDrafts, type MockDraft } from '@/lib/interviews/mock-local'
+import type { MockMode, MockOption } from '@/lib/interviews/mock-types'
+import type { InterviewFormat } from '@/lib/interviews/stations'
+export function MockInterviewLobby({options,enabled,userId}:{options:MockOption[];enabled:boolean;userId:string}) {
+ const [format,setFormat]=useState<InterviewFormat>('mmi'),[mode,setMode]=useState<MockMode>('individual'),[selected,setSelected]=useState(''),[drafts,setDrafts]=useState<MockDraft[]>([])
+ const choices=options.filter(o=>o.format===format),selection=choices.find(o=>o.id===selected)??choices[0]
+ useEffect(()=>{let alive=true;void listDrafts(userId).then(value=>{if(alive)setDrafts(value)}).catch(()=>{});return()=>{alive=false}},[userId])
+ const full=mode==='full',mmi=format==='mmi',count=full?(mmi?8:10):1
+ const title=full?(mmi?'Eight-station MMI':'30-minute panel interview'):(mmi?'Individual MMI station':'Individual panel question')
+ return <main className="mx-auto max-w-5xl space-y-7 px-5 py-10 sm:px-8 sm:py-14">
+  <header><h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Mock Interviews</h1><p className="mt-4 max-w-2xl leading-7 text-muted">Choose an individual response or a full timed mock. Prompts are revealed only after you start the timed conditions.</p></header>
+  <MockInterviewTabs active="stations"/>
+  {drafts.length>0&&<section className="rounded-2xl border border-border bg-surface p-5"><h2 className="font-semibold">Recordings on this device</h2><p className="mt-1 text-sm text-muted">Recover completed responses from an interrupted mock. Reloading ends the timed session.</p><ul className="mt-3 space-y-2">{drafts.map(d=><li key={d.id}><Link className="text-sm font-semibold text-brand" href={`/interviews/mock-interviews/session?draft=${d.id}`}>{d.format==='mmi'?'MMI':'Panel'} · {new Date(d.startedAt).toLocaleDateString()} · {d.segments.filter(s=>!s.saved).length} unsaved responses →</Link></li>)}</ul></section>}
+  {!enabled&&<p role="status" className="rounded-2xl border border-border p-5">New mock recordings are currently unavailable. Saved recordings remain accessible.</p>}
+  <section data-interview-tour="mock-selection" className="space-y-6 rounded-3xl border border-border bg-surface p-6 sm:p-8">
+   <fieldset><legend className="mb-3 font-semibold">Interview format</legend><div className="flex flex-wrap gap-3">{(['mmi','panel'] as const).map(f=><button type="button" key={f} aria-pressed={format===f} onClick={()=>{setFormat(f);setSelected('')}} className={`rounded-full border px-5 py-3 text-sm font-semibold ${format===f?'border-brand bg-brand text-brand-foreground':'border-border'}`}>{f==='mmi'?'MMI':'Panel'}</button>)}</div></fieldset>
+   <fieldset><legend className="mb-3 font-semibold">Session length</legend><div className="grid gap-3 sm:grid-cols-2">{(['individual','full'] as const).map(m=><button type="button" key={m} aria-pressed={mode===m} onClick={()=>setMode(m)} className={`rounded-2xl border p-5 text-left ${mode===m?'border-brand bg-brand-muted':'border-border'}`}><span className="block font-semibold">{m==='individual'?(mmi?'One station':'One question'):(mmi?'Full MMI · 8 stations':'Full panel · 30 minutes')}</span><span className="mt-2 block text-sm text-muted">{m==='individual'?(mmi?'2 minutes to read, then 8 minutes to respond':'30 seconds to read, then 3 minutes to respond'):(mmi?'80 minutes · automatic station changes':'10 questions · 3 minutes each · automatic changes')}</span></button>)}</div></fieldset>
+   {!full&&<div><label className="mb-2 block font-semibold" htmlFor="mock-selection">{mmi?'Select a station':'Select a question by topic and number'}</label><select id="mock-selection" className="w-full rounded-xl border border-border bg-background px-4 py-3" value={selection?.id??''} onChange={e=>setSelected(e.target.value)}>{choices.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select><p className="mt-2 text-sm text-muted">The scenario and question wording stay hidden until the timed session starts.</p></div>}
+  </section>
+  <section className="rounded-3xl bg-ink p-6 text-ink-foreground sm:p-8"><h2 className="font-display text-3xl font-semibold">{title}</h2><p className="mt-4 max-w-2xl leading-7">{full?'A fresh selection runs in timed order. There are no untimed breaks or previews between responses.':'Check your camera and microphone first. Your selected prompt stays hidden during setup.'}</p><ul className="mt-5 space-y-2 text-sm"><li>Recordings stay on this device until you review and choose to save.</li><li>{count} separately recorded {count===1?'response':'responses'}. Saving and self-review are free; marking costs {full?'12 credits for the full mock':format==='mmi'?'2 credits per MMI station':'1 credit per panel response'}.</li><li>Keep this tab visible throughout. Leaving the tab ends the mock.</li></ul>{enabled&&selection&&<Link prefetch={false} className="mt-7 inline-flex rounded-full bg-surface px-6 py-3 font-semibold text-foreground" href={`/interviews/mock-interviews/session?format=${format}&mode=${mode}${full?'':`&selection=${encodeURIComponent(selection.id)}`}`}>Set up {full?'full mock':'recording'} →</Link>}</section>
+  <p className="text-sm leading-6 text-muted">These are the practice timings used here. Follow your university’s instructions for its interview format and timing.</p>
+ </main>
+}

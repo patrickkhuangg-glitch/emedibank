@@ -80,13 +80,17 @@ export default async function AccountPage({
 
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Essay marking credits</h2>
-          <div className="mt-3 flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
+          <div className="mt-3 flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
             <span className="text-sm text-muted">Used for GAMSAT Section II tutor marking (2 credits per essay).</span>
-            <span className="rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.essay_credits ?? 0} credits</span>
+            <span className="shrink-0 rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.essay_credits ?? 0} credits</span>
           </div>
-          <div className="mt-3 flex items-center justify-between gap-4 border-t border-border pt-3">
-            <span className="text-sm text-muted">Used for tutor-marked MMI stations.</span>
-            <span className="rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.mmi_credits ?? 0} MMI credits</span>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Interview marking credits</h2>
+          <div className="mt-3 flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <span className="text-sm text-muted">2 credits per MMI station, 1 per panel response, or 12 per full mock.</span>
+            <span className="shrink-0 rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold text-brand">{profile?.mmi_credits ?? 0} credits</span>
           </div>
         </section>
         </> : null}

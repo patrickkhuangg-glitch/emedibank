@@ -72,7 +72,7 @@ export function InterviewStudyNotes({ preview = false, onNoteCountChange }: { pr
   }
 
   return (
-    <section className="rounded-3xl border border-border bg-surface p-6 eb-soft">
+    <section data-interview-tour="study-notes" className="rounded-3xl border border-border bg-surface p-6 eb-soft">
       <div className="flex items-center justify-between gap-3"><h2 className="font-display text-xl font-semibold tracking-tight">Study notes</h2><NoteIcon /></div>
       <p className="mt-2 text-sm leading-6 text-muted">Keep short reminders for what to improve in your next response.</p>
       <label className="sr-only" htmlFor="interview-note">Your study note</label>

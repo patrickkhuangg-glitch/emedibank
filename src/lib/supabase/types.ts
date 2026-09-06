@@ -1,3 +1,4 @@
+import type { InterviewStory } from '@/lib/interviews/stories'
 // Database types for the exam-prep platform.
 //
 // Hand-maintained to mirror `supabase/migrations`. Once the Supabase project has
@@ -662,45 +663,12 @@ export type Database = {
           },
         ]
       }
-      interview_attempts: {
-        Row: {
-          id: string
-          user_id: string
-          format: 'mmi' | 'panel'
-          station_id: string
-          station_title: string
-          questions: unknown
-          duration_seconds: number
-          recording_path: string
-          recording_mime_type: string
-          transcript: string | null
-          transcription_status: TranscriptionStatus
-          transcription_model: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          format: 'mmi' | 'panel'
-          station_id: string
-          station_title: string
-          questions?: unknown
-          duration_seconds?: number
-          recording_path: string
-          recording_mime_type: string
-          transcript?: string | null
-          transcription_status?: TranscriptionStatus
-          transcription_model?: string | null
-          created_at?: string
-        }
-        Update: {
-          duration_seconds?: number
-          transcript?: string | null
-          transcription_status?: TranscriptionStatus
-          transcription_model?: string | null
-        }
-        Relationships: []
-      }
+      interview_practice_logs: TableShape<InterviewPracticeLog, 'id' | 'user_id' | 'station_id' | 'format' | 'source'>
+      interview_attempts: TableShape<InterviewAttemptRow, 'user_id' | 'format' | 'station_id' | 'station_title' | 'recording_path' | 'recording_mime_type'>
+      interview_markings: TableShape<InterviewMarkingRow, 'attempt_id'>
+      interview_processing_jobs: TableShape<InterviewJobRow, 'attempt_id' | 'job_type'>
+      interview_marking_events: TableShape<InterviewEventRow, 'attempt_id' | 'event_type'>
+      interview_stories: TableShape<InterviewStory, 'id' | 'user_id' | 'title' | 'theme' | 'context' | 'actions' | 'reflection'>
       interview_study_notes: {
         Row: {
           id: string
@@ -980,6 +948,27 @@ export type Database = {
     }
     Views: Record<never, never>
     Functions: {
+      authorize_signup: { Args: { p_email: string; p_token_hash: string }; Returns: undefined }
+      consume_interview_transcription: { Args: { p_user_id: string }; Returns: boolean }
+      defer_interview_transcription: { Args: { p_job_id: string; p_worker: string }; Returns: boolean }
+      list_interview_review_queue: { Args: { p_format: string; p_status: string; p_offset: number }; Returns: InterviewAttemptRow[] }
+
+      enqueue_interview_retention: { Args: { p_days: number }; Returns: number }
+      reserve_interview_deletion: { Args: { p_attempt_id: string; p_user_id: string }; Returns: boolean }
+
+      reserve_account_trial: { Args: { p_user_id: string }; Returns: string }
+      request_essay_marking: { Args: { p_response_id: string }; Returns: string }
+      submit_essay_response: { Args: { p_response_id: string; p_body: string; p_time_spent_seconds: number; p_plan: string | null }; Returns: string }
+      submit_mock_interview_for_marking: { Args: { p_session_id: string; p_expected_credits: number }; Returns: { status: string; charged?: number } }
+      submit_interview_for_marking: { Args: { p_attempt_id: string; p_expected_credits: number }; Returns: string }
+      refund_interview_marking: { Args: { p_attempt_id: string; p_actor_id: string; p_reason: string }; Returns: string }
+      claim_next_interview_job: { Args: { p_worker: string }; Returns: InterviewJobRow[] }
+      complete_interview_job: { Args: { p_job_id: string; p_worker: string; p_payload: unknown }; Returns: boolean }
+      fail_interview_job: { Args: { p_job_id: string; p_worker: string; p_code: string; p_delay: number }; Returns: boolean }
+      finalise_interview_upload: { Args: { p_attempt_id: string; p_user_id: string; p_duration: number; p_events: unknown; p_has_audio: boolean }; Returns: boolean }
+      review_interview_marking: { Args: { p_attempt_id: string; p_actor_id: string; p_version: number; p_action: string; p_feedback: unknown; p_notes: string; p_corrections: string; p_watched: boolean }; Returns: string }
+      retry_interview_job: { Args: { p_attempt_id: string; p_actor_id: string; p_job_type: string }; Returns: string }
+
       is_admin: {
         Args: { uid: string }
         Returns: boolean
@@ -1047,3 +1036,34 @@ export type StudyPlanItem = Database['public']['Tables']['study_plan_items']['Ro
 export type StudyPlanExamDate = Database['public']['Tables']['study_plan_exam_dates']['Row']
 export type StudyPlanTask = Database['public']['Tables']['study_plan_tasks']['Row']
 export type TutoringSession = Database['public']['Tables']['tutoring_sessions']['Row']
+
+export type InterviewUploadStatus = 'awaiting_upload' | 'uploading' | 'ready' | 'failed' | 'discarded'
+export type InterviewMarkingStatus = 'queued' | 'processing' | 'awaiting_review' | 'in_review' | 'released' | 'needs_attention' | 'ungradable'
+type TableShape<R, K extends keyof R> = { Row: R; Insert: Partial<R> & Pick<R,K>; Update: Partial<R>; Relationships: [] }
+export type InterviewAttemptRow = {
+ id: string; user_id: string; format: 'mmi' | 'panel'; station_id: string; station_title: string;
+ questions: unknown; duration_seconds: number; recording_path: string; recording_mime_type: string;
+ transcript: string | null; transcription_status: TranscriptionStatus; transcription_model: string | null; created_at: string;
+ media_kind: 'audio' | 'video'; transcription_audio_path: string | null; upload_status: InterviewUploadStatus;
+ station_snapshot: unknown; question_events: unknown; marking_status: InterviewMarkingStatus | null; credits_spent: number;
+ marking_preflight_at: string | null; submitted_for_marking_at: string | null; reviewed_at: string | null; released_at: string | null; approved_feedback: unknown; video_deleted_at: string | null;
+}
+export type InterviewMarkingRow = {
+ id: string; attempt_id: string; status: 'pending' | 'awaiting_review' | 'in_review' | 'released' | 'ungradable';
+ ai_assessment: unknown; evidence_audit: unknown; draft_feedback: unknown; private_reviewer_notes: string | null; transcript_correction_notes: string | null;
+ primary_provider: string | null; primary_model: string | null; audit_provider: string | null; audit_model: string | null; rubric_version: string | null;
+ assigned_to: string | null; marked_by: string | null; ai_generated_at: string | null; approved_at: string | null;
+ created_at: string; updated_at: string; lock_version: number;
+}
+export type InterviewJobRow = {
+ id: string; attempt_id: string; job_type: 'transcribe' | 'assess' | 'audit' | 'cleanup';
+ status: 'queued' | 'running' | 'succeeded' | 'failed' | 'dead'; attempt_count: number; max_attempts: number;
+ available_at: string; locked_at: string | null; locked_by: string | null; last_error_code: string | null; last_error_message: string | null;
+ created_at: string; updated_at: string;
+}
+export type InterviewEventRow = { id: string; attempt_id: string; actor_id: string | null; event_type: string; metadata: unknown; created_at: string }
+
+export type InterviewPracticeLog = {
+ id: string; user_id: string; station_id: string; format: 'mmi' | 'panel'; source: 'rehearsal' | 'recording'; attempt_id: string | null;
+ started_at: string; completed_at: string | null; duration_seconds: number; self_rating: number | null;
+}

@@ -1,20 +1,24 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
-import { requireAdmin } from '@/lib/auth/dal'
-
-export const metadata: Metadata = { title: 'Admin · Interview reviews' }
-
-export default async function AdminInterviewReviewsPage() {
-  await requireAdmin()
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-4xl">
-    <Link href="/admin" className="text-sm font-medium text-muted transition-colors hover:text-foreground">← Admin dashboard</Link>
-    <header className="mt-5 border-b border-border pb-8"><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Tutor review</p><h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Interview station reviews</h1><p className="mt-3 max-w-2xl text-muted">Student station submissions will appear here once the interview review workflow is live.</p></header>
-    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface"><div className="flex items-center justify-between border-b border-border px-5 py-4"><div><h2 className="font-semibold">Review queue</h2><p className="mt-0.5 text-xs text-muted">Oldest submissions will appear first</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 font-mono text-xs text-muted">0 waiting</span></div>
-      <div className="grid min-h-72 place-items-center px-6 py-12 text-center"><div className="max-w-sm"><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-muted text-brand"><QueueIcon /></span><h3 className="mt-5 font-display text-xl font-bold">No station submissions yet</h3><p className="mt-2 text-sm leading-6 text-muted">The queue will support student station submissions, tutor notes and approved feedback once the workflow is live.</p></div></div>
-    </section>
-    <section className="mt-5 grid gap-3 sm:grid-cols-3"><Stage number="1" label="Student submits"/><Stage number="2" label="Tutor reviews"/><Stage number="3" label="Feedback released"/></section>
-  </main></Container>
+import { interviewQueue } from '@/lib/interviews/marking-data'
+import { statusLabel } from '@/lib/interviews/video-validation'
+export const dynamic='force-dynamic'
+export const metadata={title:'Admin · Mock Interview reviews'}
+export default async function Page({searchParams}:{searchParams:Promise<{format?:string;status?:string;page?:string}>}){
+ const filters=await searchParams
+ const {items,jobs,error,sampledAt,oldestAt,counts,total,page}=await interviewQueue({...filters,page:Number(filters.page)||0})
+ const visible=items
+ return <main className="mx-auto max-w-6xl space-y-6 px-5 py-10"><Link href="/admin">← Admin dashboard</Link><h1 className="font-display text-4xl font-semibold">Mock Interview reviews</h1>
+ {error?<p role="alert">The queue is unavailable. Apply migration 0033 and check server configuration.</p>:<>
+ <div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric label="Submissions waiting" value={counts.waiting}/><Metric label="Jobs waiting" value={counts.queued}/><Metric label="Jobs retrying" value={counts.retrying}/><Metric label="Dead jobs" value={counts.dead}/></div><p className="text-sm text-muted">Oldest waiting: {Math.floor((sampledAt-oldestAt)/3600000)} hours · {counts.refunded} ungradable / refunded · {counts.ready} awaiting review. Oldest ready submissions appear first.</p>
+ <form className="flex flex-wrap items-end gap-3"><label>Format<select name="format" defaultValue={filters.format??''} className="ml-2 rounded-full border px-4 py-3"><option value="">All</option><option value="mmi">MMI</option><option value="panel">Panel</option></select></label><label>Status<select name="status" defaultValue={filters.status??''} className="ml-2 rounded-full border px-4 py-3"><option value="">Active submissions</option>{['queued','processing','awaiting_review','in_review','needs_attention','released','ungradable'].map(s=><option key={s} value={s}>{s.replaceAll('_',' ')}</option>)}</select></label><button className="rounded-full bg-brand px-5 py-3 text-brand-foreground">Filter</button></form>
+ <div className="space-y-4">{visible.map(({attempt:a,student,marking,jobs:attemptJobs})=><article key={a.id} className="rounded-2xl border border-border bg-surface p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm text-muted">{student} · {a.format.toUpperCase()} · {Math.floor(a.duration_seconds/60)}:{String(a.duration_seconds%60).padStart(2,'0')}</p><h2 className="mt-1 font-display text-xl font-semibold"><Link href={`/admin/interviews/${a.id}`}>{a.station_title} →</Link></h2></div><p className="text-sm">{statusLabel(a)}</p></div><p className="mt-2 text-sm text-muted">Submitted {new Date(a.submitted_for_marking_at??a.created_at).toLocaleString('en-AU')} · {Math.floor((sampledAt-Date.parse(a.submitted_for_marking_at??a.created_at))/3600000)}h in queue · Transcript: {a.transcription_status} · {marking?.draft_feedback?'Draft available':'No draft yet'}</p><QueueFlags assessment={marking?.ai_assessment} audit={marking?.evidence_audit}/>{attemptJobs.length>0&&<p className="mt-2 text-sm">Processing: {attemptJobs.map(j=>`${j.job_type} ${j.status} (${j.attempt_count} attempts)`).join(' · ')}</p>}</article>)}{!visible.length&&<p>No submissions match these filters.</p>}</div>
+ <nav aria-label="Queue pages" className="flex gap-4">{page>0&&<Link href={`?${new URLSearchParams({format:filters.format??'',status:filters.status??'',page:String(page-1)})}`}>Previous page</Link>}{(page+1)*100<total&&<Link href={`?${new URLSearchParams({format:filters.format??'',status:filters.status??'',page:String(page+1)})}`}>Next page</Link>}</nav>
+ <details className="rounded-2xl border p-4"><summary>Processing operations, including self-review transcripts</summary><p className="mt-2 text-sm text-muted">Counts above cover all jobs. This list shows up to 1,000 outstanding jobs; use the runbook to recover a cleanup job. Cancelled AI jobs after human review are also recorded as dead.</p><ul className="mt-3 space-y-2 text-sm">{jobs.filter(j=>j.status==='dead'||j.status==='failed').map((j,i)=><li key={i}><span className="font-mono">{j.attempt_id}</span> · {j.job_type} · {j.status} · attempt {j.attempt_count}</li>)}</ul></details>
+ </>}
+ </main>
 }
-function Stage({ number, label }: { number: string; label: string }) { return <div className="rounded-xl bg-surface-muted px-4 py-3"><span className="font-mono text-xs text-brand">0{number}</span><p className="mt-1 text-sm font-semibold">{label}</p></div> }
-function QueueIcon() { return <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg> }
+function Metric({label,value}:{label:string;value:number}){return <div className="rounded-2xl bg-surface p-4"><p className="font-mono text-2xl">{value}</p><p className="text-sm text-muted">{label}</p></div>}
+function QueueFlags({assessment,audit}:{assessment:unknown;audit:unknown}){
+ const a=assessment as {flags?:string[];observations?:Array<{confidence:string}>}|null,u=audit as {requires_human_attention?:boolean;warnings?:Array<{category:string}>}|null
+ return <p className="mt-2 text-sm">{a?.observations?.some(o=>o.confidence==='low')?'Low-confidence evidence · ':''}{a?.flags?.join(' · ')}{u?.requires_human_attention?' · Audit requires human attention':''}{u?.warnings?.map(w=>` · ${w.category.replaceAll('_',' ')}`)}</p>
+}

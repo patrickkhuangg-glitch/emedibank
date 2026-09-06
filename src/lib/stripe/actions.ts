@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { paymentsAvailable } from '@/lib/security/payments'
 import { getStripe } from './client'
 import { getOrCreateCustomerId } from './customer'
 import { CURRENCIES, TRIAL_PERIOD_DAYS, type Currency, type Interval } from './pricing'
@@ -10,6 +11,7 @@ import { getOrigin } from '@/lib/site'
 
 /** Start a subscription checkout for a product + interval. Redirects to Stripe. */
 export async function startCheckoutAction(formData: FormData) {
+  if (!paymentsAvailable()) redirect('/pricing?error=payments_unavailable')
   const user = await getUser()
   if (!user) redirect('/login?redirectTo=/pricing')
 

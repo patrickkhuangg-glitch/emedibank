@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import Link from 'next/link'
@@ -45,13 +45,14 @@ export function Runner({
   const q = cache[id]
   const answered = answers[id]
 
-  const ensure = useCallback(async (qid: string) => {
-    if (qid in cache) return
-    const r = await fetchQuestionAction(qid)
-    setCache((c) => ({ ...c, [qid]: r.locked ? null : r.question }))
-  }, [cache])
-
-  useEffect(() => { ensure(id) }, [id, ensure])
+  useEffect(() => {
+    if (!id || id in cache) return
+    let active = true
+    fetchQuestionAction(id).then((r) => {
+      if (active) setCache((c) => ({ ...c, [id]: r.locked ? null : r.question }))
+    })
+    return () => { active = false }
+  }, [id, cache])
 
   async function explain() {
     if (answered) return
