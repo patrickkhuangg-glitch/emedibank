@@ -22,3 +22,8 @@ export function reviewHref(query:Record<string,string|undefined>,changes:Record<
  for(const [key,value] of Object.entries({...query,...changes}))if(value)params.set(key,value)
  return `/interviews/mock-interviews/review${params.size?'?'+params:''}`
 }
+
+// Match the practice calendar regardless of the hosting server's local time zone.
+export function formatRecordingDate(date:string){
+ return new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Sydney',day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(date))
+}

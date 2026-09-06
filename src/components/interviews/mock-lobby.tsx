@@ -2,10 +2,11 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { MockInterviewTabs } from './mock-tabs'
+import { InterviewLibraryRefresh } from './library-refresh'
 import { listDrafts, type MockDraft } from '@/lib/interviews/mock-local'
 import type { MockMode, MockOption } from '@/lib/interviews/mock-types'
 import type { InterviewFormat } from '@/lib/interviews/stations'
-export function MockInterviewLobby({options,enabled,userId}:{options:MockOption[];enabled:boolean;userId:string}) {
+export function MockInterviewLobby({options,enabled,userId,credits}:{options:MockOption[];enabled:boolean;userId:string;credits:number|null}) {
  const [format,setFormat]=useState<InterviewFormat>('mmi'),[mode,setMode]=useState<MockMode>('individual'),[selected,setSelected]=useState(''),[drafts,setDrafts]=useState<MockDraft[]>([])
  const choices=options.filter(o=>o.format===format),selection=choices.find(o=>o.id===selected)??choices[0]
  useEffect(()=>{let alive=true;void listDrafts(userId).then(value=>{if(alive)setDrafts(value)}).catch(()=>{});return()=>{alive=false}},[userId])
@@ -14,6 +15,14 @@ export function MockInterviewLobby({options,enabled,userId}:{options:MockOption[
  return <main className="mx-auto max-w-5xl space-y-7 px-5 py-10 sm:px-8 sm:py-14">
   <header><h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Mock Interviews</h1><p className="mt-4 max-w-2xl leading-7 text-muted">Choose an individual response or a full timed mock. Prompts are revealed only after you start the timed conditions.</p></header>
   <MockInterviewTabs active="stations"/>
+  <section aria-labelledby="mock-credit-heading">
+   <h2 id="mock-credit-heading" className="text-sm font-semibold uppercase tracking-wide text-muted">Interview marking credits</h2>
+   <div className="mt-3 flex flex-col gap-3 rounded-lg border border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <p className="text-sm text-muted">2 credits per MMI station, 1 per panel response, or 12 per full mock.</p>
+    <span role="status" className="w-fit shrink-0 rounded-full bg-brand-muted px-3 py-1 text-sm font-semibold tabular-nums text-brand">{credits===null?'Balance unavailable':`${credits} credits available`}</span>
+   </div>
+   <InterviewLibraryRefresh message="Updating your marking credits…"/>
+  </section>
   {drafts.length>0&&<section className="rounded-2xl border border-border bg-surface p-5"><h2 className="font-semibold">Recordings on this device</h2><p className="mt-1 text-sm text-muted">Recover completed responses from an interrupted mock. Reloading ends the timed session.</p><ul className="mt-3 space-y-2">{drafts.map(d=><li key={d.id}><Link className="text-sm font-semibold text-brand" href={`/interviews/mock-interviews/session?draft=${d.id}`}>{d.format==='mmi'?'MMI':'Panel'} · {new Date(d.startedAt).toLocaleDateString()} · {d.segments.filter(s=>!s.saved).length} unsaved responses →</Link></li>)}</ul></section>}
   {!enabled&&<p role="status" className="rounded-2xl border border-border p-5">New mock recordings are currently unavailable. Saved recordings remain accessible.</p>}
   <section data-interview-tour="mock-selection" className="space-y-6 rounded-3xl border border-border bg-surface p-6 sm:p-8">

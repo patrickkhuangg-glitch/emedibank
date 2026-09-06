@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {reviewLibrary,reviewHref,type ReviewResponse} from '../src/lib/interviews/review-library'
+import {formatRecordingDate,reviewLibrary,reviewHref,type ReviewResponse} from '../src/lib/interviews/review-library'
 import {fullMockMarkingCredits,stationMarkingCredits} from '../src/lib/interviews/mock-marking'
 const fixture:ReviewResponse[]=Array.from({length:50},(_,i)=>({id:String(i),format:i%2?'mmi':'panel',title:`Response ${i}`,createdAt:new Date(Date.UTC(2026,8,1,0,i)).toISOString(),duration:60,mock:null,status:i%3?'saved':'feedback',eligible:i%3!==0}))
 test('50 responses stay in bounded pages; filters, search and return links preserve context',()=>{
@@ -34,4 +34,9 @@ test('the 50-response library renders ten rows and no players; opening a respons
  const list=render(null);assert.equal((list.match(/<li /g)??[]).length,10);assert.equal((list.match(/<(video|audio)\b/g)??[]).length,0)
  const detail=render({id:'49',format:'mmi',stationId:'fixture',stationTitle:'Fixture',questions:[],durationSeconds:60,createdAt:fixture[49].createdAt,audioUrl:'https://example.invalid/private-video',transcript:null,transcriptionStatus:'not_requested',kind:'video',events:[],markingLabel:'Saved',expired:false,eligible:true,feedback:null})
  assert.equal((detail.match(/<video\b/g)??[]).length,1);assert.match(detail,/Submit for marking · 2 credits/)
+})
+
+test('recording dates match the Sydney calendar across midnight and daylight saving',()=>{
+ assert.equal(formatRecordingDate('2026-09-05T14:30:00Z'),'6 Sept 2026, 12:30 am')
+ assert.equal(formatRecordingDate('2026-12-05T13:30:00Z'),'6 Dec 2026, 12:30 am')
 })

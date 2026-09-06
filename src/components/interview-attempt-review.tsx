@@ -3,7 +3,7 @@ import { InterviewSelfRating } from '@/components/interviews/self-rating'
 import { InterviewLibraryRefresh } from '@/components/interviews/library-refresh'
 import { MockMarkingActions } from '@/components/interviews/mock-marking-actions'
 import { MARKING_DESCRIPTION,stationMarkingCredits,type MockMembership } from '@/lib/interviews/mock-marking'
-import { reviewHref,type reviewLibrary,type ReviewEntry } from '@/lib/interviews/review-library'
+import { formatRecordingDate,reviewHref,type reviewLibrary,type ReviewEntry } from '@/lib/interviews/review-library'
 import { InterviewMediaPlayer } from '@/components/interviews/media-player'
 import { InterviewFeedback } from '@/components/interviews/feedback-view'
 import { InterviewStudentActions } from '@/components/interviews/student-actions'
@@ -52,7 +52,7 @@ export function InterviewAttemptReview({library,query,selected,selectedEntry,res
    <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
     <article className="min-w-0 rounded-2xl bg-surface p-5 sm:p-7">
      <h3 className="font-display text-2xl font-semibold">{selected.stationTitle}</h3>
-     <p className="mt-2 text-sm text-muted">{selected.format==='mmi'?'MMI station':'Panel response'} · {formatAttemptDate(selected.createdAt)} · {formatDuration(selected.durationSeconds)}</p>
+     <p className="mt-2 text-sm text-muted">{selected.format==='mmi'?'MMI station':'Panel response'} · {formatRecordingDate(selected.createdAt)} · {formatDuration(selected.durationSeconds)}</p>
      <p role="status" className="mt-3 text-sm font-semibold">{selected.markingLabel}</p>
      {selected.feedback&&<details open className="mt-5"><summary className="cursor-pointer py-2 font-semibold">Your feedback report</summary><InterviewFeedback feedback={selected.feedback}/></details>}
      {selected.expired?<p className="mt-5 text-sm text-muted">This recording has expired. Available transcripts and feedback are kept below.</p>:<InterviewMediaPlayer key={selected.id} attemptId={selected.id} url={selected.audioUrl} kind={selected.kind} events={selected.events}/>}
@@ -83,7 +83,7 @@ export function InterviewAttemptReview({library,query,selected,selectedEntry,res
       const feedback=entry.responses.filter(r=>r.status==='feedback').length,pending=entry.responses.filter(r=>r.status==='pending').length,ready=entry.responses.filter(r=>r.eligible).length
       const target=entry.responses.find(r=>query.status?r.status===query.status:feedback?r.status==='feedback':r.eligible)??entry.responses[0]
       return <li key={entry.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-       <div className="min-w-0"><Link prefetch={false} href={reviewHref(query,{attempt:target.id})} className="font-semibold hover:text-brand hover:underline">{entry.title}</Link><p className="mt-1 text-sm text-muted">{formatAttemptDate(entry.createdAt)} · {entry.full?`${entry.responses.length} of ${entry.format==='mmi'?8:10} responses`:entry.format==='mmi'?'MMI station':'Panel response'}</p><p className="mt-2 text-xs font-semibold text-muted">{[feedback?`${feedback} feedback ready`:null,pending?`${pending} in marking`:null,ready?entry.full?`${ready} ready to submit`:'Ready to submit':null,!feedback&&!pending&&!ready?'Recording unavailable':null].filter(Boolean).join(' · ')}</p></div>
+       <div className="min-w-0"><Link prefetch={false} href={reviewHref(query,{attempt:target.id})} className="font-semibold hover:text-brand hover:underline">{entry.title}</Link><p className="mt-1 text-sm text-muted">{formatRecordingDate(entry.createdAt)} · {entry.full?`${entry.responses.length} of ${entry.format==='mmi'?8:10} responses`:entry.format==='mmi'?'MMI station':'Panel response'}</p><p className="mt-2 text-xs font-semibold text-muted">{[feedback?`${feedback} feedback ready`:null,pending?`${pending} in marking`:null,ready?entry.full?`${ready} ready to submit`:'Ready to submit':null,!feedback&&!pending&&!ready?'Recording unavailable':null].filter(Boolean).join(' · ')}</p></div>
        <Link prefetch={false} href={reviewHref(query,{attempt:target.id})} className={`${control} shrink-0 text-center font-semibold ${ready?'border-brand text-brand hover:bg-brand-muted':'hover:bg-surface-muted'}`}>{feedback?'View feedback':ready?'Review & submit':'View recording'}</Link>
       </li>
      })}</ul>}
@@ -106,10 +106,6 @@ function ExaminerGuide({ guide }: { guide: ExaminerFeedbackGuide }) {
       </div>
     </section>
   )
-}
-
-function formatAttemptDate(date: string) {
-  return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(date))
 }
 
 function formatDuration(totalSeconds: number) {

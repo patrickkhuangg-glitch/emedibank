@@ -76,7 +76,13 @@ test('lobby metadata and setup HTML contain no scenario or question wording',()=
  const {MockInterviewLobby}=require('../src/components/interviews/mock-lobby')
  const {MockSessionRunner}=require('../src/components/interviews/mock-session-runner')
  const metadata=JSON.stringify(mockOptions())
- const html=renderToStaticMarkup(React.createElement(MockInterviewLobby,{options:mockOptions(),enabled:true,userId:'student'}))+
+ const {AppRouterContext}=require('next/dist/shared/lib/app-router-context.shared-runtime')
+ const renderLobby=(credits:number|null)=>renderToStaticMarkup(React.createElement(AppRouterContext.Provider,{value:{refresh:()=>{}}},React.createElement(MockInterviewLobby,{options:mockOptions(),enabled:true,userId:'student',credits})))
+ assert.match(renderLobby(20),/20 credits available/)
+ assert.match(renderLobby(0),/0 credits available/)
+ assert.match(renderLobby(null),/Balance unavailable/)
+ assert.ok(!renderLobby(null).includes('0 credits available'))
+ const html=renderLobby(20)+
  renderToStaticMarkup(React.createElement(MockSessionRunner,{selection:{format:'mmi',mode:'full'},enabled:true,userId:'student'}))
  for(const station of INTERVIEW_STATIONS)for(const prompt of [station.preparation,...station.questions]){
   assert.ok(!metadata.includes(prompt))
