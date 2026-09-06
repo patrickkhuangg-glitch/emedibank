@@ -41,7 +41,9 @@ export function ProgressHero() {
       </div>
       <div className={styles.cytoPerch} aria-hidden="true">
         <span className={styles.cytoGlow} />
-        <Cyto mood="happy" size={176} />
+        <div className={styles.cytoMotion} key={screen.id}>
+          <Cyto mood="happy" size={176} className={styles.cytoWatching} />
+        </div>
       </div>
     </section>
   )
