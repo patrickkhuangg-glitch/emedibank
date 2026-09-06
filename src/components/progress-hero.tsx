@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type CSSProperties } from 'react'
+import { Cyto } from '@/components/ui/cyto'
 import styles from './progress-hero.module.css'
 
 const SECTIONS = [
@@ -32,9 +33,15 @@ export function ProgressHero() {
   }, [])
 
   return (
-    <section className={styles.carousel} aria-label="Studocyte product tour">
-      <div className={styles.screenViewport} aria-live="off">
-        <div className={styles.screen} key={screen.id} aria-label={screen.title}><Screen /></div>
+    <section className={styles.stage} aria-label="Studocyte product tour">
+      <div className={styles.carousel}>
+        <div className={styles.screenViewport} aria-live="off">
+          <div className={styles.screen} key={screen.id} aria-label={screen.title}><Screen /></div>
+        </div>
+      </div>
+      <div className={styles.cytoPerch} aria-hidden="true">
+        <span className={styles.cytoGlow} />
+        <Cyto mood="happy" size={176} />
       </div>
     </section>
   )
