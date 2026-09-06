@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { Container } from '@/components/container'
 import { practiceProgressPreview } from '@/lib/interviews/practice-progress-preview'
 import { InterviewPracticeProgress } from '@/components/interviews/practice-progress'
 import { InterviewLibraryRefresh } from '@/components/interviews/library-refresh'
@@ -17,7 +18,7 @@ export function InterviewsDashboard({ embedded = false, preview = false, progres
 
   return <main className="relative z-[2] min-h-screen bg-background pb-16 text-foreground">
     {!embedded ? <PreviewHeader preview={preview} /> : null}
-    <div className="mx-auto max-w-[1440px] px-5 pt-9 sm:px-8 sm:pt-12">
+    <Container className="pt-9 sm:pt-12">
       <section data-interview-tour="dashboard-start" className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div>
           <h1 className="text-balance font-display text-4xl font-semibold leading-[1.03] tracking-tight sm:text-6xl">Your interview dashboard.</h1>
@@ -35,13 +36,13 @@ export function InterviewsDashboard({ embedded = false, preview = false, progres
       {embedded && <InterviewLibraryRefresh message="Updating your practice history…" />}
 
       <section className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><PathCard href="/interviews/practice" title="Practice" body="Rehearse MMI and panel prompts in a focused response loop." icon={<PracticeIcon />} /><PathCard href="/interviews/mock-interviews" title="Mock Interviews" body="Record a timed interview, review your video, and request marking feedback." icon={<VideoIcon />} /><PathCard href="/interviews/stories" title="Stories" body="Find real experiences that show reflection, not a script." icon={<StoryIcon />} /><PathCard href="/interviews/resources" title="Resources" body="Keep answer frameworks and interview-day preparation close." icon={<GuideIcon />} /></section>
-    </div>
+    </Container>
   </main>
 }
 
 export default function InterviewPreviewPage() { return <InterviewsDashboard preview /> }
 
-function PreviewHeader({ preview }: { preview: boolean }) { return <header className="border-b border-border bg-surface/80 backdrop-blur"><div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-8"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-sm font-bold text-white">S</span><span className="font-display text-xl font-semibold tracking-tight">Studocyte</span><span className="hidden h-5 w-px bg-border sm:block" /><span className="hidden text-sm font-medium text-muted sm:block">Interviews</span></div><nav aria-label="Preview navigation" className="hidden items-center gap-1 rounded-full bg-surface-muted p-1 md:flex"><NavItem active href="/prototypes/interviews" label="Overview" /><NavItem href="/interviews/practice" label="Practice" /><NavItem href="/interviews/mock-interviews" label="Mock Interviews" /><NavItem href="/interviews/stories" label="Stories" /><NavItem href="/interviews/resources" label="Resources" /></nav>{preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}</div></header> }
+function PreviewHeader({ preview }: { preview: boolean }) { return <header className="border-b border-border bg-surface/80 backdrop-blur"><Container className="flex h-16 items-center justify-between gap-5"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-sm font-bold text-white">S</span><span className="font-display text-xl font-semibold tracking-tight">Studocyte</span><span className="hidden h-5 w-px bg-border sm:block" /><span className="hidden text-sm font-medium text-muted sm:block">Interviews</span></div><nav aria-label="Preview navigation" className="hidden items-center gap-1 rounded-full bg-surface-muted p-1 md:flex"><NavItem active href="/prototypes/interviews" label="Overview" /><NavItem href="/interviews/practice" label="Practice" /><NavItem href="/interviews/mock-interviews" label="Mock Interviews" /><NavItem href="/interviews/stories" label="Stories" /><NavItem href="/interviews/resources" label="Resources" /></nav>{preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}</Container></header> }
 function ReadinessPanel({ suggestions, available }: { suggestions: PracticeProgressData['suggestions']; available: boolean }) {
   return <aside className="rounded-3xl border border-border bg-surface p-6 eb-soft"><h2 className="font-display text-xl font-semibold tracking-tight">What to practise next</h2><p className="mt-2 text-sm leading-6 text-muted">A balanced next step from your past 28 days of practice and self-ratings.</p>{available ? <ol className="mt-5 divide-y divide-border">{suggestions.map(suggestion => <li key={suggestion.theme} className="py-4"><Link href={suggestion.href} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand">Practise {suggestion.theme.toLowerCase()} <ArrowIcon /></Link><p className="mt-1 text-sm leading-6 text-muted">{suggestion.reason}</p></li>)}</ol> : <p className="mt-6 text-sm leading-6 text-muted">Suggestions will return when your practice history is available.</p>}<p className="mt-4 border-t border-border pt-4 text-xs leading-5 text-muted">Suggestions balance less-practised themes with lower self-ratings. They are a practice guide, not an assessment of exam readiness.</p></aside>
 }
