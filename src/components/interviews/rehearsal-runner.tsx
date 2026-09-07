@@ -3,6 +3,10 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { InterviewSelfRating } from './self-rating'
+import { usePracticeAudio } from './use-practice-audio'
+import { InterviewTranscript } from '@/components/interview-transcript'
+import { InterviewStudyNotes } from '@/components/interview-study-notes'
+import type { QuestionEvent } from '@/lib/interviews/media-validation'
 import type { InterviewStation } from '@/lib/interviews/stations'
 import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
 
@@ -10,6 +14,11 @@ type Phase = 'ready' | 'preparation' | 'response' | 'complete'
 const button = 'rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground'
 
 export function InterviewRehearsalRunner({ station }: { station: InterviewStation }) {
+  const audio = usePracticeAudio(station)
+  const { finish: finishAudio, start: startAudio } = audio
+  const [recordAudio, setRecordAudio] = useState(false)
+  const events = useRef<QuestionEvent[]>([{question_index:0,offset_seconds:0}])
+  const finishing = useRef(false)
   const timing = getInterviewTiming(station.format)
   const questions = getInterviewQuestions(station)
   const [phase, setPhase] = useState<Phase>('ready')
@@ -21,11 +30,17 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
   const duration = useRef(0)
   const [completedDuration, setCompletedDuration] = useState(0)
 
-  async function begin(untracked = false) {
+  async function begin(record = false, untracked = false) {
     if (starting.current) return
+    if (recordAudio && audio.url && !audio.savedId && !window.confirm('Start again and discard this unsaved audio? Download or save it first if you want to keep it.')) return
     starting.current = true; setPending(true); setTrackingError('')
     try {
-      if (!untracked) {
+      if (!await audio.reset()) return
+      setRecordAudio(record); finishing.current = false
+      if (record) {
+        activityId.current = null
+        if (!await audio.prepare()) return
+      } else if (!untracked) {
         startId.current ??= crypto.randomUUID()
         const response = await fetch('/api/interviews/practice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: startId.current, stationId: station.id }) })
         const data = await response.json()
@@ -34,15 +49,18 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
       } else activityId.current = null
       startId.current = null
       start()
-    } catch { setTrackingError('Practice tracking could not start. Try again, or practise without saving progress.') }
+    } catch (error) { setTrackingError(record && error instanceof Error ? error.message : 'Practice tracking could not start. Try again, or practise without saving progress.') }
     finally { starting.current = false; setPending(false) }
   }
 
   const finish = useCallback(() => {
+    if (finishing.current) return
+    finishing.current = true
+    if (recordAudio) void finishAudio()
     duration.current = responseStarted.current ? Math.min(timing.responseSeconds, Math.max(0, Math.floor((performance.now() - responseStarted.current) / 1000))) : 0
     setCompletedDuration(duration.current)
     setPhase('complete')
-  }, [timing.responseSeconds])
+  }, [timing.responseSeconds, recordAudio, finishAudio])
 
   const saveCompletion = useCallback(async () => {
     if (!activityId.current || duration.current < 1 || saving.current) return
@@ -59,6 +77,7 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
 
   function start() {
     setCompletedDuration(0); setSavedId(null); setSaveState('idle'); responseStarted.current = 0; duration.current = 0
+    events.current = [{question_index:0,offset_seconds:0}]
     setQuestion(0)
     setSeconds(timing.preparationSeconds)
     deadline.current = performance.now() + timing.preparationSeconds * 1000
@@ -67,8 +86,11 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
 
   const nextQuestion = useCallback(() => {
     if (question === questions.length - 1) finish()
-    else setQuestion((current) => current + 1)
-  }, [question, questions.length, finish])
+    else {
+      events.current.push({question_index:question+1,offset_seconds:Math.min(timing.responseSeconds,Math.max(0,(performance.now()-responseStarted.current)/1000))})
+      setQuestion((current) => current + 1)
+    }
+  }, [question, questions.length, finish, timing.responseSeconds])
 
   useEffect(() => {
     if (phase !== 'preparation' && phase !== 'response') return
@@ -84,11 +106,12 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
         deadline.current += timing.responseSeconds * 1000
         setSeconds(Math.max(0, Math.ceil((deadline.current - now) / 1000)))
         if (now >= deadline.current) finish()
+        else if (recordAudio && !startAudio()) finish()
         else setPhase('response')
       } else finish()
     }, 200)
     return () => clearInterval(timer)
-  }, [phase, timing.responseSeconds, finish])
+  }, [phase, timing.responseSeconds, finish, recordAudio, startAudio])
 
   useEffect(() => {
     function key(event: KeyboardEvent) {
@@ -101,17 +124,31 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
     return () => window.removeEventListener('keydown', key)
   }, [phase, nextQuestion])
 
+
+  useEffect(() => {
+    const active = recordAudio && (phase === 'preparation' || phase === 'response')
+    const unsaved = recordAudio && (audio.stopping || !!audio.url) && !audio.savedId
+    function leaving(event: BeforeUnloadEvent) { if (active || unsaved) { event.preventDefault(); event.returnValue = '' } }
+    function navigate(event: MouseEvent) {
+      if (!(event.target instanceof Element) || !event.target.closest('a[href]:not([download])')) return
+      if ((active || unsaved) && !window.confirm('Leave practice? Unsaved audio will be lost. Save or download it first to keep it.')) { event.preventDefault(); event.stopImmediatePropagation() }
+    }
+    function hidden() { if (active && document.visibilityState === 'hidden') finish() }
+    window.addEventListener('beforeunload', leaving); document.addEventListener('click', navigate, true); document.addEventListener('visibilitychange', hidden)
+    return () => { window.removeEventListener('beforeunload', leaving); document.removeEventListener('click', navigate, true); document.removeEventListener('visibilitychange', hidden) }
+  }, [recordAudio, phase, audio.url, audio.savedId, audio.stopping, finish])
+
   return <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:px-8">
     <section className="mx-auto max-w-4xl space-y-6">
       <p className="text-sm font-semibold text-brand">Practice · {station.format === 'mmi' ? 'MMI station' : 'Panel interview'}</p>
       <h1 className="font-display text-3xl font-semibold sm:text-5xl">{station.title}</h1>
       {phase === 'ready' && <>
-        <p className="max-w-2xl leading-7 text-muted">Rehearse your answer out loud. You have {timing.preparationLabel} followed by {timing.responseLabel}. Your completed practice is saved to your activity calendar. No audio or video is recorded, and no marking credits are used.</p>
-        <button disabled={pending} className={button} onClick={() => begin()}>{pending ? 'Starting…' : 'Begin preparation'}</button>
+        <p className="max-w-2xl leading-7 text-muted">Rehearse your answer out loud. You have {timing.preparationLabel} followed by {timing.responseLabel}. Record your response with your microphone, listen back and save a private transcript. Recording begins after preparation. You can also practise without recording. No marking credits are used.</p>
+        <div className="flex flex-wrap gap-3"><button disabled={pending} className={button} onClick={() => begin(true)}>{pending ? 'Starting…' : 'Record audio & begin preparation'}</button><button disabled={pending} className="rounded-full border border-border px-5 py-3 text-sm font-semibold" onClick={() => begin(false)}>Practise without recording</button></div><p className="text-sm text-muted">Microphone only. Keep this tab visible while recording. Saving uses the existing allowance of 10 responses per rolling 24 hours.</p>
       </>}
       {(phase === 'preparation' || phase === 'response') && <>
         <div className="flex flex-wrap justify-between gap-3">
-          <p role="status">{phase === 'preparation' ? 'Preparation' : 'Response — practise out loud'}</p>
+          <p role="status">{phase === 'preparation' ? 'Preparation' : recordAudio ? '● Recording audio' : 'Response — practise out loud'}</p>
           <p className="font-mono text-3xl tabular-nums" aria-label={`${seconds} seconds remaining`}>{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</p>
         </div>
         <div className="rounded-3xl bg-surface p-6 sm:p-10">
@@ -126,16 +163,26 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
       </>}
       {phase === 'complete' && <div className="space-y-5 rounded-3xl bg-surface p-6 sm:p-10">
         <h2 role="status" className="font-display text-2xl font-semibold">{completedDuration > 0 ? 'Practice complete' : 'Practice ended'}</h2>
-        <p className="leading-7 text-muted">Think about one point you explained clearly and one thing to improve. You can try again, or record a mock interview to watch your response and request marking.</p>
-        <p role="status" className="text-sm text-muted">{saveState === 'saving' ? 'Saving to your practice calendar…' : saveState === 'saved' ? 'Saved to your practice calendar.' : saveState === 'failed' ? 'Your practice could not be saved. Keep this page open and retry.' : completedDuration < 1 ? 'Preparation-only sessions do not count as completed practice.' : 'This practice was not tracked.'}</p>
+        <p className="leading-7 text-muted">Think about one point you explained clearly and one thing to improve. Listen back if you recorded, review your transcript and save a study note for next time.</p>
+        {!recordAudio && <p role="status" className="text-sm text-muted">{saveState === 'saving' ? 'Saving to your practice calendar…' : saveState === 'saved' ? 'Saved to your practice calendar.' : saveState === 'failed' ? 'Your practice could not be saved. Keep this page open and retry.' : completedDuration < 1 ? 'Preparation-only sessions do not count as completed practice.' : 'This practice was not tracked.'}</p>}
         {saveState === 'failed' && <button className={button} onClick={saveCompletion}>Retry saving practice</button>}
+        {recordAudio && <>
+          {audio.stopping && <p role="status">Preparing audio preview…</p>}
+          {audio.url && <><audio src={audio.url} controls className="w-full" aria-label="Your practice recording" /><div className="flex flex-wrap items-center gap-3">{!audio.savedId && <button disabled={audio.saving || completedDuration < 1} className={button} onClick={() => audio.save(completedDuration, events.current)}>Save audio &amp; transcribe</button>}<a href={audio.url} download={`practice.${audio.extension}`} className="text-sm font-semibold text-brand underline">Download audio</a></div></>}
+          {audio.saving && <div role="status"><p>Saving audio · {audio.progress}%</p><progress max={100} value={audio.progress} aria-label="Audio upload" /><button className="ml-4 underline" onClick={audio.pause}>Pause saving</button></div>}
+          {!audio.savedId && audio.url && <p className="text-sm text-muted">Keep this tab open until saving finishes. You can retry an interrupted upload. Closing or reloading this page loses unsaved audio.</p>}
+          {audio.savedId && <><p role="status">Audio saved privately and added to your practice calendar.</p><InterviewTranscript key={audio.savedId} attemptId={audio.savedId} initialStatus="processing" initialTranscript={null} /><InterviewSelfRating key={audio.savedId} activityId={audio.savedId} /><Link href={`/interviews/practice/recordings?attempt=${audio.savedId}`} className="text-sm font-semibold text-brand">Open saved audio and transcript →</Link></>}
+        </>}
         {savedId && <InterviewSelfRating key={savedId} activityId={savedId} />}
         <div className="flex flex-wrap gap-3">
-          <button disabled={pending || saveState === 'saving'} className={button} onClick={() => begin()}>{pending ? 'Starting…' : 'Practise again'}</button>
+          <button disabled={pending || saveState === 'saving' || audio.saving || audio.stopping} className={button} onClick={() => begin(recordAudio)}>{pending ? 'Starting…' : 'Practise again'}</button>
           <Link className="rounded-full border border-border px-5 py-3 text-sm font-semibold" href={`/interviews/mock-interviews/session?format=${station.format}&station=${encodeURIComponent(station.id)}`}>Record a mock interview</Link>
         </div>
       </div>}
-      {trackingError && <div role="status" className="space-y-2 text-sm"><p>{trackingError}</p><button disabled={pending} onClick={() => begin(true)} className="min-h-11 underline underline-offset-4">Practise without saving progress</button></div>}
+      {audio.error && <p role="alert" className="text-sm text-red-700">{audio.error}</p>}
+      {phase === 'complete' && <InterviewStudyNotes />}
+      {trackingError && <div role="status" className="space-y-2 text-sm"><p>{trackingError}</p><button disabled={pending} onClick={() => begin(false, true)} className="min-h-11 underline underline-offset-4">Practise without recording or saving progress</button></div>}
+      <p><Link href="/interviews/practice/recordings" className="text-sm font-semibold text-brand">Recordings &amp; transcripts</Link></p>
       <p><Link href="/interviews" className="text-sm font-semibold text-brand">View practice calendar</Link></p>
       <p><Link href="/interviews/practice" className="text-sm font-semibold">Back to practice stations</Link></p>
     </section>

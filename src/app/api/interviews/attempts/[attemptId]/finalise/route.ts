@@ -8,11 +8,12 @@ export async function POST(request:Request,{params}:{params:Promise<{attemptId:s
  const duration=validateDuration(body.durationSeconds,attempt.format)
  const events=validateQuestionEvents(body.questionEvents,Array.isArray(attempt.questions)?attempt.questions.length:0,duration)
  const bucket=db.storage.from('interview-recordings')
+ const kind=attempt.media_kind==='audio'?'audio':'video'
  const {data:video,error}=await bucket.info(attempt.recording_path)
- if(error||!video)throw new InterviewApiError('Video upload is not complete. Resume saving before finalising.',409)
- validateMedia((video.contentType ?? ''),(video.size ?? 0),'video')
- if(baseMime((video.contentType ?? ''))!==attempt.recording_mime_type)throw new InterviewApiError('Video format does not match this attempt.')
- let hasAudio=false
+ if(error||!video)throw new InterviewApiError('Recording upload is not complete. Resume saving before finalising.',409)
+ validateMedia((video.contentType ?? ''),(video.size ?? 0),kind)
+ if(baseMime((video.contentType ?? ''))!==attempt.recording_mime_type)throw new InterviewApiError('Recording format does not match this attempt.')
+ let hasAudio=kind==='audio'
  if(attempt.transcription_audio_path){
  const {data:audio}=await bucket.info(attempt.transcription_audio_path)
  if(audio){try{validateMedia((audio.contentType ?? ''),(audio.size ?? 0),'audio');hasAudio=true}catch{hasAudio=false}}

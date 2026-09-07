@@ -3,6 +3,7 @@
 export const INTERVIEW_PREFETCH_PATHS=[
  '/interviews',
  '/interviews/practice',
+ '/interviews/practice/recordings',
  '/interviews/mock-interviews',
  '/interviews/mock-interviews/review',
  '/interviews/stories',

@@ -27,3 +27,18 @@ export async function cleanupTranscriptionAudio(){
  if(error)throw new Error('cleanup_query_failed')
  for(const a of attempts??[]){if(!a.transcription_audio_path)continue;const {error:removeError}=await db.storage.from(BUCKET).remove([a.transcription_audio_path]);if(!removeError){const {error:updateError}=await db.from('interview_attempts').update({transcription_audio_path:null}).eq('id',a.id).eq('transcription_audio_path',a.transcription_audio_path);if(updateError)console.warn(JSON.stringify({event:'interview',attemptId:a.id,stage:'audio_cleanup',outcome:'pointer_retry_required'}))}}
 }
+
+// New practice audio uses the same upload shells. Reap abandoned shells only;
+// completed audio and historical recordings keep their existing retention policy.
+export async function cleanupPracticeAudioUploads(now = Date.now()) {
+ const db=createAdminClient(),cutoff=new Date(now-24*60*60*1000).toISOString()
+ const {data:attempts,error}=await db.from('interview_attempts').select('id').eq('media_kind','audio').eq('station_snapshot->>source','practice_audio').in('upload_status',['awaiting_upload','uploading','failed','discarded']).lt('created_at',cutoff).limit(100)
+ if(error)throw new Error('practice_cleanup_query_failed')
+ for(const candidate of attempts??[]){
+  // Recheck under the UPDATE lock: a concurrent successful finalise must win
+  // without its newly saved recording being deleted by an earlier scan.
+  const {data:reserved,error:reserveError}=await db.from('interview_attempts').update({upload_status:'discarded'}).eq('id',candidate.id).eq('media_kind','audio').eq('station_snapshot->>source','practice_audio').in('upload_status',['awaiting_upload','uploading','failed','discarded']).lt('created_at',cutoff).select('*').maybeSingle()
+  if(reserveError)throw new Error('practice_cleanup_reservation_failed')
+  if(reserved)await deleteInterviewAttempt(reserved)
+ }
+}

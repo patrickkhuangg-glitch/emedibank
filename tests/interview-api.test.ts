@@ -21,7 +21,7 @@ function query(table:string){
  update:()=>chain,maybeSingle:async()=>result(),single:async()=>result(),then:(resolve:(value:unknown)=>void)=>Promise.resolve(result()).then(resolve)}
  return chain
 }
-const db={from:query,rpc:async(name:string,args:Record<string,unknown>)=>{calls.push({name,args});operations.push(name);return {data:rpcHandler?rpcHandler(name,args):rpcResult,error:null}},storage:{from:()=>({download:async()=>({data:new Blob(['synthetic audio'],{type:'audio/webm'}),error:null}),remove:async()=>{operations.push('storage_remove');return {error:null}},info:async(path:string)=>({data:(path.includes('transcription')?audio:media)?{contentType:path.includes('transcription')?'audio/webm':'video/webm',size:10000}:null,error:(path.includes('transcription')?audio:media)?null:{message:'missing'}})})}}
+const db={from:query,rpc:async(name:string,args:Record<string,unknown>)=>{calls.push({name,args});operations.push(name);return {data:rpcHandler?rpcHandler(name,args):rpcResult,error:null}},storage:{from:()=>({download:async()=>({data:new Blob(['synthetic audio'],{type:'audio/webm'}),error:null}),remove:async()=>{operations.push('storage_remove');return {error:null}},info:async(path:string)=>({data:(path.includes('transcription')?audio:media)?{contentType:path.includes('transcription')||path.includes('practice')?'audio/webm':'video/webm',size:10000}:null,error:(path.includes('transcription')?audio:media)?null:{message:'missing'}})})}}
 function mock(path:string,exports:Record<string,unknown>){const id=require.resolve(path),m=new Module(id);m.filename=id;m.loaded=true;m.exports=exports;require.cache[id]=m}
 mock('../src/lib/auth/dal.ts',{getUser:async()=>user,requireAdmin:async()=>{if(!admin)throw new Error('admin required');return {id:'admin'}},getProfile:async()=>admin?{role:'admin'}:null})
 mock('../src/lib/supabase/admin.ts',{createAdminClient:()=>db})
@@ -135,4 +135,51 @@ test('timed mock API validates selections, gates prompts and creates canonical r
   assert.equal(retried.attemptId,result.attemptId);assert.equal(retried.uploadStatus,'ready');assert.equal(inserted,null)
   process.env.INTERVIEW_VIDEO_MARKING_ENABLED='false';assert.equal((await mock.POST(request({action:'start',selection:{format:'panel',mode:'full'}}))).status,503)
  }finally{if(previous===undefined)delete process.env.INTERVIEW_WORKER_SECRET;else process.env.INTERVIEW_WORKER_SECRET=previous;attempt=null;user=null;process.env.INTERVIEW_VIDEO_MARKING_ENABLED='true'}
+})
+
+
+test('practice audio shells are canonical, owner-only and retryable; audio finalises into the existing transcription queue',async()=>{
+ const practice=require('../src/app/api/interviews/practice/recordings/route.ts') as {POST:(r:Request)=>Promise<Response>}
+ const body={id:'70000000-0000-4000-8000-000000000001',format:'panel',stationId:'panel-motivation',audioType:'audio/webm;codecs=opus',user_id:'forged',station_snapshot:{title:'forged'}}
+ const req=(payload:unknown=body,origin='http://localhost')=>new Request('http://localhost/api/interviews/practice/recordings',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(payload)})
+ user=null;attempt=null;insertError=null;rpcHandler=null
+ assert.equal((await practice.POST(req())).status,401)
+ user={id:'student-a'}
+ assert.equal((await practice.POST(req(body,'https://other.invalid'))).status,403)
+ const created=await practice.POST(req());assert.equal(created.status,200)
+ assert.equal(inserted!.media_kind,'audio');assert.equal(inserted!.user_id,'student-a');assert.equal(inserted!.recording_mime_type,'audio/webm')
+ assert.equal((inserted!.station_snapshot as {source:string}).source,'practice_audio')
+ assert.notEqual((inserted!.station_snapshot as {title:string}).title,'forged')
+ attempt={...inserted!}
+ const retried=await practice.POST(req());assert.equal(retried.status,200)
+ assert.equal((await retried.json()).audioPath,attempt.recording_path)
+ attempt.user_id='student-b';assert.equal((await practice.POST(req())).status,409)
+ attempt.user_id='student-a';media=true;audio=true;rpcResult=true;calls.length=0
+ const context={params:Promise.resolve({attemptId:body.id})}
+ const result=await finalise.POST(request({durationSeconds:30,questionEvents:[{question_index:0,offset_seconds:0}]}),context)
+ assert.equal(result.status,200);assert.equal((await result.json()).status,'processing')
+ assert.equal(calls.at(-1)!.name,'finalise_interview_upload');assert.equal(calls.at(-1)!.args.p_has_audio,true)
+ assert.equal(attempt.transcription_audio_path,undefined)
+ const before=calls.length;attempt.recording_mime_type='audio/mp4'
+ assert.notEqual((await finalise.POST(request({durationSeconds:30,questionEvents:[{question_index:0,offset_seconds:0}]}),context)).status,200)
+ assert.equal(calls.length,before)
+})
+
+test('the existing worker transcribes practice audio and retains the playback original without charging credits',async()=>{
+ const {processInterviewJob}=require('../src/lib/interviews/jobs.ts') as {processInterviewJob:()=>Promise<unknown>}
+ const job={id:'practice-job',attempt_id:'practice-attempt',job_type:'transcribe',status:'running',attempt_count:1,max_attempts:5}
+ attempt={id:'practice-attempt',user_id:'student-a',format:'panel',station_id:'panel-motivation',upload_status:'ready',media_kind:'audio',recording_path:'practice.webm',transcription_audio_path:null,transcription_status:'processing',transcript:null,marking_status:null,duration_seconds:30,questions:['Q']}
+ rpcHandler=name=>name==='claim_next_interview_job'?[job]:true;media=true
+ const originalFetch=globalThis.fetch,oldKey=process.env.OPENAI_TRANSCRIPTION_API_KEY
+ try{
+  process.env.OPENAI_TRANSCRIPTION_API_KEY='test-only';operations.length=0;calls.length=0
+  globalThis.fetch=async()=>Response.json({text:'I listened to the other person and asked questions before suggesting an appropriate response.'})
+  assert.deepEqual(await processInterviewJob(),{processed:true})
+  assert.ok(calls.some(c=>c.name==='consume_interview_transcription'))
+  assert.ok(calls.some(c=>c.name==='complete_interview_job'&&JSON.stringify(c.args.p_payload).includes('I listened')))
+  assert.ok(!operations.includes('storage_remove'))
+  assert.ok(!calls.some(c=>c.name.includes('marking')))
+  delete process.env.OPENAI_TRANSCRIPTION_API_KEY;operations.length=0
+  await processInterviewJob();assert.equal(calls.at(-1)!.args.p_code,'transcription_not_configured');assert.ok(!operations.includes('storage_remove'))
+ }finally{globalThis.fetch=originalFetch;if(oldKey===undefined)delete process.env.OPENAI_TRANSCRIPTION_API_KEY;else process.env.OPENAI_TRANSCRIPTION_API_KEY=oldKey;rpcHandler=null}
 })

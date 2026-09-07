@@ -5,7 +5,7 @@ export async function POST(_request:Request,{params}:{params:Promise<{attemptId:
  if(attempt.transcription_status==='ready'&&attempt.transcript)return Response.json({transcript:attempt.transcript,status:'ready'})
  const {data,error}=await db.rpc('retry_interview_job',{p_attempt_id:attemptId,p_job_type:'transcribe',p_actor_id:user.id})
  if(error)throw error
- if(!['queued','already_running','already_ready'].includes(data))throw new InterviewApiError('The audio copy is unavailable. Your video remains available for self-review and manual marking.',409)
+ if(!['queued','already_running','already_ready'].includes(data))throw new InterviewApiError('Transcription is unavailable for this recording. You can still review any saved media.',409)
  return Response.json({status:'processing'})
  }catch(error){return apiError(error)}
 }

@@ -1,7 +1,7 @@
 import { validWorkerSecret } from '@/lib/interviews/worker-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { retentionDays } from '@/lib/interviews/video-validation'
-import { cleanupTranscriptionAudio } from '@/lib/interviews/storage-cleanup'
+import { cleanupTranscriptionAudio,cleanupPracticeAudioUploads } from '@/lib/interviews/storage-cleanup'
 export const runtime='nodejs'
 export const maxDuration=120
 export async function GET(request:Request){
@@ -10,6 +10,7 @@ export async function GET(request:Request){
  const {data,error}=await createAdminClient().rpc('enqueue_interview_retention',{p_days:retentionDays(process.env.INTERVIEW_VIDEO_RETENTION_DAYS)})
  if(error)throw error
  await cleanupTranscriptionAudio()
+ await cleanupPracticeAudioUploads()
  return Response.json({queued:data})
  }catch{return Response.json({error:'Cleanup unavailable'},{status:503})}
 }
