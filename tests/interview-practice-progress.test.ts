@@ -1,3 +1,4 @@
+import { INTERVIEW_STATIONS } from '../src/lib/interviews/stations'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { averageRating, completedLogs, logsInWeek, monthDays, practiceDay, progressRange, shiftDay, shiftMonth, summariseThemes, suggestPractice, validProgressMonth, weekStart, type PracticeLog } from '../src/lib/interviews/practice-progress'
@@ -31,7 +32,10 @@ test('suggestions explain low self-ratings and missing coverage and link to an a
   assert.equal(suggestions[0].theme,'Ethics')
   assert.match(suggestions[0].reason,/1.0\/5 across 2 rated/)
   assert.match(suggestions[1].reason,/haven’t practised.*28 days/)
-  assert.match(suggestions[0].href,/\/interviews\/practice\/session\?format=mmi&station=/)
+  const station = INTERVIEW_STATIONS.find(station => station.id === suggestions[0].stationId)!
+  assert.ok(station)
+  assert.equal(station.category.split(' · ')[0], 'Ethics')
+  assert.equal(suggestions[0].href, `/interviews/practice/session?format=${station.format}&station=${encodeURIComponent(station.id)}`)
   assert.equal(new Set(suggestions.map(item=>item.theme)).size,3)
   assert.deepEqual(suggestPractice([log('future','panel-motivation','2027-01-01T00:00:00Z',1)],'2026-09-06'),suggestPractice([],'2026-09-06'))
 })

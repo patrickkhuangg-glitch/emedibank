@@ -19,6 +19,13 @@ export function getInterviewTiming(format: InterviewFormat) {
   return INTERVIEW_TIMING[format]
 }
 
-export function getInterviewQuestions(station: InterviewStation) {
-  return station.format === 'panel' ? station.questions.slice(0, 1) : station.questions
+export function getInterviewQuestions(station: InterviewStation, questionIndex = 0) {
+  return station.format === 'panel' ? station.questions.slice(questionIndex, questionIndex + 1) : station.questions
+}
+
+/** Missing selection preserves existing links; invalid panel indexes are rejected. */
+export function getPracticeQuestionIndex(station: InterviewStation, value: unknown): number | null {
+  if (station.format !== 'panel' || value === undefined) return 0
+  const index = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value
+  return typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < station.questions.length ? index : null
 }

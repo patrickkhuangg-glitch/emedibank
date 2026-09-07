@@ -5,7 +5,7 @@ import { mediaExtension, type QuestionEvent } from '@/lib/interviews/media-valid
 import { uploadInterviewMedia } from '@/lib/interviews/video-upload'
 import type { InterviewStation } from '@/lib/interviews/stations'
 
-export function usePracticeAudio(station: InterviewStation) {
+export function usePracticeAudio(station: InterviewStation, questionIndex = 0) {
   const recorder = useRef<ReturnType<typeof prepareAudioRecording> | null>(null)
   const generation = useRef(0), busy = useRef(false), blob = useRef<Blob | null>(null), attempt = useRef<string | null>(null), path = useRef<string | null>(null), uploaded = useRef(false), abort = useRef<AbortController | null>(null)
   const [extension, setExtension] = useState('webm')
@@ -59,7 +59,7 @@ export function usePracticeAudio(station: InterviewStation) {
     try {
       attempt.current ??= crypto.randomUUID()
       if (!path.current) {
-        const r = await fetch('/api/interviews/practice/recordings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: attempt.current, format: station.format, stationId: station.id, audioType: blob.current.type }), signal: abort.current.signal })
+        const r = await fetch('/api/interviews/practice/recordings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: attempt.current, format: station.format, stationId: station.id, questionIndex, audioType: blob.current.type }), signal: abort.current.signal })
         const data = await r.json()
         if (!r.ok) throw new Error(data.error || 'Saving could not start. Please retry.')
         path.current = data.audioPath

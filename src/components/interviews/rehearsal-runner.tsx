@@ -13,14 +13,14 @@ import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timi
 type Phase = 'ready' | 'preparation' | 'response' | 'complete'
 const button = 'rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground'
 
-export function InterviewRehearsalRunner({ station }: { station: InterviewStation }) {
-  const audio = usePracticeAudio(station)
+export function InterviewRehearsalRunner({ station, questionIndex = 0 }: { station: InterviewStation; questionIndex?: number }) {
+  const audio = usePracticeAudio(station, questionIndex)
   const { finish: finishAudio, start: startAudio } = audio
   const [recordAudio, setRecordAudio] = useState(false)
   const events = useRef<QuestionEvent[]>([{question_index:0,offset_seconds:0}])
   const finishing = useRef(false)
   const timing = getInterviewTiming(station.format)
-  const questions = getInterviewQuestions(station)
+  const questions = getInterviewQuestions(station, questionIndex)
   const [phase, setPhase] = useState<Phase>('ready')
   const [seconds, setSeconds] = useState<number>(timing.preparationSeconds)
   const [question, setQuestion] = useState(0)
@@ -158,7 +158,7 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
         </div>
         <div className="rounded-3xl bg-surface p-6 sm:p-10">
           <p className="text-sm text-muted">{phase === 'preparation' ? station.category : `Question ${question + 1} of ${questions.length}`}</p>
-          <h2 className="mt-5 font-display text-2xl leading-snug sm:text-4xl">{phase === 'preparation' ? station.preparation : questions[question]}</h2>
+          <h2 className="mt-5 font-display text-2xl leading-snug sm:text-4xl">{phase === 'preparation' ? (station.format === 'panel' ? questions[0] : station.preparation) : questions[question]}</h2>
           {phase === 'response' && <div className="mt-8 flex flex-wrap items-center gap-4">
             <button className={button} onClick={nextQuestion}>{question === questions.length - 1 ? 'Finish practice' : 'Next question'}</button>
             <p className="text-sm text-muted">Space also continues</p>

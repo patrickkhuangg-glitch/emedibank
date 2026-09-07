@@ -1,3 +1,5 @@
+import { INTERVIEW_STATIONS } from '@/lib/interviews/stations'
+import { getPracticeQuestionIndex } from '@/lib/interviews/timing'
 import { getUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { apiError, InterviewApiError, readSmallJson } from '@/lib/interviews/api'
@@ -12,13 +14,18 @@ export async function POST(request: Request) {
     const body = await readSmallJson(request)
     if (typeof body.id !== 'string' || !uuid.test(body.id)) throw new InterviewApiError('Invalid recording. Please start a new practice session.')
     const type = String(body.audioType ?? ''), extension = mediaExtension(type, 'audio')
-    const snapshot = { ...stationSnapshot(body.format, body.stationId), source: 'practice_audio' }
+    const station = INTERVIEW_STATIONS.find(s => s.format === body.format && s.id === body.stationId)
+    if (!station) throw new InterviewApiError('Choose an available practice station.')
+    const questionIndex = getPracticeQuestionIndex(station, body.questionIndex)
+    if (questionIndex === null) throw new InterviewApiError('Choose an available panel question.')
+    const snapshot = { ...stationSnapshot(body.format, body.stationId, questionIndex), source: 'practice_audio' }
     const db = createAdminClient()
     // The browser retains one ID for retries, including a lost initiation response.
-    const { data: existing, error: lookupError } = await db.from('interview_attempts').select('id,user_id,media_kind,station_id,recording_mime_type,recording_path,upload_status').eq('id', body.id).maybeSingle()
+    const { data: existing, error: lookupError } = await db.from('interview_attempts').select('id,user_id,media_kind,station_id,recording_mime_type,recording_path,upload_status,station_snapshot').eq('id', body.id).maybeSingle()
     if (lookupError) throw lookupError
     if (existing) {
-      if (existing.user_id !== user.id || existing.media_kind !== 'audio' || existing.station_id !== snapshot.station_id || existing.recording_mime_type !== baseMime(type) || !['awaiting_upload', 'uploading', 'ready'].includes(existing.upload_status)) throw new InterviewApiError('This recording cannot be resumed.', 409)
+      const savedSnapshot = existing.station_snapshot as { question_index?: number } | null
+      if (existing.user_id !== user.id || existing.media_kind !== 'audio' || existing.station_id !== snapshot.station_id || existing.recording_mime_type !== baseMime(type) || (savedSnapshot?.question_index ?? 0) !== questionIndex || !['awaiting_upload', 'uploading', 'ready'].includes(existing.upload_status)) throw new InterviewApiError('This recording cannot be resumed.', 409)
       return Response.json({ attemptId: existing.id, audioPath: existing.recording_path }, { headers: { 'Cache-Control': 'no-store' } })
     }
     const path = `${user.id}/${body.id}/practice.${extension}`

@@ -1,3 +1,4 @@
+import { INTERVIEW_STATIONS } from '../src/lib/interviews/stations'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import Module,{ createRequire } from 'node:module'
@@ -163,6 +164,23 @@ test('practice audio shells are canonical, owner-only and retryable; audio final
  const before=calls.length;attempt.recording_mime_type='audio/mp4'
  assert.notEqual((await finalise.POST(request({durationSeconds:30,questionEvents:[{question_index:0,offset_seconds:0}]}),context)).status,200)
  assert.equal(calls.length,before)
+})
+
+test('practice audio saves the selected panel question and prevents a retry from changing it',async()=>{
+ const practice=require('../src/app/api/interviews/practice/recordings/route.ts') as {POST:(r:Request)=>Promise<Response>}
+ const station=INTERVIEW_STATIONS.find(s=>s.id==='panel-community-engagement')!
+ const body={id:'70000000-0000-4000-8000-000000000002',format:'panel',stationId:station.id,questionIndex:4,audioType:'audio/webm'}
+ const req=(payload:unknown)=>new Request('http://localhost/api/interviews/practice/recordings',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify(payload)})
+ user={id:'student-a'};attempt=null;insertError=null
+ try {
+  for(const invalid of [-1,5,1.5,null,'bad',{}]) assert.equal((await practice.POST(req({...body,questionIndex:invalid}))).status,400)
+  assert.equal((await practice.POST(req(body))).status,200)
+  assert.deepEqual(inserted!.questions,[station.questions[4]])
+  assert.equal((inserted!.station_snapshot as {question_index:number}).question_index,4)
+  attempt={...inserted!}
+  assert.equal((await practice.POST(req(body))).status,200)
+  assert.equal((await practice.POST(req({...body,questionIndex:0}))).status,409)
+ } finally {attempt=null;user=null}
 })
 
 test('the existing worker transcribes practice audio and retains the playback original without charging credits',async()=>{
