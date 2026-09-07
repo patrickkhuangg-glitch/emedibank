@@ -143,8 +143,13 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
       <p className="text-sm font-semibold text-brand">Practice · {station.format === 'mmi' ? 'MMI station' : 'Panel interview'}</p>
       <h1 className="font-display text-3xl font-semibold sm:text-5xl">{station.title}</h1>
       {phase === 'ready' && <>
-        <p className="max-w-2xl leading-7 text-muted">Rehearse your answer out loud. You have {timing.preparationLabel} followed by {timing.responseLabel}. Record your response with your microphone, listen back and save a private transcript. Recording begins after preparation. You can also practise without recording. No marking credits are used.</p>
-        <div className="flex flex-wrap gap-3"><button disabled={pending} className={button} onClick={() => begin(true)}>{pending ? 'Starting…' : 'Record audio & begin preparation'}</button><button disabled={pending} className="rounded-full border border-border px-5 py-3 text-sm font-semibold" onClick={() => begin(false)}>Practise without recording</button></div><p className="text-sm text-muted">Microphone only. Keep this tab visible while recording. Saving uses the existing allowance of 10 responses per rolling 24 hours.</p>
+        <div className="max-w-2xl space-y-3 leading-7 text-muted">
+          <p className="font-semibold text-foreground">Rehearse your answer out loud.</p>
+          <p>You have <strong className="font-semibold text-foreground">{timing.preparationLabel}</strong> followed by <strong className="font-semibold text-foreground">{timing.responseLabel}</strong>.</p>
+          <p>Record your response with your microphone, listen back and save a private transcript. Recording begins after preparation.</p>
+          <p>You can also practise without recording. No marking credits are used.</p>
+        </div>
+        <div className="flex flex-wrap gap-3"><button disabled={pending} className={button} onClick={() => begin(true)}>{pending ? 'Starting…' : 'Record audio & begin preparation'}</button><button disabled={pending} className="rounded-full border border-border px-5 py-3 text-sm font-semibold" onClick={() => begin(false)}>Practise without recording</button></div><p className="text-sm text-muted">Microphone only. Keep this tab visible while recording.</p>
       </>}
       {(phase === 'preparation' || phase === 'response') && <>
         <div className="flex flex-wrap justify-between gap-3">
@@ -182,8 +187,6 @@ export function InterviewRehearsalRunner({ station }: { station: InterviewStatio
       {audio.error && <p role="alert" className="text-sm text-red-700">{audio.error}</p>}
       {phase === 'complete' && <InterviewStudyNotes />}
       {trackingError && <div role="status" className="space-y-2 text-sm"><p>{trackingError}</p><button disabled={pending} onClick={() => begin(false, true)} className="min-h-11 underline underline-offset-4">Practise without recording or saving progress</button></div>}
-      <p><Link href="/interviews/practice/recordings" className="text-sm font-semibold text-brand">Recordings &amp; transcripts</Link></p>
-      <p><Link href="/interviews" className="text-sm font-semibold text-brand">View practice calendar</Link></p>
       <p><Link href="/interviews/practice" className="text-sm font-semibold">Back to practice stations</Link></p>
     </section>
   </main>
