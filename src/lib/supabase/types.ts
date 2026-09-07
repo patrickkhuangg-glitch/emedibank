@@ -666,6 +666,7 @@ export type Database = {
       interview_practice_logs: TableShape<InterviewPracticeLog, 'id' | 'user_id' | 'station_id' | 'format' | 'source'>
       interview_attempts: TableShape<InterviewAttemptRow, 'user_id' | 'format' | 'station_id' | 'station_title' | 'recording_path' | 'recording_mime_type'>
       interview_markings: TableShape<InterviewMarkingRow, 'attempt_id'>
+      interview_transcript_layouts: TableShape<{attempt_id:string;source_hash:string;questions_hash:string;status:'processing'|'ready'|'failed';attempt_count:number;request_id:string;started_at:string;layout:unknown;model:string|null},'attempt_id'|'source_hash'|'questions_hash'|'status'|'request_id'>
       interview_processing_jobs: TableShape<InterviewJobRow, 'attempt_id' | 'job_type'>
       interview_marking_events: TableShape<InterviewEventRow, 'attempt_id' | 'event_type'>
       interview_stories: TableShape<InterviewStory, 'id' | 'user_id' | 'title' | 'theme' | 'context' | 'actions' | 'reflection'>

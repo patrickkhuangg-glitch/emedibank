@@ -39,6 +39,8 @@ The response schema now requires exactly one assignment per source unit and rest
 
 The student and admin marking interfaces share the grouped transcript component. Existing in-progress grouping requests are checked automatically for up to a minute; failed provider requests are not automatically retried. Admin access is checked before reading an attempt or calling the shared grouping service, and unsubmitted private practices are denied. The original transcript remains expandable and marking feedback/credits are untouched.
 
-No schema change is required. If old grouping failures exhausted all three retries, the disposable failed cache rows can be removed after the provider issue is resolved; do not remove ready or processing layouts and do not edit original transcripts. An operator can use `delete from public.interview_transcript_layouts where status = 'failed';` once as part of this repair. Later retries should be scoped to the affected attempt.
+No schema change is required. Opening an authorised attempt removes only its legacy failed cache (empty model marker), so recordings that exhausted retries before this repair can recover. Ready and processing layouts remain intact. Current failures carry a version marker and keep the three-attempt cap. Original transcripts and marking state are untouched.
 
-Validation: 60 interview tests, full lint (one pre-existing image warning), and the production build pass. Live provider and submitted-review checks are recorded separately in the repair receipt.
+The admin queue includes a fixed synthetic four-question provider check. It uses existing admin authentication and does not create accounts, read student recordings or mutate database rows.
+
+Validation: 61 interview tests, full lint (one pre-existing image warning), and the production build pass. Live provider and submitted-review checks are recorded separately in the repair receipt.

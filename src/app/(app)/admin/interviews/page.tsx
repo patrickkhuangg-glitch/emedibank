@@ -1,3 +1,4 @@
+import { TranscriptHealthCheck } from '@/components/interviews/transcript-health-check'
 import Link from 'next/link'
 import { interviewQueue } from '@/lib/interviews/marking-data'
 import { statusLabel } from '@/lib/interviews/video-validation'
@@ -15,7 +16,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{format?
  <nav aria-label="Queue pages" className="flex gap-4">{page>0&&<Link href={`?${new URLSearchParams({format:filters.format??'',status:filters.status??'',page:String(page-1)})}`}>Previous page</Link>}{(page+1)*100<total&&<Link href={`?${new URLSearchParams({format:filters.format??'',status:filters.status??'',page:String(page+1)})}`}>Next page</Link>}</nav>
  <details className="rounded-2xl border p-4"><summary>Processing operations, including self-review transcripts</summary><p className="mt-2 text-sm text-muted">Counts above cover all jobs. This list shows up to 1,000 outstanding jobs; use the runbook to recover a cleanup job. Cancelled AI jobs after human review are also recorded as dead.</p><ul className="mt-3 space-y-2 text-sm">{jobs.filter(j=>j.status==='dead'||j.status==='failed').map((j,i)=><li key={i}><span className="font-mono">{j.attempt_id}</span> · {j.job_type} · {j.status} · attempt {j.attempt_count}</li>)}</ul></details>
  </>}
- </main>
+ <TranscriptHealthCheck/></main>
 }
 function Metric({label,value}:{label:string;value:number}){return <div className="rounded-2xl bg-surface p-4"><p className="font-mono text-2xl">{value}</p><p className="text-sm text-muted">{label}</p></div>}
 function QueueFlags({assessment,audit}:{assessment:unknown;audit:unknown}){
