@@ -948,6 +948,8 @@ export type Database = {
     }
     Views: Record<never, never>
     Functions: {
+      claim_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string }; Returns: unknown }
+      complete_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string; p_layout: unknown; p_model: string }; Returns: boolean }
       authorize_signup: { Args: { p_email: string; p_token_hash: string }; Returns: undefined }
       consume_interview_transcription: { Args: { p_user_id: string }; Returns: boolean }
       defer_interview_transcription: { Args: { p_job_id: string; p_worker: string }; Returns: boolean }

@@ -29,7 +29,7 @@ export default async function PracticeRecordingsPage({ searchParams }: { searchP
     if (changes.attempt) query.set('attempt', changes.attempt)
     return `${base}${query.size ? '?' + query : ''}`
   }
-  const { data: selected } = id && responses.some(row => row.id === id) ? await db.from('interview_attempts').select('id,format,station_title,created_at,duration_seconds,upload_status,video_deleted_at,recording_path,question_events,transcription_status,transcript').eq('id', id).eq('user_id', user.id).eq('media_kind', 'audio').maybeSingle() : { data: null }
+  const { data: selected } = id && responses.some(row => row.id === id) ? await db.from('interview_attempts').select('id,format,station_title,created_at,duration_seconds,upload_status,video_deleted_at,recording_path,question_events,transcription_status,transcript,questions').eq('id', id).eq('user_id', user.id).eq('media_kind', 'audio').maybeSingle() : { data: null }
   const [{ data: media }, { data: activity }] = selected ? await Promise.all([
     selected.upload_status === 'ready' && !selected.video_deleted_at ? db.storage.from('interview-recordings').createSignedUrl(selected.recording_path, 600) : Promise.resolve({ data: null }),
     db.from('interview_practice_logs').select('self_rating').eq('id', selected.id).eq('user_id', user.id).maybeSingle(),
@@ -44,7 +44,7 @@ export default async function PracticeRecordingsPage({ searchParams }: { searchP
           <h2 className="font-display text-2xl font-semibold">{selected.station_title}</h2>
           <p className="text-sm text-muted">{formatRecordingDate(selected.created_at)} · {selected.format === 'mmi' ? 'MMI' : 'Panel'} · {Math.floor(selected.duration_seconds / 60)}:{String(selected.duration_seconds % 60).padStart(2, '0')}</p>
           {selected.upload_status !== 'ready' ? <p>Upload unfinished. Return to the recording tab and resume saving your audio.</p> : <InterviewMediaPlayer key={selected.id} attemptId={selected.id} kind="audio" url={media?.signedUrl ?? null} events={Array.isArray(selected.question_events) ? selected.question_events as QuestionEvent[] : []} />}
-          <InterviewTranscript key={selected.id} attemptId={selected.id} initialStatus={selected.transcription_status} initialTranscript={selected.transcript} />
+          <InterviewTranscript key={selected.id} attemptId={selected.id} initialStatus={selected.transcription_status} initialTranscript={selected.transcript} questions={selected.questions} />
           {activity && <InterviewSelfRating key={selected.id} activityId={selected.id} initialRating={activity.self_rating} />}
           <InterviewStudentActions key={selected.id} id={selected.id} format={selected.format} eligible={false} credits={0} deleteOnly backHref={href()} />
         </article>
