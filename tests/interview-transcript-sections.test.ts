@@ -37,3 +37,15 @@ test('single questions and unavailable grouping remain readable without fabricat
  const raw=renderToStaticMarkup(React.createElement(InterviewTranscriptText,{text:'Original text.',questions,layout:{bad:true}}))
  assert.match(raw,/Original text/);assert.ok(!raw.includes('Question 1'))
 })
+
+
+test('synthetic grouping check verifies all answer boundaries independently of JSON validity',async()=>{
+ const {TRANSCRIPT_CHECK_SAMPLE,TRANSCRIPT_CHECK_EXPECTED,evaluateTranscriptCheck}=await import('../src/lib/interviews/transcript-check-sample')
+ const {transcript,questions}=TRANSCRIPT_CHECK_SAMPLE
+ const expected=layoutFromAssignments(transcript,questions,{question_indices:TRANSCRIPT_CHECK_EXPECTED})
+ assert.deepEqual(evaluateTranscriptCheck(expected),{passed:true,matchedUnits:17,totalUnits:17})
+ const shifted=layoutFromAssignments(transcript,questions,{question_indices:[0,1,2,3,3,null,null,null,2,null,null,null,null,3,3,3,3]})
+ assert.equal(evaluateTranscriptCheck(shifted).passed,false)
+ assert.equal(evaluateTranscriptCheck(null).matchedUnits,0)
+ assert.equal(expected.spans.map(span=>transcript.slice(span.start,span.end)).join(''),transcript)
+})

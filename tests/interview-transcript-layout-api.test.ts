@@ -14,7 +14,7 @@ const deletions:Array<{table:string;filters:unknown[][]}>=[]
 const db={rpc:async(name:string)=>{calls.push(name);return name==='claim_interview_transcript_layout'?{data:{status:claimStatus,transcript:text,questions,layout},error:dbError?{}:null}:{data:save,error:null}}}
 function mock(path:string,exports:unknown){const id=require.resolve(path),m=new Module(id);m.filename=id;m.loaded=true;m.exports=exports;require.cache[id]=m}
 mock('../src/lib/auth/dal',{getUser:async()=>signedIn?{id:'owner'}:null,getProfile:async()=>signedIn?{id:'reviewer',role}:null})
-mock('../src/lib/supabase/admin',{createAdminClient:()=>({...db,from:(table:string)=>{let deletion:{table:string;filters:unknown[][]}|undefined;const query={select:()=>query,delete:()=>{deletion={table,filters:[]};deletions.push(deletion);return query},eq:(...filter:unknown[])=>{deletion?.filters.push(filter);return query},maybeSingle:async()=>({data:table==='interview_markings'?(marked?{attempt_id:'attempt'}:null):owner?{id:'attempt',user_id:'owner',transcript:text,questions,transcription_status:transcriptStatus,submitted_for_marking_at:submitted?'2026-09-07':null,marking_status:marked?'in_review':null}:null,error:null})};return query}})})
+mock('../src/lib/supabase/admin',{createAdminClient:()=>({...db,from:(table:string)=>{let deletion:{table:string;filters:unknown[][]}|undefined;const query={select:()=>query,delete:()=>{deletion={table,filters:[]};deletions.push(deletion);return query},eq:(...filter:unknown[])=>{deletion?.filters.push(filter);return query},in:(...filter:unknown[])=>{deletion?.filters.push(['in',...filter]);return query},or:(filter:string)=>{deletion?.filters.push(['or',filter]);return query},maybeSingle:async()=>({data:table==='interview_markings'?(marked?{attempt_id:'attempt'}:null):owner?{id:'attempt',user_id:'owner',transcript:text,questions,transcription_status:transcriptStatus,submitted_for_marking_at:submitted?'2026-09-07':null,marking_status:marked?'in_review':null}:null,error:null})};return query}})})
 mock('../src/lib/interviews/transcript-section-provider',{transcriptLayoutKey:()=>configured?'test':undefined,transcriptLayoutFailure:()=> 'transcript_layout_permission',organiseTranscript:async()=>{providerCalls++;if(throwProvider)throw new Error('PRIVATE_PROVIDER_RESPONSE');return {layout,model:'test'}}})
 const {POST}=require('../src/app/api/interviews/attempts/[attemptId]/transcript/sections/route')
 const ctx={params:Promise.resolve({attemptId:'attempt'})}
@@ -32,7 +32,7 @@ test('grouping API authenticates owners, caches results and fails safely without
  questions=['Only question?'];const before=providerCalls
  assert.equal((await (await POST(request(),ctx)).json()).status,'ready');assert.equal(providerCalls,before)
  assert.ok(calls.every(name=>name==='claim_interview_transcript_layout'||name==='complete_interview_transcript_layout'))
- assert.ok(deletions.every(d=>d.table==='interview_transcript_layouts'&&JSON.stringify(d.filters)===JSON.stringify([['attempt_id','attempt'],['status','failed'],['model','']])))
+ assert.ok(deletions.every(d=>d.table==='interview_transcript_layouts'&&JSON.stringify(d.filters)===JSON.stringify([['attempt_id','attempt'],['in','status',['ready','failed']],['or','model.is.null,model.not.like.layout-v3:%']])))
 })
 
 test('transcript status polling is private, read-only and never exposes unfinished text',async()=>{
@@ -77,6 +77,7 @@ test('provider check uses only a fixed synthetic sample and requires existing ad
  assert.equal((await check(request('https://other.invalid'))).status,403)
  const before=calls.length,response=await check(request()),body=await response.json()
  assert.equal(body.status,'ready');assert.equal(body.questions.length,4)
+ assert.equal(body.quality.passed,false,'a valid response alone must not pass the quality check')
  assert.match(body.transcript,/both volunteers calmly/)
  assert.equal(calls.length,before,'health check must never create records or touch a cache')
  assert.match(response.headers.get('cache-control'),/no-store/)

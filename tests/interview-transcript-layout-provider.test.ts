@@ -6,7 +6,7 @@ const require=createRequire(import.meta.url)
 const {registerHooks}=require('node:module')
 registerHooks({resolve(s:string,c:object,next:(s:string,c:object)=>object){return next(s==='server-only'?resolve('tests/helpers/server-only.cjs'):s,c)}})
 const {organiseTranscript}=require('../src/lib/interviews/transcript-section-provider') as typeof import('../src/lib/interviews/transcript-section-provider')
-test('grouping provider uses index-only structured output and preserves raw text on every failure',async()=>{
+test('grouping provider uses named unit assignments and preserves raw text on every failure',async()=>{
  const originalFetch=globalThis.fetch,originalKey=process.env.OPENAI_INTERVIEW_TRANSCRIPT_LAYOUT_API_KEY,originalFallback=process.env.OPENAI_TRANSCRIPTION_API_KEY
  const originalInterview=process.env.OPENAI_INTERVIEW_MARKING_API_KEY,originalEssay=process.env.OPENAI_ESSAY_MARKING_API_KEY
  let sent:Record<string,unknown>|null=null
@@ -16,7 +16,7 @@ test('grouping provider uses index-only structured output and preserves raw text
   delete process.env.OPENAI_INTERVIEW_TRANSCRIPT_LAYOUT_API_KEY;delete process.env.OPENAI_TRANSCRIPTION_API_KEY;delete process.env.OPENAI_INTERVIEW_MARKING_API_KEY;delete process.env.OPENAI_ESSAY_MARKING_API_KEY
   await assert.rejects(organiseTranscript(text,questions),/not_configured/)
   process.env.OPENAI_INTERVIEW_TRANSCRIPT_LAYOUT_API_KEY='test-only'
-  globalThis.fetch=async(_input,init)=>{sent=JSON.parse(String(init?.body));return response({question_indices:[0,1]})}
+  globalThis.fetch=async(_input,init)=>{sent=JSON.parse(String(init?.body));return response({assignments:{unit_0:0,unit_1:1}})}
   const result=await organiseTranscript(text,questions)
   assert.equal(result.layout.spans.map(span=>text.slice(span.start,span.end)).join(''),text)
   assert.equal(sent!.store,false)
@@ -24,13 +24,16 @@ test('grouping provider uses index-only structured output and preserves raw text
   assert.match(sent!.instructions as string,/Do not assess, correct, rewrite/)
   const input=JSON.parse(sent!.input as string)
   assert.equal(input.units.map((unit:{text:string})=>unit.text).join(''),text)
-  const format=(sent!.text as {format:{schema:{properties:{question_indices:unknown}}}}).format
-  assert.deepEqual(format.schema.properties.question_indices,{type:'array',minItems:2,maxItems:2,items:{type:['integer','null'],enum:[0,1,null]}})
-  for(const output of [{question_indices:[0]},{question_indices:[0,20]},{question_indices:['rewritten text',1]}]){
+  assert.deepEqual(input.units.map((unit:{unit_id:string})=>unit.unit_id),['unit_0','unit_1'])
+  const format=(sent!.text as {format:{schema:{properties:{assignments:unknown}}}}).format
+  assert.deepEqual(format.schema.properties.assignments,{type:'object',additionalProperties:false,properties:{unit_0:{type:['integer','null'],enum:[0,1,null]},unit_1:{type:['integer','null'],enum:[0,1,null]}},required:['unit_0','unit_1']})
+  globalThis.fetch=async()=>response({assignments:{unit_1:1,unit_0:0}})
+  assert.deepEqual((await organiseTranscript(text,questions)).layout,result.layout,'JSON key order cannot shift sentences')
+  for(const output of [{assignments:{unit_0:0}},{assignments:{unit_0:0,unit_1:20}},{assignments:{unit_0:'rewritten text',unit_1:1}},{assignments:{unit_0:0,unit_2:1}},{assignments:{unit_0:0,unit_1:1,unit_2:1}},{assignments:[0,1]},null]){
    globalThis.fetch=async()=>response(output)
    await assert.rejects(organiseTranscript(text,questions))
   }
-  globalThis.fetch=async()=>response({question_indices:[0,1]},'incomplete')
+  globalThis.fetch=async()=>response({assignments:{unit_0:0,unit_1:1}},'incomplete')
   await assert.rejects(organiseTranscript(text,questions),/incomplete/)
   globalThis.fetch=async()=>new Response('{}',{status:429})
   await assert.rejects(organiseTranscript(text,questions),/rate_limit/)

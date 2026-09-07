@@ -1,3 +1,5 @@
+import { transcriptUnits, validTranscriptLayout } from './transcript-sections'
+
 // Fixed synthetic content from the real microphone-pipeline playtest.
 export const TRANSCRIPT_CHECK_SAMPLE = {
   "questions": [
@@ -7,4 +9,14 @@ export const TRANSCRIPT_CHECK_SAMPLE = {
     "Describe a time you changed your approach after listening to someone else."
   ],
   "transcript": "I would begin by speaking with both volunteers calmly and asking each person what they are trying to achieve. I would separate their underlying concerns from their preferred spending plan. Then I would bring them together, agree on respectful ground rules, and compare the options against the event purpose, the available budget, and tomorrow's deadline. I would avoid choosing a side before hearing both explanations. For quieter team members, I would offer everyone an uninterrupted turn and also invite written suggestions before the discussion. I would ask open questions without putting anyone on the spot. If someone was repeatedly interrupted, I would pause the discussion and return the floor to them. After the meeting, I would check privately whether there was anything they had not felt comfortable saying. If the group remained deadlocked, I would summarize the points of agreement and the remaining disagreement. We could score both options against criteria agreed in advance. If time ran out, I would involve the event coordinator, explain the trade-offs, and ask them to make a transparent decision within their authority. I would communicate the reason to the whole team and record the next steps. In a university tutoring project, I initially wanted to give a long presentation because I thought it would cover more content. Another volunteer explained that the students wanted to practice problems themselves. I listened, changed the session to small group activities, and asked for feedback afterwards. Participation improved, but I realized I had confused speaking with teaching. I learned to check what people actually need before defending my original plan."
+}
+
+// Independent expected boundaries; never supplied to the provider.
+export const TRANSCRIPT_CHECK_EXPECTED = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,3]
+export function evaluateTranscriptCheck(layout:unknown) {
+ const {transcript,questions}=TRANSCRIPT_CHECK_SAMPLE
+ const units=transcriptUnits(transcript)
+ const valid=validTranscriptLayout(layout,transcript,questions)
+ const matchedUnits=valid?units.filter((unit,index)=>layout.spans.some(span=>span.start<=unit.start&&span.end>=unit.end&&span.questionIndex===TRANSCRIPT_CHECK_EXPECTED[index])).length:0
+ return {passed:valid&&units.length===TRANSCRIPT_CHECK_EXPECTED.length&&matchedUnits===units.length,matchedUnits,totalUnits:units.length}
 }

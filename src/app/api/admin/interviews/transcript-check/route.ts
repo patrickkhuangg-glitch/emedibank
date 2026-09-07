@@ -1,7 +1,7 @@
 import { getProfile } from '@/lib/auth/dal'
 import { apiError, InterviewApiError } from '@/lib/interviews/api'
 import { organiseTranscript, transcriptLayoutFailure, transcriptLayoutKey } from '@/lib/interviews/transcript-section-provider'
-import { TRANSCRIPT_CHECK_SAMPLE } from '@/lib/interviews/transcript-check-sample'
+import { TRANSCRIPT_CHECK_SAMPLE, evaluateTranscriptCheck } from '@/lib/interviews/transcript-check-sample'
 export const maxDuration=45
 export async function POST(request:Request){
  try{
@@ -12,7 +12,10 @@ export async function POST(request:Request){
   const json=(value:unknown)=>Response.json(value,{headers:{'Cache-Control':'private, no-store'}})
   if(!transcriptLayoutKey())return json({status:'unavailable',reason:'transcript_layout_not_configured'})
   // Fixed synthetic speech only: no request-supplied content, records, credits or user changes.
-  try{return json({status:'ready',...TRANSCRIPT_CHECK_SAMPLE,...await organiseTranscript(TRANSCRIPT_CHECK_SAMPLE.transcript,TRANSCRIPT_CHECK_SAMPLE.questions)})}
+  try{
+   const result=await organiseTranscript(TRANSCRIPT_CHECK_SAMPLE.transcript,TRANSCRIPT_CHECK_SAMPLE.questions)
+   return json({status:'ready',...TRANSCRIPT_CHECK_SAMPLE,...result,quality:evaluateTranscriptCheck(result.layout)})
+  }
   catch(error){return json({status:'unavailable',reason:transcriptLayoutFailure(error)})}
  }catch(error){return apiError(error)}
 }

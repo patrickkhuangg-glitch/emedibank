@@ -9,9 +9,10 @@ export async function groupAttemptTranscript(attempt:Pick<InterviewAttemptRow,'i
  if(attempt.transcription_status!=='ready'||!text||!questions.length)return {status:'unavailable',reason:'transcript_not_ready'}
  if(questions.length===1)return {status:'ready',transcript:text,questions,layout:{version:1,spans:[{start:0,end:text.length,questionIndex:0}]}}
  const requestId=crypto.randomUUID()
- // Recover pre-repair failures once, including exhausted retries. Only the authorised
- // attempt's disposable failed cache is removed; current failures carry a version marker.
- await db.from('interview_transcript_layouts').delete().eq('attempt_id',attempt.id).eq('status','failed').eq('model','')
+ // Refresh legacy presentation caches once on authorised access. Leave active jobs alone.
+ // Current success/failure markers preserve caching and the bounded retry budget.
+ // Without a provider key, retain any readable legacy layout.
+ if(transcriptLayoutKey())await db.from('interview_transcript_layouts').delete().eq('attempt_id',attempt.id).in('status',['ready','failed']).or('model.is.null,model.not.like.layout-v3:%')
  const {data,error}=await db.rpc('claim_interview_transcript_layout',{p_attempt_id:attempt.id,p_user_id:attempt.user_id,p_request_id:requestId})
  if(error)return {status:'unavailable',reason:'transcript_layout_cache'}
  const claim=data as {status:string;transcript?:string;questions?:unknown;layout?:unknown}
@@ -23,11 +24,11 @@ export async function groupAttemptTranscript(attempt:Pick<InterviewAttemptRow,'i
  try{
   if(!transcriptLayoutKey())throw new Error('not_configured')
   const {layout,model}=await organiseTranscript(source,canonical)
-  const {data:saved,error:saveError}=await db.rpc('complete_interview_transcript_layout',{p_attempt_id:attempt.id,p_user_id:attempt.user_id,p_request_id:requestId,p_layout:layout,p_model:model})
+  const {data:saved,error:saveError}=await db.rpc('complete_interview_transcript_layout',{p_attempt_id:attempt.id,p_user_id:attempt.user_id,p_request_id:requestId,p_layout:layout,p_model:`layout-v3:${model}`})
   return saved&&!saveError?{status:'ready',transcript:source,questions:canonical,layout}:{status:'unavailable',reason:'transcript_layout_save'}
  }catch(error){
   const reason=!transcriptLayoutKey()?'transcript_layout_not_configured':transcriptLayoutFailure(error)
-  await db.rpc('complete_interview_transcript_layout',{p_attempt_id:attempt.id,p_user_id:attempt.user_id,p_request_id:requestId,p_layout:null,p_model:`layout-v2:${reason}`})
+  await db.rpc('complete_interview_transcript_layout',{p_attempt_id:attempt.id,p_user_id:attempt.user_id,p_request_id:requestId,p_layout:null,p_model:`layout-v3:${reason}`})
   console.warn(JSON.stringify({event:'interview_transcript_layout',attemptId:attempt.id,code:reason}))
   return {status:'unavailable',reason}
  }
