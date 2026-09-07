@@ -6,15 +6,15 @@ const require=createRequire(import.meta.url)
 const {registerHooks}=require('node:module')
 registerHooks({resolve(s:string,c:object,next:(s:string,c:object)=>object){return next(s==='server-only'?resolve('tests/helpers/server-only.cjs'):s,c)}})
 let signedIn=true,owner=true,configured=true,providerCalls=0,claimStatus='claimed',save=true,dbError=false
-let transcriptStatus='ready'
+let transcriptStatus='ready',role='student',submitted=false,marked=false,throwProvider=false
 let questions=['First question?','Second question?']
 const text='First answer. Second answer.',layout={version:1,spans:[{start:0,end:14,questionIndex:0},{start:14,end:text.length,questionIndex:1}]}
 const calls:string[]=[]
 const db={rpc:async(name:string)=>{calls.push(name);return name==='claim_interview_transcript_layout'?{data:{status:claimStatus,transcript:text,questions,layout},error:dbError?{}:null}:{data:save,error:null}}}
 function mock(path:string,exports:unknown){const id=require.resolve(path),m=new Module(id);m.filename=id;m.loaded=true;m.exports=exports;require.cache[id]=m}
-mock('../src/lib/auth/dal',{getUser:async()=>signedIn?{id:'owner'}:null})
-mock('../src/lib/supabase/admin',{createAdminClient:()=>({...db,from:()=>({select:()=>({eq:()=>({eq:()=>({maybeSingle:async()=>({data:owner?{id:'attempt',transcript:text,questions,transcription_status:transcriptStatus}:null,error:null})})})})})})})
-mock('../src/lib/interviews/transcript-section-provider',{transcriptLayoutKey:()=>configured?'test':undefined,organiseTranscript:async()=>{providerCalls++;return {layout,model:'test'}}})
+mock('../src/lib/auth/dal',{getUser:async()=>signedIn?{id:'owner'}:null,getProfile:async()=>signedIn?{id:'reviewer',role}:null})
+mock('../src/lib/supabase/admin',{createAdminClient:()=>({...db,from:(table:string)=>{const query={select:()=>query,eq:()=>query,maybeSingle:async()=>({data:table==='interview_markings'?(marked?{attempt_id:'attempt'}:null):owner?{id:'attempt',user_id:'owner',transcript:text,questions,transcription_status:transcriptStatus,submitted_for_marking_at:submitted?'2026-09-07':null,marking_status:marked?'in_review':null}:null,error:null})};return query}})})
+mock('../src/lib/interviews/transcript-section-provider',{transcriptLayoutKey:()=>configured?'test':undefined,transcriptLayoutFailure:()=> 'transcript_layout_permission',organiseTranscript:async()=>{providerCalls++;if(throwProvider)throw new Error('PRIVATE_PROVIDER_RESPONSE');return {layout,model:'test'}}})
 const {POST}=require('../src/app/api/interviews/attempts/[attemptId]/transcript/sections/route')
 const ctx={params:Promise.resolve({attemptId:'attempt'})}
 const request=(origin='http://localhost')=>new Request('http://localhost/api/transcript/sections',{method:'POST',headers:{Origin:origin}})
@@ -44,4 +44,25 @@ test('transcript status polling is private, read-only and never exposes unfinish
  assert.match(ready.headers.get('cache-control')??'',/no-store/)
  assert.equal((await ready.json()).transcript,text)
  assert.equal(calls.length,before)
+})
+
+
+test('reviewer grouping requires an admin and a submitted marking, and never widens the owner endpoint',async()=>{
+ const {POST:adminPost}=require('../src/app/api/admin/interviews/[attemptId]/transcript/sections/route')
+ questions=['First question?','Second question?'];claimStatus='claimed';configured=true;owner=true
+ signedIn=false;assert.equal((await adminPost(request(),ctx)).status,401);signedIn=true
+ for(const notAdmin of ['student','tutor']){role=notAdmin;assert.equal((await adminPost(request(),ctx)).status,403)}
+ role='admin';assert.equal((await adminPost(request('https://other.invalid'),ctx)).status,403)
+ assert.equal((await adminPost(request(),ctx)).status,404)
+ submitted=true;assert.equal((await adminPost(request(),ctx)).status,404)
+ marked=true;const ready=await adminPost(request(),ctx)
+ assert.equal((await ready.json()).status,'ready');assert.match(ready.headers.get('cache-control'),/no-store/)
+ throwProvider=true
+ const reviewerFailure=await (await adminPost(request(),ctx)).json()
+ assert.equal(reviewerFailure.reason,'transcript_layout_permission');assert.ok(!JSON.stringify(reviewerFailure).includes('PRIVATE_PROVIDER'))
+ const studentFailure=await (await POST(request(),ctx)).json()
+ assert.equal(studentFailure.status,'unavailable');assert.equal(studentFailure.reason,undefined)
+ owner=false;assert.equal((await POST(request(),ctx)).status,404);owner=true;throwProvider=false
+ claimStatus='ready';configured=false;const before=providerCalls
+ assert.equal((await (await adminPost(request(),ctx)).json()).status,'ready');assert.equal(providerCalls,before)
 })

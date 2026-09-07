@@ -29,3 +29,16 @@ Tests cover exact wording/whitespace preservation, uncertain and repeated passag
 Release logs are in the parent `.vercel` directory: `transcript-sections-tests.log`, `transcript-sections-lint.log`, and `transcript-sections-build.log`. Publish only the isolated `codex/transcript-question-sections` release, preserving unrelated work in the main workspace.
 
 Final verification: the local component preview displayed three question sections and the full-transcript disclosure correctly. No live provider invocation or production database change was performed. The 59-test interview suite, full lint (one pre-existing image warning) and production build with Webpack passed.
+
+
+## Grouping repair — 7 September 2026
+
+The live playtest confirmed accurate audio transcription but failed grouping. The host has only a transcription key and an essay-marking text key configured. Grouping now prefers the dedicated layout key, then interview marking, essay marking and finally transcription. An explicit dedicated key is authoritative; failures never silently switch to another credential. Audio transcription is unchanged.
+
+The response schema now requires exactly one assignment per source unit and restricts values to saved question indices or null. Provider failures have safe fixed diagnostic codes; raw provider messages, credentials and transcript text are never logged. The reviewer-only endpoint returns the code to authenticated admins for submitted markings. Students retain a generic fallback. Cached successful sections remain available without a configured provider key.
+
+The student and admin marking interfaces share the grouped transcript component. Existing in-progress grouping requests are checked automatically for up to a minute; failed provider requests are not automatically retried. Admin access is checked before reading an attempt or calling the shared grouping service, and unsubmitted private practices are denied. The original transcript remains expandable and marking feedback/credits are untouched.
+
+No schema change is required. If old grouping failures exhausted all three retries, the disposable failed cache rows can be removed after the provider issue is resolved; do not remove ready or processing layouts and do not edit original transcripts. An operator can use `delete from public.interview_transcript_layouts where status = 'failed';` once as part of this repair. Later retries should be scoped to the affected attempt.
+
+Validation: 60 interview tests, full lint (one pre-existing image warning), and the production build pass. Live provider and submitted-review checks are recorded separately in the repair receipt.
