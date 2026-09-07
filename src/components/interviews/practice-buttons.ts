@@ -1,0 +1,6 @@
+// Shared feedback for the practice flow. Motion is limited to a short pointer
+// press; keyboard focus and reduced-motion preferences never trigger scaling.
+export const practiceButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-center text-sm font-semibold cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand motion-safe:[&:active:not(:focus-visible)]:scale-[0.97] motion-reduce:transition-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50'
+export const practiceButtonPrimary = `${practiceButton} border border-transparent bg-brand px-5 py-3 text-brand-foreground hover:bg-[#5936b4] hover:shadow-[0_0_0_4px_var(--brand-muted)]`
+export const practiceButtonSecondary = `${practiceButton} border border-border bg-surface px-5 py-3 text-foreground hover:border-brand hover:bg-brand-muted hover:text-brand hover:shadow-[0_0_0_4px_var(--brand-muted)]`
+export const practiceButtonQuiet = `${practiceButton} border border-transparent px-4 py-2 text-brand hover:bg-brand-muted`

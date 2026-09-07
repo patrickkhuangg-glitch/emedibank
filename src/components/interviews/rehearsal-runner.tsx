@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { practiceButtonPrimary, practiceButtonSecondary, practiceButtonQuiet } from './practice-buttons'
 import { InterviewSelfRating } from './self-rating'
 import { usePracticeAudio } from './use-practice-audio'
 import { InterviewTranscript } from '@/components/interview-transcript'
@@ -11,7 +12,7 @@ import type { InterviewStation } from '@/lib/interviews/stations'
 import { getInterviewQuestions, getInterviewTiming } from '@/lib/interviews/timing'
 
 type Phase = 'ready' | 'preparation' | 'response' | 'complete'
-const button = 'rounded-full bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground'
+const button = practiceButtonPrimary
 
 export function InterviewRehearsalRunner({ station, questionIndex = 0 }: { station: InterviewStation; questionIndex?: number }) {
   const audio = usePracticeAudio(station, questionIndex)
@@ -149,7 +150,7 @@ export function InterviewRehearsalRunner({ station, questionIndex = 0 }: { stati
           <p>Record your response with your microphone, listen back and save a private transcript. Recording begins after preparation.</p>
           <p>You can also practise without recording. No marking credits are used.</p>
         </div>
-        <div className="flex flex-wrap gap-3"><button disabled={pending} className={button} onClick={() => begin(true)}>{pending ? 'Starting…' : 'Record audio & begin preparation'}</button><button disabled={pending} className="rounded-full border border-border px-5 py-3 text-sm font-semibold" onClick={() => begin(false)}>Practise without recording</button></div><p className="text-sm text-muted">Microphone only. Keep this tab visible while recording.</p>
+        <div className="flex flex-wrap gap-3"><button disabled={pending} className={button} onClick={() => begin(true)}>{pending ? 'Starting…' : 'Record audio & begin preparation'}</button><button disabled={pending} className={practiceButtonSecondary} onClick={() => begin(false)}>Practise without recording</button></div><p className="text-sm text-muted">Microphone only. Keep this tab visible while recording.</p>
       </>}
       {(phase === 'preparation' || phase === 'response') && <>
         <div className="flex flex-wrap justify-between gap-3">
@@ -164,7 +165,7 @@ export function InterviewRehearsalRunner({ station, questionIndex = 0 }: { stati
             <p className="text-sm text-muted">Space also continues</p>
           </div>}
         </div>
-        <button className="rounded-full border border-border px-5 py-3 text-sm font-semibold" onClick={finish}>End practice</button>
+        <button className={practiceButtonSecondary} onClick={finish}>End practice</button>
       </>}
       {phase === 'complete' && <div className="space-y-5 rounded-3xl bg-surface p-6 sm:p-10">
         <h2 role="status" className="font-display text-2xl font-semibold">{completedDuration > 0 ? 'Practice complete' : 'Practice ended'}</h2>
@@ -173,21 +174,28 @@ export function InterviewRehearsalRunner({ station, questionIndex = 0 }: { stati
         {saveState === 'failed' && <button className={button} onClick={saveCompletion}>Retry saving practice</button>}
         {recordAudio && <>
           {audio.stopping && <p role="status">Preparing audio preview…</p>}
-          {audio.url && <><audio src={audio.url} controls className="w-full" aria-label="Your practice recording" /><div className="flex flex-wrap items-center gap-3">{!audio.savedId && <button disabled={audio.saving || completedDuration < 1} className={button} onClick={() => audio.save(completedDuration, events.current)}>Save audio &amp; transcribe</button>}<a href={audio.url} download={`practice.${audio.extension}`} className="text-sm font-semibold text-brand underline">Download audio</a></div></>}
-          {audio.saving && <div role="status"><p>Saving audio · {audio.progress}%</p><progress max={100} value={audio.progress} aria-label="Audio upload" /><button className="ml-4 underline" onClick={audio.pause}>Pause saving</button></div>}
+          {audio.url && <><audio src={audio.url} controls className="w-full" aria-label="Your practice recording" /><div className="flex flex-wrap items-center gap-3">{!audio.savedId && <button disabled={audio.saving || completedDuration < 1} className={button} onClick={() => audio.save(completedDuration, events.current)}>Save audio &amp; transcribe</button>}<a href={audio.url} download={`practice.${audio.extension}`} className={practiceButtonSecondary}>Download audio</a></div></>}
+          {audio.saving && <div role="status"><p>Saving audio · {audio.progress}%</p><progress max={100} value={audio.progress} aria-label="Audio upload" /><button className={`ml-3 ${practiceButtonQuiet}`} onClick={audio.pause}>Pause saving</button></div>}
           {!audio.savedId && audio.url && <p className="text-sm text-muted">Keep this tab open until saving finishes. You can retry an interrupted upload. Closing or reloading this page loses unsaved audio.</p>}
-          {audio.savedId && <><p role="status">Audio saved privately and added to your practice calendar.</p><InterviewTranscript key={audio.savedId} attemptId={audio.savedId} initialStatus="processing" initialTranscript={null} /><InterviewSelfRating key={audio.savedId} activityId={audio.savedId} /><Link href={`/interviews/practice/recordings?attempt=${audio.savedId}`} className="text-sm font-semibold text-brand">Open saved audio and transcript →</Link></>}
+          {audio.savedId && <><p role="status">Audio saved privately and added to your practice calendar.</p><InterviewTranscript key={audio.savedId} attemptId={audio.savedId} initialStatus="processing" initialTranscript={null} /><InterviewSelfRating key={audio.savedId} activityId={audio.savedId} /><Link href={`/interviews/practice/recordings?attempt=${audio.savedId}`} className={practiceButtonQuiet}>Open saved audio and transcript →</Link></>}
         </>}
         {savedId && <InterviewSelfRating key={savedId} activityId={savedId} />}
-        <div className="flex flex-wrap gap-3">
-          <button disabled={pending || saveState === 'saving' || audio.saving || audio.stopping} className={button} onClick={() => begin(recordAudio)}>{pending ? 'Starting…' : 'Practise again'}</button>
-          <Link className="rounded-full border border-border px-5 py-3 text-sm font-semibold" href={`/interviews/mock-interviews/session?format=${station.format}&station=${encodeURIComponent(station.id)}`}>Record a mock interview</Link>
-        </div>
+        <nav aria-label="After practice" className="space-y-4 border-t border-border pt-6">
+          <h3 className="font-semibold">What would you like to do next?</h3>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link className={practiceButtonPrimary} href="/interviews/practice">Back to Practice <span aria-hidden="true">→</span></Link>
+            <Link className={practiceButtonSecondary} href="/interviews">Interview dashboard</Link>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button disabled={pending || saveState === 'saving' || audio.saving || audio.stopping} className={practiceButtonQuiet} onClick={() => begin(recordAudio)}>{pending ? 'Starting…' : 'Practise again'}</button>
+            <Link className={practiceButtonQuiet} href={`/interviews/mock-interviews/session?format=${station.format}&selection=${encodeURIComponent(station.format === 'panel' ? `${station.id}:${questionIndex}` : station.id)}`}>Record a mock interview</Link>
+          </div>
+        </nav>
       </div>}
       {audio.error && <p role="alert" className="text-sm text-red-700">{audio.error}</p>}
       {phase === 'complete' && <InterviewStudyNotes />}
-      {trackingError && <div role="status" className="space-y-2 text-sm"><p>{trackingError}</p><button disabled={pending} onClick={() => begin(false, true)} className="min-h-11 underline underline-offset-4">Practise without recording or saving progress</button></div>}
-      <p><Link href="/interviews/practice" className="text-sm font-semibold">Back to practice stations</Link></p>
+      {trackingError && <div role="status" className="space-y-2 text-sm"><p>{trackingError}</p><button disabled={pending} onClick={() => begin(false, true)} className={practiceButtonQuiet}>Practise without recording or saving progress</button></div>}
+      {phase !== 'complete' && <p><Link href="/interviews/practice" className={practiceButtonQuiet}>← Back to Practice</Link></p>}
     </section>
   </main>
 }

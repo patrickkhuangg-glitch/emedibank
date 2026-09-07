@@ -1,5 +1,6 @@
 'use client'
 
+import { practiceButtonPrimary } from '@/components/interviews/practice-buttons'
 import { useEffect, useState } from 'react'
 
 type StudyNote = {
@@ -77,7 +78,7 @@ export function InterviewStudyNotes({ preview = false, onNoteCountChange }: { pr
       <p className="mt-2 text-sm leading-6 text-muted">Keep short reminders for what to improve in your next response.</p>
       <label className="sr-only" htmlFor="interview-note">Your study note</label>
       <textarea id="interview-note" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={280} placeholder="For example: start with the patient’s perspective before discussing options." className="mt-5 min-h-28 w-full resize-none rounded-2xl border border-border bg-background p-3.5 text-sm leading-6 outline-none placeholder:text-muted focus:border-brand" />
-      <div className="mt-3 flex items-center justify-between gap-3"><span className="text-xs text-muted">{draft.length}/280</span><button type="button" disabled={!draft.trim() || saving} onClick={saveNote} className="eb-press rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground disabled:cursor-not-allowed disabled:opacity-45">{saving ? 'Saving…' : 'Add note'}</button></div>
+      <div className="mt-3 flex items-center justify-between gap-3"><span className="text-xs text-muted">{draft.length}/280</span><button type="button" disabled={!draft.trim() || saving} onClick={saveNote} className={practiceButtonPrimary}>{saving ? 'Saving…' : 'Add note'}</button></div>
       {error ? <p role="alert" className="mt-4 text-sm font-semibold text-red-700">{error}</p> : null}
       <div className="mt-6 border-t border-border pt-5">
         <p className="text-xs font-semibold text-muted">{notes.length ? `${notes.length} saved ${notes.length === 1 ? 'reminder' : 'reminders'}` : 'Your saved reminders'}</p>
