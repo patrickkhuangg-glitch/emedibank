@@ -1,4 +1,5 @@
 import { getProfile } from '@/lib/auth/dal'
+import { adminMfaIsVerified } from '@/lib/auth/admin-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { apiError, InterviewApiError } from '@/lib/interviews/api'
 import { groupAttemptTranscript } from '@/lib/interviews/transcript-section-service'
@@ -8,6 +9,7 @@ export async function POST(request:Request,{params}:{params:Promise<{attemptId:s
   const profile=await getProfile()
   if(!profile)throw new InterviewApiError('Sign in required.',401)
   if(profile.role!=='admin')throw new InterviewApiError('Reviewer access required.',403)
+  if(!await adminMfaIsVerified())throw new InterviewApiError('Multi-factor verification required.',403)
   if(request.headers.get('origin')!==new URL(request.url).origin)throw new InterviewApiError('Request origin is not allowed.',403)
   const {attemptId}=await params,db=createAdminClient()
   const [{data:attempt,error},{data:marking,error:markError}]=await Promise.all([

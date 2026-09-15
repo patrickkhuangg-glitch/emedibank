@@ -3,6 +3,7 @@
 import { removeInterviewObjects } from '@/lib/interviews/storage-cleanup'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth/dal'
+import { adminMfaIsVerified } from '@/lib/auth/admin-mfa'
 import { normalisePhone } from '@/lib/auth/signup-protection'
 import { authorizeSignup } from '@/lib/auth/signup-authorization'
 import { getOrigin } from '@/lib/site'
@@ -16,6 +17,7 @@ export type ManageAccountState = { error?: string; message?: string; deleted?: b
 export async function inviteStudentAction(_previous: InviteStudentState, formData: FormData): Promise<InviteStudentState> {
   const profile = await getProfile()
   if (profile?.role !== 'admin') return { error: 'Only admins can create student accounts.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before managing accounts.' }
 
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const fullName = String(formData.get('fullName') ?? '').trim()
@@ -58,6 +60,7 @@ export async function inviteStudentAction(_previous: InviteStudentState, formDat
 export async function sendAccountAccessAction(_previous: SendAccountAccessState, formData: FormData): Promise<SendAccountAccessState> {
   const requestingProfile = await getProfile()
   if (requestingProfile?.role !== 'admin') return { error: 'Only admins can send account access emails.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before managing accounts.' }
 
   const userId = String(formData.get('userId') ?? '').trim()
   const requestedEmail = String(formData.get('email') ?? '').trim().toLowerCase()
@@ -91,6 +94,7 @@ export async function sendAccountAccessAction(_previous: SendAccountAccessState,
 export async function updateManagedAccountAction(_previous: ManageAccountState, formData: FormData): Promise<ManageAccountState> {
   const requestingProfile = await getProfile()
   if (requestingProfile?.role !== 'admin') return { error: 'Only admins can update accounts.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before managing accounts.' }
 
   const userId = String(formData.get('userId') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
@@ -153,6 +157,7 @@ export async function updateManagedAccountAction(_previous: ManageAccountState, 
 export async function deleteManagedAccountAction(_previous: ManageAccountState, formData: FormData): Promise<ManageAccountState> {
   const requestingProfile = await getProfile()
   if (requestingProfile?.role !== 'admin') return { error: 'Only admins can delete accounts.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before managing accounts.' }
 
   const userId = String(formData.get('userId') ?? '').trim()
   const confirmationEmail = String(formData.get('confirmationEmail') ?? '').trim().toLowerCase()
@@ -221,6 +226,7 @@ export async function deleteManagedAccountAction(_previous: ManageAccountState, 
 export async function setManualExamAccessAction(_previous: ManualExamAccessState, formData: FormData): Promise<ManualExamAccessState> {
   const requestingProfile = await getProfile()
   if (requestingProfile?.role !== 'admin') return { error: 'Only admins can change Studocyte access.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before managing accounts.' }
 
   const userId = String(formData.get('userId') ?? '').trim()
   const examId = String(formData.get('examId') ?? '').trim()

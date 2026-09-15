@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getProfile, requireAdmin, requireUser } from '@/lib/auth/dal'
+import { adminMfaIsVerified } from '@/lib/auth/admin-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlanItemKind, StudyPlanStatus } from '@/lib/supabase/types'
 
@@ -15,6 +16,7 @@ export type StudyPlanActionState = { error?: string; success?: string }
 export async function createStudyPlanAction(_previous: CreateStudyPlanState, formData: FormData): Promise<CreateStudyPlanState> {
   const adminProfile = await getProfile()
   if (adminProfile?.role !== 'admin') return { error: 'Only admins can create student packages.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before creating a package.' }
   const email = value(formData, 'studentEmail').toLowerCase()
   const name = value(formData, 'name')
   if (!email || !name) return { error: 'Enter the student email and package name.' }

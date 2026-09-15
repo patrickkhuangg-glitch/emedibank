@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Profile, InterfaceMode } from '@/lib/supabase/types'
 import { homeForRole } from '@/lib/auth/roles'
 import { COMPLETE_PROFILE_PATH, hasRequiredPhone } from '@/lib/auth/profile-completion'
+import { requireAdminMfa } from '@/lib/auth/admin-mfa'
 
 /** The current authenticated user, or null. Cached per request. */
 export const getUser = cache(async () => {
@@ -76,6 +77,7 @@ export async function requireAdmin() {
   const profile = await getProfile()
   if (!profile) redirect('/login?redirectTo=/admin')
   if (profile.role !== 'admin') redirect('/dashboard')
+  await requireAdminMfa()
   return profile
 }
 
@@ -84,5 +86,6 @@ export async function requireStaff(redirectTo = '/students') {
   const profile = await getProfile()
   if (!profile) redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`)
   if (profile.role !== 'tutor' && profile.role !== 'admin') redirect('/dashboard')
+  if (profile.role === 'admin') await requireAdminMfa()
   return profile
 }

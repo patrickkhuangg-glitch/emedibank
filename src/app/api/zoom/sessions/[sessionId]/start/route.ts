@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getProfile, getUser } from '@/lib/auth/dal'
+import { requireAdminMfa } from '@/lib/auth/admin-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getZoomMeetingStartUrl } from '@/lib/zoom/client'
 
@@ -9,6 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ sess
   const profile = await getProfile()
   const user = await getUser()
   if (!profile || !user || (profile.role !== 'admin' && profile.role !== 'tutor')) return NextResponse.redirect(new URL('/login?redirectTo=/bookings', request.url))
+  if (profile.role === 'admin') await requireAdminMfa()
 
   const { sessionId } = await params
   const admin = createAdminClient()

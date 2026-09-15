@@ -1,14 +1,12 @@
 'use server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { getProfile } from '@/lib/auth/dal'
+import { requireAdmin as requireVerifiedAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 
 export type ImportResult = { created: number; stimuli: number; errors: { row: number; message: string }[] }
 
 async function requireAdmin() {
-  const p = await getProfile()
-  if (p?.role !== 'admin') redirect('/dashboard')
+  await requireVerifiedAdmin()
 }
 
 /** Parse CSV or TSV (RFC4180-ish quoting) into rows of cells. */

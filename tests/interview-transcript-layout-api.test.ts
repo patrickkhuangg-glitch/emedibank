@@ -7,6 +7,7 @@ const {registerHooks}=require('node:module')
 registerHooks({resolve(s:string,c:object,next:(s:string,c:object)=>object){return next(s==='server-only'?resolve('tests/helpers/server-only.cjs'):s,c)}})
 let signedIn=true,owner=true,configured=true,providerCalls=0,claimStatus='claimed',save=true,dbError=false
 let transcriptStatus='ready',role='student',submitted=false,marked=false,throwProvider=false
+let mfaVerified=true
 let questions=['First question?','Second question?']
 const text='First answer. Second answer.',layout={version:1,spans:[{start:0,end:14,questionIndex:0},{start:14,end:text.length,questionIndex:1}]}
 const calls:string[]=[]
@@ -14,6 +15,7 @@ const deletions:Array<{table:string;filters:unknown[][]}>=[]
 const db={rpc:async(name:string)=>{calls.push(name);return name==='claim_interview_transcript_layout'?{data:{status:claimStatus,transcript:text,questions,layout},error:dbError?{}:null}:{data:save,error:null}}}
 function mock(path:string,exports:unknown){const id=require.resolve(path),m=new Module(id);m.filename=id;m.loaded=true;m.exports=exports;require.cache[id]=m}
 mock('../src/lib/auth/dal',{getUser:async()=>signedIn?{id:'owner'}:null,getProfile:async()=>signedIn?{id:'reviewer',role}:null})
+mock('../src/lib/auth/admin-mfa',{adminMfaIsVerified:async()=>mfaVerified})
 mock('../src/lib/supabase/admin',{createAdminClient:()=>({...db,from:(table:string)=>{let deletion:{table:string;filters:unknown[][]}|undefined;const query={select:()=>query,delete:()=>{deletion={table,filters:[]};deletions.push(deletion);return query},eq:(...filter:unknown[])=>{deletion?.filters.push(filter);return query},in:(...filter:unknown[])=>{deletion?.filters.push(['in',...filter]);return query},or:(filter:string)=>{deletion?.filters.push(['or',filter]);return query},maybeSingle:async()=>({data:table==='interview_markings'?(marked?{attempt_id:'attempt'}:null):owner?{id:'attempt',user_id:'owner',transcript:text,questions,transcription_status:transcriptStatus,submitted_for_marking_at:submitted?'2026-09-07':null,marking_status:marked?'in_review':null}:null,error:null})};return query}})})
 mock('../src/lib/interviews/transcript-section-provider',{transcriptLayoutKey:()=>configured?'test':undefined,transcriptLayoutFailure:()=> 'transcript_layout_permission',organiseTranscript:async()=>{providerCalls++;if(throwProvider)throw new Error('PRIVATE_PROVIDER_RESPONSE');return {layout,model:'test'}}})
 mock('../src/lib/interviews/trial-provider',{admitTrialProvider:async()=>{}})
@@ -55,7 +57,8 @@ test('reviewer grouping requires an admin and a submitted marking, and never wid
  questions=['First question?','Second question?'];claimStatus='claimed';configured=true;owner=true
  signedIn=false;assert.equal((await adminPost(request(),ctx)).status,401);signedIn=true
  for(const notAdmin of ['student','tutor']){role=notAdmin;assert.equal((await adminPost(request(),ctx)).status,403)}
- role='admin';assert.equal((await adminPost(request('https://other.invalid'),ctx)).status,403)
+ role='admin';mfaVerified=false;assert.equal((await adminPost(request(),ctx)).status,403);mfaVerified=true
+ assert.equal((await adminPost(request('https://other.invalid'),ctx)).status,403)
  assert.equal((await adminPost(request(),ctx)).status,404)
  submitted=true;assert.equal((await adminPost(request(),ctx)).status,404)
  marked=true;const ready=await adminPost(request(),ctx)
@@ -74,7 +77,8 @@ test('provider check uses only a fixed synthetic sample and requires existing ad
  const {POST:check}=require('../src/app/api/admin/interviews/transcript-check/route')
  configured=true;throwProvider=false;role='student';signedIn=false
  assert.equal((await check(request())).status,401);signedIn=true
- assert.equal((await check(request())).status,403);role='admin'
+ assert.equal((await check(request())).status,403);role='admin';mfaVerified=false
+ assert.equal((await check(request())).status,403);mfaVerified=true
  assert.equal((await check(request('https://other.invalid'))).status,403)
  const before=calls.length,response=await check(request()),body=await response.json()
  assert.equal(body.status,'ready');assert.equal(body.questions.length,4)

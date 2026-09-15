@@ -1,15 +1,13 @@
 'use server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { getProfile } from '@/lib/auth/dal'
+import { requireAdmin as requireVerifiedAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { createVideoUpload } from '@/lib/mux/upload'
 import { getOrigin } from '@/lib/site'
 import type { QFilter } from './question-filter'
 
 async function requireAdmin() {
-  const p = await getProfile()
-  if (p?.role !== 'admin') redirect('/dashboard')
+  await requireVerifiedAdmin()
 }
 
 export type QuestionInput = {

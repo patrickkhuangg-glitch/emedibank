@@ -26,7 +26,7 @@ test('background monitoring detects stalls/overdue cleanup, records incidents on
 })
 test('health endpoint denies students and fails visibly rather than claiming healthy when monitor is unavailable',async()=>{
  let role='student',data:unknown=null
- const route=loadModule('src/app/api/admin/interviews/health/route.ts',{'@/lib/interviews/operation-alerts':{alertConfiguration:()=>null},'@/lib/auth/dal':{getProfile:async()=>({role})},'@/lib/supabase/admin':{createAdminClient:()=>({rpc:async()=>({data,error:null})})}}) as {GET:()=>Promise<Response>}
+ const route=loadModule('src/app/api/admin/interviews/health/route.ts',{'@/lib/interviews/operation-alerts':{alertConfiguration:()=>null},'@/lib/auth/dal':{getProfile:async()=>({role})},'@/lib/auth/admin-mfa':{adminMfaIsVerified:async()=>true},'@/lib/supabase/admin':{createAdminClient:()=>({rpc:async()=>({data,error:null})})}}) as {GET:()=>Promise<Response>}
  assert.equal((await route.GET()).status,403);role='admin';assert.equal((await route.GET()).status,503)
  data={issues:[],metrics:{},checked_at:new Date().toISOString()};const r=await route.GET();assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'private, no-store')
 })

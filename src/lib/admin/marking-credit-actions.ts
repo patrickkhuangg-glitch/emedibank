@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth/dal'
+import { adminMfaIsVerified } from '@/lib/auth/admin-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export type MarkingCreditState = { error?: string; message?: string }
@@ -9,6 +10,7 @@ export type MarkingCreditState = { error?: string; message?: string }
 export async function addMarkingCreditsAction(_previous: MarkingCreditState, formData: FormData): Promise<MarkingCreditState> {
   const actor = await getProfile()
   if (actor?.role !== 'admin') return { error: 'Only admins can add marking credits.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before changing credits.' }
   const userId = String(formData.get('userId') ?? '')
   const requestId = String(formData.get('requestId') ?? '')
   const essay = String(formData.get('essayAmount') ?? '').trim()

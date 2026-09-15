@@ -1,4 +1,5 @@
 import { getProfile } from '@/lib/auth/dal'
+import { adminMfaIsVerified } from '@/lib/auth/admin-mfa'
 import { apiError, InterviewApiError } from '@/lib/interviews/api'
 import { organiseTranscript, transcriptLayoutFailure, transcriptLayoutKey } from '@/lib/interviews/transcript-section-provider'
 import { TRANSCRIPT_CHECK_SAMPLE, evaluateTranscriptCheck } from '@/lib/interviews/transcript-check-sample'
@@ -8,6 +9,7 @@ export async function POST(request:Request){
   const profile=await getProfile()
   if(!profile)throw new InterviewApiError('Sign in required.',401)
   if(profile.role!=='admin')throw new InterviewApiError('Reviewer access required.',403)
+  if(!await adminMfaIsVerified())throw new InterviewApiError('Multi-factor verification required.',403)
   if(request.headers.get('origin')!==new URL(request.url).origin)throw new InterviewApiError('Request origin is not allowed.',403)
   const json=(value:unknown)=>Response.json(value,{headers:{'Cache-Control':'private, no-store'}})
   if(!transcriptLayoutKey())return json({status:'unavailable',reason:'transcript_layout_not_configured'})

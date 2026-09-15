@@ -6,6 +6,7 @@ const context={actor:null as null|{id:string;role:string},calls:[] as Array<{nam
 ;(globalThis as unknown as {creditActionTest:typeof context}).creditActionTest=context
 const mocks:Record<string,string>={
  '@/lib/auth/dal':"exports.getProfile=async()=>globalThis.creditActionTest.actor",
+ '@/lib/auth/admin-mfa':"exports.adminMfaIsVerified=async()=>true",
  '@/lib/supabase/admin':"exports.createAdminClient=()=>({rpc:async(name,args)=>{globalThis.creditActionTest.calls.push({name,args});return globalThis.creditActionTest.response}})",
  'next/cache':"exports.revalidatePath=path=>globalThis.creditActionTest.paths.push(path)",
 }

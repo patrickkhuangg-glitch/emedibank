@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getProfile, requireAdmin, requireUser } from '@/lib/auth/dal'
+import { adminMfaIsVerified, requireAdminMfa } from '@/lib/auth/admin-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createHostCalendarEvent, deleteHostCalendarEvent } from '@/lib/google-calendar'
 import { createZoomMeeting, deleteZoomMeeting } from '@/lib/zoom/client'
@@ -14,6 +15,7 @@ export async function createTutoringSessionAction(
 ): Promise<CreateTutoringSessionState> {
   const adminProfile = await getProfile()
   if (adminProfile?.role !== 'admin') return { error: 'Only admins can schedule tutoring sessions.' }
+  if (!await adminMfaIsVerified()) return { error: 'Verify your authenticator code before scheduling sessions.' }
 
   const planId = value(formData, 'planId')
   const planItemId = value(formData, 'planItemId')
@@ -102,6 +104,7 @@ export async function createTutoringSessionAction(
 export async function cancelTutoringSessionAction(formData: FormData) {
   const user = await requireUser('/bookings')
   const profile = await getProfile()
+  if (profile?.role === 'admin') await requireAdminMfa()
   const sessionId = value(formData, 'sessionId')
   if (!sessionId) return
 
@@ -170,6 +173,7 @@ export async function approveTutoringOverrunAction(formData: FormData) {
 export async function updateTutoringSessionFollowUpAction(formData: FormData) {
   const user = await requireUser('/bookings')
   const profile = await getProfile()
+  if (profile?.role === 'admin') await requireAdminMfa()
   const sessionId = value(formData, 'sessionId')
   const planId = value(formData, 'planId')
   if (!sessionId || !planId) return
