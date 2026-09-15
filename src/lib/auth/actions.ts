@@ -5,7 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOrigin } from '@/lib/site'
 import { normalisePhone, verifySignupProtection } from '@/lib/auth/signup-protection'
-import { homeForRole, safeInternalPath } from '@/lib/auth/roles'
+import { safeInternalPath } from '@/lib/auth/roles'
+import { destinationAfterSignIn } from '@/lib/auth/profile-completion'
+import { claimSingleDeviceSession } from '@/lib/auth/single-device'
 
 export type AuthState = { error?: string; message?: string }
 
@@ -20,10 +22,13 @@ export async function signInAction(
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: error.message }
+  if (!await claimSingleDeviceSession(supabase)) {
+    await supabase.auth.signOut({ scope: 'local' })
+    return { error: 'We could not secure this sign-in. Please try again.' }
+  }
 
-  if (redirectTo) redirect(redirectTo)
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle()
-  redirect(homeForRole(profile?.role))
+  const { data: profile } = await supabase.from('profiles').select('role, phone_number').eq('id', data.user.id).maybeSingle()
+  redirect(destinationAfterSignIn(profile, redirectTo))
 }
 
 export async function signUpAction(
@@ -50,7 +55,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      data: { full_name: fullName, phone_number: phoneNumber },
+      data: { full_name: fullName, phone_number: phoneNumber, signup_authorization: protection.authorization },
       emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent('/pricing?signup=success')}`,
     },
   })
@@ -59,6 +64,10 @@ export async function signUpAction(
   // If email confirmation is on, there's no session yet.
   if (!data.session) {
     return { message: 'Check your email to verify your account, then choose a plan and start your trial.' }
+  }
+  if (!await claimSingleDeviceSession(supabase)) {
+    await supabase.auth.signOut({ scope: 'local' })
+    return { error: 'We could not secure this sign-in. Please try again.' }
   }
   redirect('/pricing?signup=success')
 }
@@ -76,6 +85,28 @@ export async function updateProfileAction(_previous: AuthState, formData: FormDa
   if (error) return { error: error.message.includes('profiles_phone_number_unique') ? 'That mobile number is already linked to another account.' : 'Your details could not be saved. Please try again.' }
   revalidatePath('/account')
   return { message: 'Your details have been saved. You can now start a trial.' }
+}
+
+export async function completeProfileAction(_previous: AuthState, formData: FormData): Promise<AuthState> {
+  const fullName = String(formData.get('full_name') ?? '').trim()
+  const phoneNumber = normalisePhone(String(formData.get('phone_number') ?? ''))
+  const requestedPath = safeInternalPath(String(formData.get('next') ?? ''))
+  if (fullName.length < 2) return { error: 'Enter your full name.' }
+  if (!phoneNumber) return { error: 'Enter a valid mobile number. Use an Australian 04 number or international + format.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Your session has expired. Please log in again.' }
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .update({ full_name: fullName, phone_number: phoneNumber })
+    .eq('id', user.id)
+    .select('role, phone_number')
+    .single()
+  if (error) return { error: error.message.includes('profiles_phone_number_unique') ? 'That mobile number is already linked to another account.' : 'Your details could not be saved. Please try again.' }
+
+  revalidatePath('/', 'layout')
+  redirect(destinationAfterSignIn(profile, requestedPath))
 }
 
 export async function signInWithGoogleAction(formData: FormData) {

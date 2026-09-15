@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getProfile, getUser } from '@/lib/auth/dal'
-import { homeForRole } from '@/lib/auth/roles'
+import { destinationAfterSignIn } from '@/lib/auth/profile-completion'
 import { SignupForm } from './signup-form'
 
 export const metadata: Metadata = { title: 'Sign up' }
 
 export default async function SignupPage() {
-  if (await getUser()) redirect(homeForRole((await getProfile())?.role))
+  if (await getUser()) redirect(destinationAfterSignIn(await getProfile()))
   return (
     <div className="space-y-6">
       <div>

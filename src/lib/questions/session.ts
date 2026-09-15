@@ -1,6 +1,8 @@
+import { PRACTICE_QUESTION_FILTER } from '@/lib/questions/availability'
 import 'server-only'
 import { randomInt } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { readAllRows } from '@/lib/supabase/read-all-rows'
 import { canAccessExam } from '@/lib/access'
 
 export type SessionFilters = {
@@ -25,12 +27,13 @@ export async function resolveSessionQuestionIds(
     subtestIds = (subs ?? []).map((s) => s.id)
   }
 
-  let query = supabase.from('questions').select('id').eq('published', true).in('subtest_id', subtestIds)
-  if (f.difficulty) query = query.eq('difficulty', f.difficulty as 'easy' | 'medium' | 'hard')
-  if (f.tags.length) query = query.overlaps('tags', f.tags)
-
-  const { data } = await query
-  const ids = (data ?? []).map((q) => q.id)
+  const rows = await readAllRows((from, to) => {
+    let query = supabase.from('questions').select('id').eq('published', true).or(PRACTICE_QUESTION_FILTER).in('subtest_id', subtestIds)
+    if (f.difficulty) query = query.eq('difficulty', f.difficulty as 'easy' | 'medium' | 'hard')
+    if (f.tags.length) query = query.overlaps('tags', f.tags)
+    return query.order('id').range(from, to)
+  })
+  const ids = rows.map((q) => q.id)
   for (let i = ids.length - 1; i > 0; i--) {
     const j = randomInt(i + 1)
     ;[ids[i], ids[j]] = [ids[j], ids[i]]

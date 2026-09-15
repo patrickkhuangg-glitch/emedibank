@@ -1,0 +1,43 @@
+{
+  "base": "3338fe283c107fd3078dbcb020a061cbe43e7ec1",
+  "deployment_id": "dpl_5jvGBdaVXNxPTBUxwfWmXpsqCvhU",
+  "source_directory": "/Users/patrick/Documents/ChatGPT/EMeducate/studocyte/.vercel/transcript-questions-release",
+  "source_kind": "GitHub main committed tree",
+  "files": [],
+  "applied_migrations": [
+    {
+      "file": "supabase/migrations/0033_interview_video_marking.sql",
+      "sha256": "08ac6162e50dce475f505a55cc23b1051eb2df106189ec77c6b75d8029c6e40b"
+    },
+    {
+      "file": "supabase/migrations/0035_security_hardening.sql",
+      "sha256": "12f1cd87dc4c43dfd69b69a17acab880778d62d68aec5a40bcd359a9ae49b0b0"
+    },
+    {
+      "file": "supabase/migrations/0038_mock_interview_batch_marking.sql",
+      "sha256": "fd657996da72127f7f8ef5314dba8c9dbb0199aaf7bcae9f6d065d72ed8dc8b1"
+    },
+    {
+      "file": "supabase/migrations/0039_interview_marking_prices.sql",
+      "sha256": "fcf7628acc6563312067d03b39a15a9256b171a1ee996da81f3f9d9dacf55ae1"
+    },
+    {
+      "file": "supabase/migrations/0040_interview_story_bank.sql",
+      "sha256": "b7d2cc1125a9c1af62e79b0c4756f3b2f9d696156d0229c96a8c7aa496831c81"
+    },
+    {
+      "file": "supabase/migrations/0041_interview_practice_progress.sql",
+      "sha256": "7f52b84026772d51c9c9122564f21223e5e38697cd95f1b6bfe710eb8cac989f"
+    },
+    {
+      "file": "supabase/migrations/0042_practice_audio_recording_limit.sql",
+      "sha256": "b07e81c5aeee26c97455886a61492e7a392d15a356feed4bb24ab7a62b59428d"
+    },
+    {
+      "file": "supabase/migrations/0043_interview_transcript_layouts.sql",
+      "sha256": "f30222c34a8d56b16b28c202751df2f42e274092915e8c579f8c21adbaf927c4"
+    }
+  ],
+  "previous_deployment_id": "dpl_3hVqrNneYiX5pPgwuCN7SZvU6LkW",
+  "notes": "Published transcript-grouping repair. Default text model gpt-4.1-mini with explicit unit IDs, exact wording preserved, and grouped student/reviewer display. Existing text inference credentials preferred over audio-only fallback; safe provider diagnostics. Legacy ready/failed presentation caches refresh on authorised access; current caches retain bounded retries. Live existing-admin synthetic check passed 17/17 sentence assignments across four questions; original disclosure verified. All 62 interview tests, full lint (one pre-existing warning) and production build passed. Public endpoints deny unauthenticated access. No production configuration, schema, account, permission or marking-credit changes. Full submitted-review walkthrough not run (no existing submissions; temporary-admin test blocked by automatic approval review). Unrelated workspace edits excluded."
+}

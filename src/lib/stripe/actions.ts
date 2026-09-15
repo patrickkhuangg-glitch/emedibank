@@ -1,15 +1,18 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { paymentsAvailable } from '@/lib/security/payments'
 import { getStripe } from './client'
 import { getOrCreateCustomerId } from './customer'
-import { CURRENCIES, TRIAL_PERIOD_DAYS, type Currency, type Interval } from './pricing'
+import { CURRENCIES, type Currency, type Interval } from './pricing'
+import { getCheckoutTrialEnd } from './trial'
 import { getUser, getProfile } from '@/lib/auth/dal'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { getOrigin } from '@/lib/site'
 
 /** Start a subscription checkout for a product + interval. Redirects to Stripe. */
 export async function startCheckoutAction(formData: FormData) {
+  if (!paymentsAvailable()) redirect('/pricing?error=payments_unavailable')
   const user = await getUser()
   if (!user) redirect('/login?redirectTo=/pricing')
 
@@ -21,15 +24,19 @@ export async function startCheckoutAction(formData: FormData) {
   const currency = (CURRENCIES as readonly string[]).includes(requestedCurrency)
     ? requestedCurrency as Currency
     : undefined
+  const subscribeNow = formData.get('checkoutMode') === 'paid'
   const addInterviews = formData.get('addInterviews') === 'on'
 
-  const supabase = createAdminClient()
-  const { data: product } = await supabase
+  // Products and exams are a public catalogue. Read them through the normal
+  // request-scoped client so checkout does not need privileged database access
+  // until it actually creates or updates the customer's private billing data.
+  const supabase = await createClient()
+  const { data: product, error: productError } = await supabase
     .from('products')
     .select('id, stripe_product_id')
     .eq('id', productId)
     .maybeSingle()
-  if (!product?.stripe_product_id) redirect('/pricing?error=unknown_product')
+  if (productError || !product?.stripe_product_id) redirect('/pricing?error=unknown_product')
 
   const stripe = getStripe()
   const prices = await stripe.prices.list({
@@ -61,19 +68,39 @@ export async function startCheckoutAction(formData: FormData) {
   const profile = await getProfile()
   if (!profile?.full_name || !profile.phone_number) redirect('/account?complete=trial')
   const customerId = await getOrCreateCustomerId(user.id, user.email, profile?.full_name)
+  // An existing subscription for the same product belongs in billing management,
+  // not a second checkout (including subscriptions whose webhooks are delayed).
+  const existing = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 })
+  const selectedPrices = new Set(lineItems.map(item => item.price))
+  const selectedProducts = new Set([product.stripe_product_id])
+  if (addInterviews) {
+    for (const item of lineItems.slice(1)) {
+      const extraPrice = await stripe.prices.retrieve(item.price)
+      selectedProducts.add(typeof extraPrice.product === 'string' ? extraPrice.product : extraPrice.product.id)
+    }
+  }
+  if (existing.has_more || existing.data.some(subscription =>
+    !['canceled', 'incomplete_expired'].includes(subscription.status) &&
+    subscription.items.data.some(item => selectedPrices.has(item.price.id) || selectedProducts.has(
+      typeof item.price.product === 'string' ? item.price.product : item.price.product.id,
+    ))
+  )) redirect('/pricing?error=existing_subscription')
+
+  const trialEnd = subscribeNow ? null : await getCheckoutTrialEnd(user.id, customerId)
   const origin = await getOrigin()
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
+    consent_collection: { terms_of_service: 'required' },
+    automatic_tax: { enabled: false },
     payment_method_collection: 'if_required',
     customer: customerId,
     line_items: lineItems,
     ...(currency ? { currency } : {}),
     subscription_data: {
-      trial_period_days: TRIAL_PERIOD_DAYS,
-      trial_settings: {
+      ...(trialEnd ? { trial_end: trialEnd, trial_settings: {
         end_behavior: { missing_payment_method: 'pause' },
-      },
+      } } : {}),
       metadata: { supabase_user_id: user.id },
     },
     success_url: `${origin}/account?checkout=success`,

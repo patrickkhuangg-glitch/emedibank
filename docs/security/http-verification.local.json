@@ -1,0 +1,182 @@
+{
+  "checked_at": "2026-09-05T22:56:20.793490+00:00",
+  "scope": "Local production previews, no authenticated browser or external integration tests",
+  "results": [
+    {
+      "url": "http://127.0.0.1:3100/",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 44,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3100/privacy",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 46,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3100/terms",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 60,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3100/refunds",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 43,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3100/acceptable-use",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 35,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3100/studocyte/terms",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 41,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3101/",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(self), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 13,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3101/login",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(self), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 10,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3101/signup",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(self), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 10,
+      "all_script_nonces_match": true
+    },
+    {
+      "url": "http://127.0.0.1:3101/pricing",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(self), microphone=(self), geolocation=()"
+      },
+      "csp": true,
+      "frame_ancestors": true,
+      "script_count": 10,
+      "all_script_nonces_match": true
+    },
+    {
+      "path": "/api/enquiry",
+      "port": 3100,
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "path": "/api/interview-marking",
+      "port": 3100,
+      "status": 410,
+      "expected": 410
+    },
+    {
+      "path": "/api/interviews/recordings",
+      "port": 3101,
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "port": 3100,
+      "nonce_changes_between_requests": true
+    },
+    {
+      "port": 3101,
+      "nonce_changes_between_requests": true
+    }
+  ]
+}

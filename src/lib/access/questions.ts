@@ -1,3 +1,4 @@
+import { isMockOnly } from '@/lib/questions/availability'
 // Question-bank access + grading. All server-side (service role): the answer key
 // and explanation never reach the browser until the student submits, and the
 // video explanation is paid-only. Reuses Phase 1's exam entitlements.
@@ -5,11 +6,16 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessExam, hasActiveEntitlement } from '@/lib/access'
 import type { QuestionKind } from '@/lib/supabase/types'
-import { questionMarkValue } from '@/lib/practice/marks'
+import { gridMarkValue, questionMarkValue } from '@/lib/practice/marks'
 
 type YesNo = 'Yes' | 'No'
 type Table = { headers: string[]; rows: string[][] }
 export type QData = {
+  mock_only?: boolean
+  mock_key?: string
+  source_id?: string
+  source_title?: string
+  reasoning_family?: string
   passage?: string
   image?: string
   images?: string[]
@@ -67,18 +73,19 @@ export function markScore(
 
 export async function canAttemptQuestion(userId: string | null | undefined, questionId: string) {
   const m = await loadMeta(questionId)
-  if (!m || !m.published) return false
+  if (!m || !m.published || isMockOnly(m.data)) return false
   return canAccessExam(userId, m.exam_id)
 }
 
 export async function canWatchExplanation(userId: string | null | undefined, questionId: string) {
   const m = await loadMeta(questionId)
-  if (!m) return false
+  if (!m || !m.published || isMockOnly(m.data)) return false
   return hasActiveEntitlement(userId, m.exam_id)
 }
 
 export type SafeQuestion = {
   id: string
+  review?: { setId: string; setTitle: string; questionType: string }
   kind: QuestionKind
   topic: string | null
   marks: number
@@ -108,11 +115,13 @@ export async function buildSafeQuestion(m: QuestionMeta): Promise<SafeQuestion> 
   // science units); keep `table` as the first for older single-table callers.
   const tbls: Table[] = sd?.tables ?? m.data?.tables ?? (sd?.table ? [sd.table] : m.data?.table ? [m.data.table] : [])
   const imgs: string[] = sd?.images ?? m.data?.images ?? (sd?.image ? [sd.image] : m.data?.image ? [m.data.image] : [])
+  const qrType = m.tags?.find(tag => ['Tables','Diagrams','Complex','Text only'].includes(tag)) ?? (imgs.length ? (tbls.length ? 'Complex' : 'Diagrams') : tbls.length ? 'Tables' : 'Text only')
   const base = {
     id: m.id,
+    review: { setId: m.stimulus_id ?? m.id, setTitle: m.data?.source_title ?? 'Question set', questionType: m.subtest_slug === 'quantitative-reasoning' ? qrType : m.data?.reasoning_family ?? m.tags?.[0] ?? m.topic ?? 'Uncategorised' },
     kind: m.kind,
     topic: m.topic,
-    marks: questionMarkValue(m.subtest_slug, m.tags),
+    marks: m.subtest_slug === 'decision-making' && m.data?.statements?.length === 5 ? 2 : questionMarkValue(m.subtest_slug, m.tags),
     stem: m.stem,
     passage: sd?.passage ?? m.data?.passage ?? null,
     image: imgs[0] ?? null,
@@ -143,7 +152,7 @@ export async function getQuestionForAttempt(
   questionId: string,
 ): Promise<{ locked: true } | { locked: false; question: SafeQuestion }> {
   const m = await loadMeta(questionId)
-  if (!m || !m.published) return { locked: true }
+  if (!m || !m.published || isMockOnly(m.data)) return { locked: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { locked: true }
   return { locked: false, question: await buildSafeQuestion(m) }
 }
@@ -191,7 +200,7 @@ export async function gradeSingle(
   const is_correct = !!correct && correct.id === selectedOptionId
   const score = markScore(m, correct?.label, selected?.label, is_correct)
 
-  await supabase.from('question_attempts').insert({
+  const { error: attemptError } = await supabase.from('question_attempts').insert({
     user_id: userId,
     question_id: m.id,
     subtest_id: m.subtest_id,
@@ -200,6 +209,7 @@ export async function gradeSingle(
     is_correct,
     time_spent_seconds: timeSpentSeconds ?? null,
   })
+  if (attemptError) { console.error('Question attempt recording failed', attemptError.code, attemptError.message); throw new Error('Your answer could not be saved. Please retry marking.') }
 
   return {
     is_correct,
@@ -220,7 +230,7 @@ export async function submitAnswer(
   timeSpentSeconds?: number,
 ): Promise<AnswerResult | { denied: true }> {
   const m = await loadMeta(questionId)
-  if (!m || !m.published) return { denied: true }
+  if (!m || !m.published || isMockOnly(m.data)) return { denied: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
   return gradeSingle(userId, m, selectedOptionId, timeSpentSeconds)
 }
@@ -248,10 +258,10 @@ export async function gradeGrid(
     correct_answer: s.correct,
     correct: answers[String(index)] === s.correct,
   }))
-  const is_correct = per_statement.every((p) => p.correct)
+  const is_correct = per_statement.length > 0 && per_statement.every((p) => p.correct)
 
   const supabase = createAdminClient()
-  await supabase.from('question_attempts').insert({
+  const { error: attemptError } = await supabase.from('question_attempts').insert({
     user_id: userId,
     question_id: m.id,
     subtest_id: m.subtest_id,
@@ -261,10 +271,11 @@ export async function gradeGrid(
     is_correct,
     time_spent_seconds: timeSpentSeconds ?? null,
   })
+  if (attemptError) { console.error('Question attempt recording failed', attemptError.code, attemptError.message); throw new Error('Your answer could not be saved. Please retry marking.') }
 
   return {
     is_correct,
-    score: is_correct ? questionMarkValue(m.subtest_slug, m.tags) : 0,
+    score: gridMarkValue(m.subtest_slug, m.tags, per_statement.filter(p => p.correct).length, per_statement.length),
     per_statement,
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),
@@ -281,7 +292,7 @@ export async function submitGridAnswer(
   timeSpentSeconds?: number,
 ): Promise<GridResult | { denied: true }> {
   const m = await loadMeta(questionId)
-  if (!m || !m.published || !m.data?.statements?.length) return { denied: true }
+  if (!m || !m.published || isMockOnly(m.data) || !m.data?.statements?.length) return { denied: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
   return gradeGrid(userId, m, answers, timeSpentSeconds)
 }
@@ -297,10 +308,10 @@ export async function getExplanationPlayback(
   const supabase = createAdminClient()
   const { data: q } = await supabase
     .from('questions')
-    .select('mux_playback_id, video_status, subtest_id')
+    .select('mux_playback_id, video_status, subtest_id, data')
     .eq('id', questionId)
     .maybeSingle()
-  if (!q || q.video_status !== 'ready' || !q.mux_playback_id) return { denied: true }
+  if (!q || isMockOnly(q.data) || q.video_status !== 'ready' || !q.mux_playback_id) return { denied: true }
 
   const { data: st } = await supabase
     .from('subtests')
@@ -341,7 +352,7 @@ export async function gradeMostLeast(
   const is_correct = most_correct && least_correct
 
   const supabase = createAdminClient()
-  await supabase.from('question_attempts').insert({
+  const { error: attemptError } = await supabase.from('question_attempts').insert({
     user_id: userId,
     question_id: m.id,
     subtest_id: m.subtest_id,
@@ -351,6 +362,7 @@ export async function gradeMostLeast(
     is_correct,
     time_spent_seconds: timeSpentSeconds ?? null,
   })
+  if (attemptError) { console.error('Question attempt recording failed', attemptError.code, attemptError.message); throw new Error('Your answer could not be saved. Please retry marking.') }
 
   return {
     is_correct,
@@ -374,7 +386,7 @@ export async function submitMostLeastAnswer(
   timeSpentSeconds?: number,
 ): Promise<MostLeastResult | { denied: true }> {
   const m = await loadMeta(questionId)
-  if (!m || !m.published || !m.data?.mostLeast) return { denied: true }
+  if (!m || !m.published || isMockOnly(m.data) || !m.data?.mostLeast) return { denied: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
   return gradeMostLeast(userId, m, choice, timeSpentSeconds)
 }
@@ -391,8 +403,13 @@ export async function revealSolution(
   questionId: string,
 ): Promise<RevealResult | { denied: true }> {
   const m = await loadMeta(questionId)
-  if (!m || !m.published) return { denied: true }
+  if (!m || !m.published || isMockOnly(m.data)) return { denied: true }
   if (!(await canAccessExam(userId, m.exam_id))) return { denied: true }
+  return buildRevealedSolution(userId, m)
+}
+
+/** Ungated internal builder. Callers must verify access or mock-manifest membership. */
+export async function buildRevealedSolution(userId: string | null | undefined, m: QuestionMeta): Promise<RevealResult> {
   const common = {
     explanation_text: m.explanation_text,
     can_watch_video: await hasActiveEntitlement(userId, m.exam_id),

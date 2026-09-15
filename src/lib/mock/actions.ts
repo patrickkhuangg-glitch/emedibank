@@ -7,6 +7,8 @@ import { getUser } from '@/lib/auth/dal'
 import { verifyManifest } from './token'
 import {
   loadMeta,
+  buildRevealedSolution,
+  type RevealResult,
   buildSafeQuestion,
   gradeSingle,
   gradeGrid,
@@ -85,4 +87,11 @@ export async function mockGradeMostLeastAction(
   const v = await verify(token, questionId)
   if (!v || !v.meta.data?.mostLeast) return { denied: true }
   return gradeMostLeast(v.userId, v.meta, choice, timeSpentSeconds)
+}
+
+/** Read-only answer review for unanswered questions in this authorised mock. */
+export async function mockRevealSolutionAction(token: string, questionId: string): Promise<RevealResult | { denied: true }> {
+  const v = await verify(token, questionId)
+  if (!v) return { denied: true }
+  return buildRevealedSolution(v.userId, v.meta)
 }

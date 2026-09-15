@@ -1,0 +1,63 @@
+{
+  "status": "published; hosted checks passed",
+  "deployment_id": "dpl_FxDgHnYFPsYGwkzqeNob49jz4Qx9",
+  "previous_deployment_id": "dpl_JAdVn6qmSennFkGqNHdERaAKGzdH",
+  "files": [
+    {
+      "file": "src/components/interviews/student-actions.tsx",
+      "sha256": "a00d34bbe5934727f715d2143c4d34df2d91a6f3460a99be049700d117d0b2f1"
+    },
+    {
+      "file": "src/components/interviews/mock-marking-actions.tsx",
+      "sha256": "1d676caaa8cae1c63a967cae5c6d0649bf2a077160aed05776e5e4074f7f7f95"
+    },
+    {
+      "file": "src/components/interviews/mock-session-runner.tsx",
+      "sha256": "0a91e14f64ba29cc7ca0835e870bbd5b392e324c524d03f751af6fb510bccb3c"
+    },
+    {
+      "file": "src/lib/interviews/mock-marking.ts",
+      "sha256": "bc37c6b95cf1c705c1035a100f030bf2699f0860eebf63a8d6f2cb586087af65"
+    },
+    {
+      "file": "src/app/api/interviews/mock-sessions/[sessionId]/marking/route.ts",
+      "sha256": "9d6a1b42f3d8cac211da5609f6c853aed2b4c3be996772e10213ee3081f53663"
+    },
+    {
+      "file": "src/components/interview-attempt-review.tsx",
+      "sha256": "c73544df66b80ec368a99961993f90171ca2568a43c31dd58e951b8680c6af80"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/review/page.tsx",
+      "sha256": "aec4699c0eb24b5466f290295452f27515cd41740ee3fab0f6f327c5b5e66f03"
+    },
+    {
+      "file": "src/app/(app)/admin/interviews/[attemptId]/page.tsx",
+      "sha256": "b2121c13914a401752fb3a7fafe8c81c6aff9243b2c787669fb1131ce58c9c3d"
+    },
+    {
+      "file": "src/lib/interviews/marking-data.ts",
+      "sha256": "f8665baedda6afdab51e2f8629bbeb34f51edc73331565dc2d3d5d40f22abd34"
+    },
+    {
+      "file": "supabase/migrations/0038_mock_interview_batch_marking.sql",
+      "sha256": "fd657996da72127f7f8ef5314dba8c9dbb0199aaf7bcae9f6d065d72ed8dc8b1"
+    },
+    {
+      "file": "tests/interview-batch-api.test.ts",
+      "sha256": "9b628b0cd9e829f4e093c0cf2c89bf546c00393491cfe80af33e5abcf04fd693"
+    },
+    {
+      "file": "tests/interview-batch-marking.test.ts",
+      "sha256": "8fe39809f478eb85a226d180741cfde49610134e4faad12e4b82e66e8877d9cc"
+    },
+    {
+      "file": "tests/interview-mock.test.ts",
+      "sha256": "9884cf8a1a6059df71185502ab6971ba569014a268f36fd25c0c1ba0241237d6"
+    },
+    {
+      "file": "src/lib/supabase/types.ts",
+      "sha256": "24627c08d303bd5abd5315bc92ef1be284bcb2bf9ff1d70f0af3b47369f3ed57"
+    }
+  ]
+}

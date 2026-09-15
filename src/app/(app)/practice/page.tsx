@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 
@@ -12,9 +12,9 @@ export default async function PracticePage() {
   const supabase = await createClient()
   const { data: exams } = await supabase.from('exams').select('*').eq('active', true).eq('kind', 'mcq').order('created_at')
   return (
-    <Container className="py-16">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight">Practice</h1>
+    <Container>
+      <div className="w-full">
+        <h1 className="page-title">Practice</h1>
         <p className="mt-1 text-muted">Build a question session. Choose sections, categories, length, and timing.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {(exams ?? []).map((exam) => (

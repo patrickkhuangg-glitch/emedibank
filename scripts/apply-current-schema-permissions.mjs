@@ -1,0 +1,18 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {sql} from './lib/interview-operator.mjs';
+if(!process.argv.includes('--authorised-production-hardening'))throw Error('Explicit production hardening authorisation required');
+const file='supabase/migrations/0055_current_schema_permissions.sql',migration=readFileSync(file,'utf8');
+const before=await sql("select pg_get_functiondef('public.is_admin(uuid)'::regprocedure) definition");
+writeFileSync('artifacts/release-access-credits/is-admin-before.json',JSON.stringify(before,null,2));
+const bounded=migration.replace('begin;','begin;\nset local lock_timeout=\'5s\';set local statement_timeout=\'20s\';');
+await sql(bounded.replace(/commit;\s*$/,'rollback;'),false);
+console.log('Hosted rollback rehearsal passed.');
+await sql(bounded,false);
+const [inventory]=await sql(readFileSync('supabase/security-inventory.sql','utf8'));
+writeFileSync('artifacts/release-access-credits/inventory-after.json',JSON.stringify(inventory.inventory,null,2));
+const violations=await sql("select c.relname,r.rolname from pg_class c join pg_namespace n on n.oid=c.relnamespace cross join pg_roles r where n.nspname='public' and c.relkind in ('r','p') and r.rolname in ('anon','authenticated') and (has_table_privilege(r.oid,c.oid,'TRUNCATE') or has_table_privilege(r.oid,c.oid,'TRIGGER') or has_table_privilege(r.oid,c.oid,'REFERENCES'))");
+if(violations.length)throw Error('Excessive table permissions remain');
+const gate=await sql("select tgenabled from pg_trigger where tgrelid='auth.users'::regclass and tgname='require_signup_authorization' and not tgisinternal");
+if(gate[0]?.tgenabled!=='O')throw Error('Signup ticket trigger is not active');
+writeFileSync('artifacts/release-access-credits/migration.json',JSON.stringify({at:new Date().toISOString(),migration:file,rollbackRehearsal:true,applied:true,excessiveTablePrivileges:0,signupGateActive:true},null,2));
+console.log('Current-schema permissions applied; excessive table privileges removed; signup ticket gate active.');

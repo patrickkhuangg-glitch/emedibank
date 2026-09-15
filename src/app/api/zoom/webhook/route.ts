@@ -26,18 +26,27 @@ export async function POST(request: Request) {
   if (!secret) return NextResponse.json({ error: 'Zoom webhook is not configured.' }, { status: 503 })
 
   const body = await request.text()
-  const payload = JSON.parse(body) as ZoomWebhook
+  // Validation challenges are signed Zoom requests too. Never expose an HMAC
+  // oracle by signing their plainToken before authenticating the whole request.
+  if (!validSignature(request, body, secret)) return NextResponse.json({ error: 'Invalid Zoom signature.' }, { status: 401 })
+  let payload: ZoomWebhook
+  try {
+    const parsed: unknown = JSON.parse(body)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid payload')
+    payload = parsed as ZoomWebhook
+  } catch {
+    return NextResponse.json({ error: 'Invalid Zoom payload.' }, { status: 400 })
+  }
 
   if (payload.event === 'endpoint.url_validation') {
     const plainToken = payload.payload?.plainToken
-    if (!plainToken) return NextResponse.json({ error: 'Missing Zoom validation token.' }, { status: 400 })
+    if (typeof plainToken !== 'string' || !plainToken || plainToken.length > 256) return NextResponse.json({ error: 'Invalid Zoom validation token.' }, { status: 400 })
     return NextResponse.json({
       plainToken,
       encryptedToken: createHmac('sha256', secret).update(plainToken).digest('hex'),
     })
   }
 
-  if (!validSignature(request, body, secret)) return NextResponse.json({ error: 'Invalid Zoom signature.' }, { status: 401 })
   if (payload.event !== 'meeting.ended') return NextResponse.json({ received: true })
 
   const meetingId = String(payload.payload?.object?.id ?? '')
@@ -80,7 +89,9 @@ export async function POST(request: Request) {
 function validSignature(request: Request, body: string, secret: string) {
   const timestamp = request.headers.get('x-zm-request-timestamp')
   const signature = request.headers.get('x-zm-signature')
-  if (!timestamp || !signature) return false
+  if (!timestamp || !/^\d{1,12}$/.test(timestamp) || !signature || !/^v0=[a-f0-9]{64}$/.test(signature)) return false
+  const seconds = Number(timestamp)
+  if (!Number.isSafeInteger(seconds) || Math.abs(Math.floor(Date.now() / 1000) - seconds) > 300) return false
   const expected = `v0=${createHmac('sha256', secret).update(`v0:${timestamp}:${body}`).digest('hex')}`
   const expectedBytes = Buffer.from(expected)
   const actualBytes = Buffer.from(signature)

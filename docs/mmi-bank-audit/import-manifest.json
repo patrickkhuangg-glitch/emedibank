@@ -1,0 +1,957 @@
+{
+  "sourceFile": "mmi-station-bank-156.md",
+  "sourceSha256": "aaa505859c298e0fc132d3afc8466c3d24c6fc0518dc3244850c3f078556592c",
+  "reviewDate": "2026-09-09",
+  "accepted": [
+    {
+      "sourceNumber": 1,
+      "sourceTitle": "Child assent before a procedure",
+      "stationId": "mmi-bank-2026-09-001-child-assent-before-a-procedure",
+      "category": "Consent · children and assent",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 2,
+      "sourceTitle": "Concealing a terminal diagnosis",
+      "stationId": "mmi-bank-2026-09-002-concealing-a-terminal-diagnosis",
+      "category": "Communication · difficult news",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 3,
+      "sourceTitle": "Copying a clinical note",
+      "stationId": "mmi-bank-2026-09-003-copying-a-clinical-note",
+      "category": "Patient safety · documentation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 4,
+      "sourceTitle": "A request for a work certificate",
+      "stationId": "mmi-bank-2026-09-004-a-request-for-a-work-certificate",
+      "category": "Integrity · certification",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 5,
+      "sourceTitle": "Gift from a grateful patient",
+      "stationId": "mmi-bank-2026-09-005-gift-from-a-grateful-patient",
+      "category": "Professionalism · gifts and boundaries",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 6,
+      "sourceTitle": "Personal information in a teaching session",
+      "stationId": "mmi-bank-2026-09-006-personal-information-in-a-teaching-session",
+      "category": "Confidentiality · teaching material",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 7,
+      "sourceTitle": "Low health literacy",
+      "stationId": "mmi-bank-2026-09-007-low-health-literacy",
+      "category": "Communication · health literacy",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 8,
+      "sourceTitle": "Family-directed traditional healing",
+      "stationId": "mmi-bank-2026-09-008-family-directed-traditional-healing",
+      "category": "Cultural respect · traditional healing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 9,
+      "sourceTitle": "Religious clothing and sterile practice",
+      "stationId": "mmi-bank-2026-09-009-religious-clothing-and-sterile-practice",
+      "category": "Equity · religious accommodation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 10,
+      "sourceTitle": "A clinician’s chosen name",
+      "stationId": "mmi-bank-2026-09-010-a-clinician-s-chosen-name",
+      "category": "Professionalism · respect at work",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 12,
+      "sourceTitle": "Feedback about a supervisor",
+      "stationId": "mmi-bank-2026-09-012-feedback-about-a-supervisor",
+      "category": "Professionalism · speaking up",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 13,
+      "sourceTitle": "Certificate for disability support",
+      "stationId": "mmi-bank-2026-09-013-certificate-for-disability-support",
+      "category": "Equity · disability support",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 14,
+      "sourceTitle": "Family members answering for a patient",
+      "stationId": "mmi-bank-2026-09-014-family-members-answering-for-a-patient",
+      "category": "Communication · patient participation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 15,
+      "sourceTitle": "Debriefing after a patient death",
+      "stationId": "mmi-bank-2026-09-015-debriefing-after-a-patient-death",
+      "category": "Empathy · professional wellbeing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 16,
+      "sourceTitle": "Patient request for another clinician",
+      "stationId": "mmi-bank-2026-09-016-patient-request-for-another-clinician",
+      "category": "Communication · complaints and continuity",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 17,
+      "sourceTitle": "Unpaid carer exhaustion",
+      "stationId": "mmi-bank-2026-09-017-unpaid-carer-exhaustion",
+      "category": "Empathy · carer wellbeing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 18,
+      "sourceTitle": "Inaccurate medication list at discharge",
+      "stationId": "mmi-bank-2026-09-018-inaccurate-medication-list-at-discharge",
+      "category": "Patient safety · discharge communication",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 19,
+      "sourceTitle": "An inaccessible appointment-booking system",
+      "stationId": "mmi-bank-2026-09-019-an-inaccessible-appointment-booking-system",
+      "category": "Equity · digital access to care",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 21,
+      "sourceTitle": "Medication shortages and continuity",
+      "stationId": "mmi-bank-2026-09-021-medication-shortages-and-continuity",
+      "category": "Patient safety · continuity of medicines",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 22,
+      "sourceTitle": "A clinician’s personal fundraiser",
+      "stationId": "mmi-bank-2026-09-022-a-clinician-s-personal-fundraiser",
+      "category": "Professionalism · fundraising boundaries",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 23,
+      "sourceTitle": "Privacy in a shared hospital room",
+      "stationId": "mmi-bank-2026-09-023-privacy-in-a-shared-hospital-room",
+      "category": "Confidentiality · privacy in hospital",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 24,
+      "sourceTitle": "Managing a patient complaint online",
+      "stationId": "mmi-bank-2026-09-024-managing-a-patient-complaint-online",
+      "category": "Confidentiality · public complaints",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 26,
+      "sourceTitle": "A missed follow-up result",
+      "stationId": "mmi-bank-2026-09-026-a-missed-follow-up-result",
+      "category": "Patient safety · missed results",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 27,
+      "sourceTitle": "Fluoridation referendum",
+      "stationId": "mmi-bank-2026-09-027-fluoridation-referendum",
+      "category": "Public health · evidence and trust",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 28,
+      "sourceTitle": "Sugary-drink sponsorship",
+      "stationId": "mmi-bank-2026-09-028-sugary-drink-sponsorship",
+      "category": "Public health · sponsorship and equity",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 29,
+      "sourceTitle": "Vaping waste near schools",
+      "stationId": "mmi-bank-2026-09-029-vaping-waste-near-schools",
+      "category": "Public health · youth prevention",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 30,
+      "sourceTitle": "Heatwave response",
+      "stationId": "mmi-bank-2026-09-030-heatwave-response",
+      "category": "Equity · emergency access",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 31,
+      "sourceTitle": "Wastewater surveillance",
+      "stationId": "mmi-bank-2026-09-031-wastewater-surveillance",
+      "category": "Public health · population privacy",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 32,
+      "sourceTitle": "Masks on public transport",
+      "stationId": "mmi-bank-2026-09-032-masks-on-public-transport",
+      "category": "Public health · proportionate restrictions",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 33,
+      "sourceTitle": "E-scooter injury prevention",
+      "stationId": "mmi-bank-2026-09-033-e-scooter-injury-prevention",
+      "category": "Public health · transport safety",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 34,
+      "sourceTitle": "Safe disposal of needles",
+      "stationId": "mmi-bank-2026-09-034-safe-disposal-of-needles",
+      "category": "Public health · harm minimisation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 36,
+      "sourceTitle": "Shared electronic health record",
+      "stationId": "mmi-bank-2026-09-036-shared-electronic-health-record",
+      "category": "Confidentiality · shared health records",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 37,
+      "sourceTitle": "Global vaccine distribution",
+      "stationId": "mmi-bank-2026-09-037-global-vaccine-distribution",
+      "category": "Public health · global equity",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 38,
+      "sourceTitle": "Cross-border telehealth",
+      "stationId": "mmi-bank-2026-09-038-cross-border-telehealth",
+      "category": "Equity · coordinated care",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 39,
+      "sourceTitle": "Remote dialysis during flooding",
+      "stationId": "mmi-bank-2026-09-039-remote-dialysis-during-flooding",
+      "category": "Patient safety · disaster continuity",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 40,
+      "sourceTitle": "School-lunch nutrition policy",
+      "stationId": "mmi-bank-2026-09-040-school-lunch-nutrition-policy",
+      "category": "Public health · nutrition and inclusion",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 41,
+      "sourceTitle": "Free period products",
+      "stationId": "mmi-bank-2026-09-041-free-period-products",
+      "category": "Equity · targeted student support",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 42,
+      "sourceTitle": "Food insecurity screening",
+      "stationId": "mmi-bank-2026-09-042-food-insecurity-screening",
+      "category": "Equity · screening and practical support",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 43,
+      "sourceTitle": "Sleep education for shift workers",
+      "stationId": "mmi-bank-2026-09-043-sleep-education-for-shift-workers",
+      "category": "Public health · work and wellbeing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 44,
+      "sourceTitle": "Air quality near a freight corridor",
+      "stationId": "mmi-bank-2026-09-044-air-quality-near-a-freight-corridor",
+      "category": "Public health · environmental uncertainty",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 45,
+      "sourceTitle": "Public defibrillators",
+      "stationId": "mmi-bank-2026-09-045-public-defibrillators",
+      "category": "Public health · resource allocation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 46,
+      "sourceTitle": "Water restrictions and dialysis",
+      "stationId": "mmi-bank-2026-09-046-water-restrictions-and-dialysis",
+      "category": "Communication · explaining public priorities",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 48,
+      "sourceTitle": "Public alerts after a chemical spill",
+      "stationId": "mmi-bank-2026-09-048-public-alerts-after-a-chemical-spill",
+      "category": "Communication · emergency uncertainty",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 49,
+      "sourceTitle": "Accessibility of emergency warnings",
+      "stationId": "mmi-bank-2026-09-049-accessibility-of-emergency-warnings",
+      "category": "Equity · accessible warnings",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 50,
+      "sourceTitle": "Free sunscreen in public spaces",
+      "stationId": "mmi-bank-2026-09-050-free-sunscreen-in-public-spaces",
+      "category": "Public health · accessible prevention",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 51,
+      "sourceTitle": "Gambling advertising and sport",
+      "stationId": "mmi-bank-2026-09-051-gambling-advertising-and-sport",
+      "category": "Public health · gambling sponsorship",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 52,
+      "sourceTitle": "Community mental-health first aid",
+      "stationId": "mmi-bank-2026-09-052-community-mental-health-first-aid",
+      "category": "Professionalism · volunteer role boundaries",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 54,
+      "sourceTitle": "Withdrawing from a biobank",
+      "stationId": "mmi-bank-2026-09-054-withdrawing-from-a-biobank",
+      "category": "Research ethics · withdrawal",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 55,
+      "sourceTitle": "Animal research",
+      "stationId": "mmi-bank-2026-09-055-animal-research",
+      "category": "Research ethics · animal welfare",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 57,
+      "sourceTitle": "Brain-computer interface trial",
+      "stationId": "mmi-bank-2026-09-057-brain-computer-interface-trial",
+      "category": "Research ethics · emerging treatments",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 58,
+      "sourceTitle": "Direct-to-consumer genetic testing",
+      "stationId": "mmi-bank-2026-09-058-direct-to-consumer-genetic-testing",
+      "category": "Communication · uncertain health information",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 59,
+      "sourceTitle": "Returning individual research results",
+      "stationId": "mmi-bank-2026-09-059-returning-individual-research-results",
+      "category": "Research ethics · return of results",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 60,
+      "sourceTitle": "Synthetic patient data",
+      "stationId": "mmi-bank-2026-09-060-synthetic-patient-data",
+      "category": "Technology · synthetic health data",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 61,
+      "sourceTitle": "Research in a low-income setting",
+      "stationId": "mmi-bank-2026-09-061-research-in-a-low-income-setting",
+      "category": "Research ethics · fair partnerships",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 62,
+      "sourceTitle": "Paid patient partners",
+      "stationId": "mmi-bank-2026-09-062-paid-patient-partners",
+      "category": "Research ethics · patient partnership",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 63,
+      "sourceTitle": "Compassionate access to an unapproved therapy",
+      "stationId": "mmi-bank-2026-09-063-compassionate-access-to-an-unapproved-therapy",
+      "category": "Communication · hope and uncertainty",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 64,
+      "sourceTitle": "Incidental findings in imaging research",
+      "stationId": "mmi-bank-2026-09-064-incidental-findings-in-imaging-research",
+      "category": "Research ethics · incidental findings",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 65,
+      "sourceTitle": "Research involving refugees",
+      "stationId": "mmi-bank-2026-09-065-research-involving-refugees",
+      "category": "Research ethics · voluntary participation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 67,
+      "sourceTitle": "Deepfake health advertising",
+      "stationId": "mmi-bank-2026-09-067-deepfake-health-advertising",
+      "category": "Technology · misleading health content",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 68,
+      "sourceTitle": "Facial-recognition triage",
+      "stationId": "mmi-bank-2026-09-068-facial-recognition-triage",
+      "category": "Technology · predictive surveillance",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 69,
+      "sourceTitle": "Digital phenotyping for depression",
+      "stationId": "mmi-bank-2026-09-069-digital-phenotyping-for-depression",
+      "category": "Technology · mental-health predictions",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 70,
+      "sourceTitle": "Research participant becomes unwell",
+      "stationId": "mmi-bank-2026-09-070-research-participant-becomes-unwell",
+      "category": "Research ethics · participant safety",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 71,
+      "sourceTitle": "Health data sold after a company takeover",
+      "stationId": "mmi-bank-2026-09-071-health-data-sold-after-a-company-takeover",
+      "category": "Confidentiality · changing data use",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 72,
+      "sourceTitle": "Early access to a longevity drug",
+      "stationId": "mmi-bank-2026-09-072-early-access-to-a-longevity-drug",
+      "category": "Professionalism · uncertain benefits",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 73,
+      "sourceTitle": "Pharmaceutical influence on patient advocacy",
+      "stationId": "mmi-bank-2026-09-073-pharmaceutical-influence-on-patient-advocacy",
+      "category": "Integrity · industry-funded advocacy",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 74,
+      "sourceTitle": "Citizen science during an outbreak",
+      "stationId": "mmi-bank-2026-09-074-citizen-science-during-an-outbreak",
+      "category": "Public health · community health data",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 76,
+      "sourceTitle": "Public trust after a trial pause",
+      "stationId": "mmi-bank-2026-09-076-public-trust-after-a-trial-pause",
+      "category": "Communication · research safety updates",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 77,
+      "sourceTitle": "Ownership of a patient-created dataset",
+      "stationId": "mmi-bank-2026-09-077-ownership-of-a-patient-created-dataset",
+      "category": "Research ethics · community data ownership",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 78,
+      "sourceTitle": "Virtual reality exposure research",
+      "stationId": "mmi-bank-2026-09-078-virtual-reality-exposure-research",
+      "category": "Research ethics · anticipated distress",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 79,
+      "sourceTitle": "The family group-chat screenshot",
+      "stationId": "mmi-bank-2026-09-079-the-family-group-chat-screenshot",
+      "category": "Confidentiality · private messages",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 80,
+      "sourceTitle": "Algorithmic rental screening",
+      "stationId": "mmi-bank-2026-09-080-algorithmic-rental-screening",
+      "category": "Technology · fair automated decisions",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 82,
+      "sourceTitle": "Editing a colleague’s voice recording",
+      "stationId": "mmi-bank-2026-09-082-editing-a-colleague-s-voice-recording",
+      "category": "Integrity · altered recordings",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 83,
+      "sourceTitle": "A viral rescue video",
+      "stationId": "mmi-bank-2026-09-083-a-viral-rescue-video",
+      "category": "Dignity · filming emergencies",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 84,
+      "sourceTitle": "Online memorial comments",
+      "stationId": "mmi-bank-2026-09-084-online-memorial-comments",
+      "category": "Empathy · online grief",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 86,
+      "sourceTitle": "Location sharing between friends",
+      "stationId": "mmi-bank-2026-09-086-location-sharing-between-friends",
+      "category": "Consent · location sharing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 87,
+      "sourceTitle": "A child’s digital footprint",
+      "stationId": "mmi-bank-2026-09-087-a-child-s-digital-footprint",
+      "category": "Consent · children online",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 88,
+      "sourceTitle": "A deepfake at school",
+      "stationId": "mmi-bank-2026-09-088-a-deepfake-at-school",
+      "category": "Technology · impersonation and harm",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 89,
+      "sourceTitle": "A neighbourhood Wi-Fi network",
+      "stationId": "mmi-bank-2026-09-089-a-neighbourhood-wi-fi-network",
+      "category": "Technology · connectivity and data choices",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 90,
+      "sourceTitle": "Marketplace seller ratings",
+      "stationId": "mmi-bank-2026-09-090-marketplace-seller-ratings",
+      "category": "Fairness · platform appeals",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 91,
+      "sourceTitle": "A leaked volunteer database",
+      "stationId": "mmi-bank-2026-09-091-a-leaked-volunteer-database",
+      "category": "Confidentiality · accidental disclosure",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 92,
+      "sourceTitle": "Facial filters and self-image",
+      "stationId": "mmi-bank-2026-09-092-facial-filters-and-self-image",
+      "category": "Empathy · online appearance pressures",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 93,
+      "sourceTitle": "Online tutoring data",
+      "stationId": "mmi-bank-2026-09-093-online-tutoring-data",
+      "category": "Consent · lesson recordings",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 95,
+      "sourceTitle": "Anonymous campus app",
+      "stationId": "mmi-bank-2026-09-095-anonymous-campus-app",
+      "category": "Technology · anonymous community spaces",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 96,
+      "sourceTitle": "Automated job interviews",
+      "stationId": "mmi-bank-2026-09-096-automated-job-interviews",
+      "category": "Equity · automated recruitment",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 97,
+      "sourceTitle": "Tracking devices in a sports team",
+      "stationId": "mmi-bank-2026-09-097-tracking-devices-in-a-sports-team",
+      "category": "Consent · athlete monitoring",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 99,
+      "sourceTitle": "Rewilding a local reserve",
+      "stationId": "mmi-bank-2026-09-099-rewilding-a-local-reserve",
+      "category": "Sustainability · shared public space",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 100,
+      "sourceTitle": "Water allocation for a river town",
+      "stationId": "mmi-bank-2026-09-100-water-allocation-for-a-river-town",
+      "category": "Sustainability · water allocation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 101,
+      "sourceTitle": "A school tree-removal plan",
+      "stationId": "mmi-bank-2026-09-101-a-school-tree-removal-plan",
+      "category": "Sustainability · school safety and trees",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 103,
+      "sourceTitle": "A public art mural",
+      "stationId": "mmi-bank-2026-09-103-a-public-art-mural",
+      "category": "Cultural respect · public representation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 104,
+      "sourceTitle": "Renewable-energy wind farm",
+      "stationId": "mmi-bank-2026-09-104-renewable-energy-wind-farm",
+      "category": "Sustainability · meaningful consultation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 105,
+      "sourceTitle": "Food-waste collection",
+      "stationId": "mmi-bank-2026-09-105-food-waste-collection",
+      "category": "Sustainability · workable implementation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 106,
+      "sourceTitle": "Protecting a night sky",
+      "stationId": "mmi-bank-2026-09-106-protecting-a-night-sky",
+      "category": "Sustainability · light and public safety",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 108,
+      "sourceTitle": "Tourism in a fragile landscape",
+      "stationId": "mmi-bank-2026-09-108-tourism-in-a-fragile-landscape",
+      "category": "Sustainability · tourism and conservation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 110,
+      "sourceTitle": "Preserving a local cemetery",
+      "stationId": "mmi-bank-2026-09-110-preserving-a-local-cemetery",
+      "category": "Cultural respect · memory and development",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 111,
+      "sourceTitle": "A festival’s accessibility plan",
+      "stationId": "mmi-bank-2026-09-111-a-festival-s-accessibility-plan",
+      "category": "Equity · accessible events",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 112,
+      "sourceTitle": "Community solar subscriptions",
+      "stationId": "mmi-bank-2026-09-112-community-solar-subscriptions",
+      "category": "Equity · climate benefits",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 114,
+      "sourceTitle": "Community radio language policy",
+      "stationId": "mmi-bank-2026-09-114-community-radio-language-policy",
+      "category": "Community · language and belonging",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 115,
+      "sourceTitle": "Restoring a historical building",
+      "stationId": "mmi-bank-2026-09-115-restoring-a-historical-building",
+      "category": "Community · heritage and future use",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 116,
+      "sourceTitle": "Community garden pesticide dispute",
+      "stationId": "mmi-bank-2026-09-116-community-garden-pesticide-dispute",
+      "category": "Sustainability · contested evidence",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 117,
+      "sourceTitle": "Wildlife feeding ban",
+      "stationId": "mmi-bank-2026-09-117-wildlife-feeding-ban",
+      "category": "Sustainability · community behaviour",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 118,
+      "sourceTitle": "Disaster donations sorting",
+      "stationId": "mmi-bank-2026-09-118-disaster-donations-sorting",
+      "category": "Dignity · disaster assistance",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 119,
+      "sourceTitle": "A group project’s silent member",
+      "stationId": "mmi-bank-2026-09-119-a-group-project-s-silent-member",
+      "category": "Teamwork · different participation styles",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 120,
+      "sourceTitle": "A mentor taking credit",
+      "stationId": "mmi-bank-2026-09-120-a-mentor-taking-credit",
+      "category": "Integrity · recognition at work",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 121,
+      "sourceTitle": "Competing student-club events",
+      "stationId": "mmi-bank-2026-09-121-competing-student-club-events",
+      "category": "Teamwork · negotiating competing needs",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 122,
+      "sourceTitle": "A workplace dress-code complaint",
+      "stationId": "mmi-bank-2026-09-122-a-workplace-dress-code-complaint",
+      "category": "Equity · workplace expectations",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 123,
+      "sourceTitle": "A friend’s unpaid labour",
+      "stationId": "mmi-bank-2026-09-123-a-friend-s-unpaid-labour",
+      "category": "Fairness · unpaid expertise",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 124,
+      "sourceTitle": "A teacher’s political comment",
+      "stationId": "mmi-bank-2026-09-124-a-teacher-s-political-comment",
+      "category": "Professionalism · authority and debate",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 126,
+      "sourceTitle": "A team’s hidden workload",
+      "stationId": "mmi-bank-2026-09-126-a-team-s-hidden-workload",
+      "category": "Fairness · invisible work",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 128,
+      "sourceTitle": "A school discipline policy",
+      "stationId": "mmi-bank-2026-09-128-a-school-discipline-policy",
+      "category": "Equity · attendance and discipline",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 129,
+      "sourceTitle": "The departing employee’s files",
+      "stationId": "mmi-bank-2026-09-129-the-departing-employee-s-files",
+      "category": "Confidentiality · demonstrating past work",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 130,
+      "sourceTitle": "A peer’s public apology",
+      "stationId": "mmi-bank-2026-09-130-a-peer-s-public-apology",
+      "category": "Empathy · apology and repair",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 132,
+      "sourceTitle": "A sports coach’s harsh feedback",
+      "stationId": "mmi-bank-2026-09-132-a-sports-coach-s-harsh-feedback",
+      "category": "Leadership · constructive feedback",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 133,
+      "sourceTitle": "A leadership succession dispute",
+      "stationId": "mmi-bank-2026-09-133-a-leadership-succession-dispute",
+      "category": "Leadership · succession and legitimacy",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 134,
+      "sourceTitle": "A shared-house care roster",
+      "stationId": "mmi-bank-2026-09-134-a-shared-house-care-roster",
+      "category": "Teamwork · shared responsibilities",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 135,
+      "sourceTitle": "A child performer’s contract",
+      "stationId": "mmi-bank-2026-09-135-a-child-performer-s-contract",
+      "category": "Consent · young people's choices",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 136,
+      "sourceTitle": "Community choir exclusion",
+      "stationId": "mmi-bank-2026-09-136-community-choir-exclusion",
+      "category": "Community · inclusion and excellence",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 137,
+      "sourceTitle": "A refereeing mistake",
+      "stationId": "mmi-bank-2026-09-137-a-refereeing-mistake",
+      "category": "Fairness · responding to mistakes",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 139,
+      "sourceTitle": "An employee’s second job",
+      "stationId": "mmi-bank-2026-09-139-an-employee-s-second-job",
+      "category": "Fairness · competing work obligations",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 140,
+      "sourceTitle": "A school fundraiser prize",
+      "stationId": "mmi-bank-2026-09-140-a-school-fundraiser-prize",
+      "category": "Equity · fundraising participation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 141,
+      "sourceTitle": "A workplace wellbeing survey",
+      "stationId": "mmi-bank-2026-09-141-a-workplace-wellbeing-survey",
+      "category": "Confidentiality · staff feedback",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 142,
+      "sourceTitle": "The inaccessible team retreat",
+      "stationId": "mmi-bank-2026-09-142-the-inaccessible-team-retreat",
+      "category": "Equity · inclusive workplaces",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 144,
+      "sourceTitle": "A restaurant’s service charge",
+      "stationId": "mmi-bank-2026-09-144-a-restaurant-s-service-charge",
+      "category": "Communication · transparent pricing",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 145,
+      "sourceTitle": "A performer’s contract cancellation",
+      "stationId": "mmi-bank-2026-09-145-a-performer-s-contract-cancellation",
+      "category": "Fairness · past conduct and change",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 146,
+      "sourceTitle": "Anonymous peer feedback",
+      "stationId": "mmi-bank-2026-09-146-anonymous-peer-feedback",
+      "category": "Fairness · peer assessment",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 147,
+      "sourceTitle": "Parent volunteers and gatekeeping",
+      "stationId": "mmi-bank-2026-09-147-parent-volunteers-and-gatekeeping",
+      "category": "Equity · access to school activities",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 149,
+      "sourceTitle": "The overloaded intern",
+      "stationId": "mmi-bank-2026-09-149-the-overloaded-intern",
+      "category": "Professionalism · work and learning",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 150,
+      "sourceTitle": "A shared presentation deadline",
+      "stationId": "mmi-bank-2026-09-150-a-shared-presentation-deadline",
+      "category": "Teamwork · crisis and accountability",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 152,
+      "sourceTitle": "A club’s alcohol-free event",
+      "stationId": "mmi-bank-2026-09-152-a-club-s-alcohol-free-event",
+      "category": "Community · changing traditions",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 153,
+      "sourceTitle": "A young entrepreneur’s loan",
+      "stationId": "mmi-bank-2026-09-153-a-young-entrepreneur-s-loan",
+      "category": "Fairness · access to opportunity",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 154,
+      "sourceTitle": "A union meeting boycott",
+      "stationId": "mmi-bank-2026-09-154-a-union-meeting-boycott",
+      "category": "Leadership · rebuilding representation",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 155,
+      "sourceTitle": "A library’s quiet-space policy",
+      "stationId": "mmi-bank-2026-09-155-a-library-s-quiet-space-policy",
+      "category": "Community · competing access needs",
+      "status": "accepted after editorial revision"
+    },
+    {
+      "sourceNumber": 156,
+      "sourceTitle": "Choosing a community award recipient",
+      "stationId": "mmi-bank-2026-09-156-choosing-a-community-award-recipient",
+      "category": "Fairness · recognising contribution",
+      "status": "accepted after editorial revision"
+    }
+  ],
+  "heldSourceNumbers": [
+    11,
+    20,
+    25,
+    35,
+    47,
+    53,
+    56,
+    66,
+    75,
+    81,
+    85,
+    94,
+    98,
+    102,
+    107,
+    109,
+    113,
+    125,
+    127,
+    131,
+    138,
+    143,
+    148,
+    151
+  ]
+}

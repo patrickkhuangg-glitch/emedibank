@@ -1,12 +1,15 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import MuxPlayer from '@mux/mux-player-react'
 import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
-import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, revealAnswerAction } from '@/lib/questions/actions'
+import { QuestionLoading } from '@/components/question-loading'
+import { loadQuestionSection } from '@/lib/practice/load-question-section'
+import { useQuestionViews } from '@/lib/practice/use-question-views'
+import { canMarkQuestions } from '@/lib/practice/question-views'
+import { fetchQuestionsAction, answerQuestionAction, revealAnswerAction } from '@/lib/questions/actions'
 import { recordPracticeSessionAction, type StoredSessionResponse } from '@/lib/practice/session-actions'
+import styles from './exam-runner.module.css'
 
 // Passage/stimulus practice interface — serves GAMSAT (Sections I & III) and ISAT
 // (Critical Reasoning, Quantitative Reasoning): a Medify-style stimulus on the left,
@@ -71,6 +74,8 @@ export function GamsatRunner({
 
   const [phase, setPhase] = useState<'intro' | 'running' | 'summary' | 'review'>('intro')
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [grading, setGrading] = useState(false)
   const [i, setI] = useState(0)
   const [cache, setCache] = useState<Record<string, SafeQuestion | null>>({})
@@ -87,6 +92,7 @@ export function GamsatRunner({
   const activeIndex = reviewing ? (reviewList[reviewPos] ?? 0) : i
   const id = questionIds[activeIndex]
   const q = cache[id]
+  const { allViewed, unviewedCount, firstUnviewedIndex } = useQuestionViews(questionIds, id, phase === 'running' && loaded && !!q)
   const answered = answers[id]
 
   // "Unit" size = questions sharing the current passage (GAMSAT groups ~6 per stimulus).
@@ -102,11 +108,15 @@ export function GamsatRunner({
   useEffect(() => {
     if (phase !== 'running' || loaded) return
     let alive = true
-    fetchQuestionsAction(questionIds).then((map) => {
-      if (alive) { setCache(map as Record<string, SafeQuestion | null>); setLoaded(true) }
-    })
+    loadQuestionSection(questionIds, () => fetchQuestionsAction(questionIds)).then((map) => {
+      if (alive) {
+        setCache(map as Record<string, SafeQuestion | null>)
+        startedAtRef.current = Date.now()
+        setLoaded(true)
+      }
+    }).catch(() => { if (alive) setLoadError(true) })
     return () => { alive = false }
-  }, [phase, loaded, questionIds])
+  }, [phase, loaded, questionIds, loadAttempt])
 
   const go = useCallback((d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))), [total])
   const reviewGo = (d: number) => setReviewPos((p) => Math.min(reviewList.length - 1, Math.max(0, p + d)))
@@ -115,7 +125,8 @@ export function GamsatRunner({
     setReviewList(list); setReviewPos(pos); setPhase('review')
   }
 
-  const submitAll = useCallback(async () => {
+  const submitAll = useCallback(async (cause: 'manual' | 'timer' = 'manual') => {
+    if (!loaded || grading || !canMarkQuestions(allViewed, cause)) return
     setGrading(true)
     const nextA: Record<string, Answered> = {}
     await Promise.all(
@@ -151,16 +162,16 @@ export function GamsatRunner({
         responses: storedResponses,
       })
     }
-  }, [questionIds, cache, pending, examSlug, subtestId, tag, mode])
+  }, [loaded, grading, allViewed, questionIds, cache, pending, examSlug, subtestId, tag, mode])
 
   const submitRef = useRef(submitAll)
   useEffect(() => { submitRef.current = submitAll }, [submitAll])
   useEffect(() => {
-    if (phase !== 'running' || !timed) return
-    if (remaining <= 0) { submitRef.current(); return }
+    if (phase !== 'running' || !timed || !loaded) return
+    if (remaining <= 0) { submitRef.current('timer'); return }
     const t = setTimeout(() => setRemaining((r) => r - 1), 1000)
     return () => clearTimeout(t)
-  }, [phase, timed, remaining])
+  }, [phase, timed, remaining, loaded])
 
   // Reveal the solution for an unanswered item during review (no attempt recorded).
   useEffect(() => {
@@ -174,22 +185,9 @@ export function GamsatRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewing, id, answeredIds])
 
-  // Lazily fetch a paid, ready video during review.
-  useEffect(() => {
-    if (!reviewing) return
-    const a = answers[id]
-    if (!a?.result || a.video || !a.result.can_watch_video || !a.result.video_ready) return
-    let alive = true
-    loadExplanationVideoAction(id).then((v) => {
-      if (!alive || 'denied' in v) return
-      setAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
-    })
-    return () => { alive = false }
-  }, [reviewing, id, answers])
 
   function begin() {
     haptic(15)
-    startedAtRef.current = Date.now()
     setPhase('running')
   }
   const hasPending = (qid: string) => !!pending[qid]
@@ -197,14 +195,14 @@ export function GamsatRunner({
   // ---------- INTRO ----------
   if (phase === 'intro') {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: FONT, color: INK }}>
-        <div className="flex items-center gap-3 px-5 text-white" style={{ background: TEAL, height: 56 }}>
+      <div className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: FONT, color: INK }}>
+        <div className={`${styles.topbar} flex items-center gap-3 px-5 text-white`} style={{ background: TEAL, height: 56 }}>
           <span className="text-[17px] font-bold">{label}</span>
         </div>
-        <div className="flex-1 overflow-auto p-8"><div className="mx-auto max-w-3xl whitespace-pre-wrap text-[15px] leading-relaxed">{instructions}</div></div>
-        <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
+        <div className={`${styles.introStage} flex-1 overflow-auto p-8`}><div className={`${styles.introCard} mx-auto max-w-3xl whitespace-pre-wrap text-[15px] leading-relaxed`}>{instructions}</div></div>
+        <div className={`${styles.introFooter} flex items-center justify-between border-t border-gray-200 px-5 py-3`}>
           <button onClick={() => router.push(`/practice/${examSlug}`)} className="rounded-md px-5 py-2.5 text-[15px] text-[#2B6CB0] hover:bg-gray-50">Exit</button>
-          <button onClick={begin} className="inline-flex items-center gap-2 rounded-md px-7 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Begin</button>
+          <button onClick={begin} className={`${styles.primaryAction} inline-flex items-center gap-2 rounded-md px-7 py-2.5 text-[15px] font-bold text-white`} style={{ background: '#2f9e44' }}>Begin</button>
         </div>
       </div>
     )
@@ -225,8 +223,8 @@ export function GamsatRunner({
     const markSum = questionIds.reduce((s, qid) => s + (answeredIds.has(qid) ? (resultOf(qid)?.score ?? 0) : 0), 0)
 
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: FONT, color: INK }}>
-        <div className="flex items-center gap-3 px-5 text-white" style={{ background: TEAL, height: 56 }}>
+      <div className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: FONT, color: INK }}>
+        <div className={`${styles.topbar} flex items-center gap-3 px-5 text-white`} style={{ background: TEAL, height: 56 }}>
           <span className="text-[17px] font-bold">{label} — Results</span>
         </div>
         <div className="border-b border-gray-200 px-6 py-4 text-center">
@@ -267,7 +265,7 @@ export function GamsatRunner({
   const bookmarked = !!flags[id]
 
   const Stimulus = q ? (
-    <div className="max-w-[660px] text-[15px] leading-[1.62]" style={{ color: INK }}>
+    <div className={`${styles.stimulusSurface} max-w-[660px] text-[15px] leading-[1.62]`} style={{ color: INK }}>
       <p className="mb-4 font-bold">There are {unitCount} question{unitCount === 1 ? '' : 's'} in this unit.</p>
       {q.passage ? <div className="whitespace-pre-wrap [&>*]:mb-[15px] [text-align:justify]">{q.passage.split(/\n{2,}/).map((para, k) => <p key={k}>{para}</p>)}</div> : null}
       {(q.images ?? []).map((src, imageIndex) => (
@@ -296,9 +294,9 @@ export function GamsatRunner({
       >
         <svg width="26" height="30" viewBox="0 0 26 30" fill={bookmarked ? '#6b4ee6' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M4 3h18v24l-9-6-9 6z" />{bookmarked ? null : <path d="M13 9v8M9 13h8" />}</svg>
       </button>
-      <div className="rounded border border-gray-200 p-6">
-        <p className="border-b border-gray-100 pb-4 text-[16px] leading-[1.5]">{q.stem}</p>
-        <div className="flex flex-col">
+      <div className={`${styles.questionSurface} p-6`}>
+        <p className={`${styles.questionStem} text-[16px]`}>{q.stem}</p>
+        <div className={styles.options} role="radiogroup" aria-label="Answer options">
           {q.options.map((o) => {
             const sel = selectedId === o.id
             const isCorrect = reviewing && correctId === o.id
@@ -307,7 +305,8 @@ export function GamsatRunner({
               <button
                 key={o.id} disabled={reviewing} role="radio" aria-checked={sel}
                 onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }}
-                className="flex w-full items-center gap-4 border-b border-gray-100 py-[17px] text-left text-[15px] last:border-b-0 disabled:cursor-default"
+                data-result={isCorrect?'correct':isWrong?'wrong':undefined}
+                className={`${styles.option} flex w-full items-center gap-4 text-left text-[15px] disabled:cursor-default`}
                 style={{ background: isCorrect ? '#eefaf0' : isWrong ? '#fdecec' : undefined }}
               >
                 <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-full border-2"
@@ -327,15 +326,7 @@ export function GamsatRunner({
             {answered.result.explanation_text ? (
               <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-4 text-[14px] leading-relaxed"><p className="mb-1 font-bold">Worked solution</p>{answered.result.explanation_text}</div>
             ) : null}
-            {answered.video ? (
-              <div className="mt-3 overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={answered.video.playbackId} tokens={{ playback: answered.video.token }} streamType="on-demand" accentColor="#1BA7C6" /></div>
-            ) : !answered.result.has_video ? null : answered.result.can_watch_video ? (answered.result.video_ready ? null : <p className="mt-2 text-[13px] text-gray-500">Video explanation is processing.</p>) : (
-              <div className="mt-3 rounded border-2 border-[#1BA7C6] bg-[#eaf7fb] p-4 text-center">
-                <p className="font-bold" style={{ color: '#1b2a46' }}>Video explanation</p>
-                <p className="mt-1 text-[13px] text-gray-600">Watch this worked through on video with a subscription.</p>
-                <Link href="/pricing" className="mt-2 inline-block rounded-md px-4 py-2 text-[13px] font-medium text-white" style={{ background: '#1BA7C6' }}>See plans</Link>
-              </div>
-            )}
+
           </div>
         ) : null}
       </div>
@@ -343,9 +334,9 @@ export function GamsatRunner({
   ) : null
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: FONT, color: INK }}>
+    <div className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: FONT, color: INK }}>
       {/* header */}
-      <div className="flex items-center gap-3 px-4 text-white" style={{ background: TEAL, height: 56 }}>
+      <div className={`${styles.topbar} flex items-center gap-3 px-4 text-white`} style={{ background: TEAL, height: 56 }}>
         {!reviewing ? (
           <button onClick={() => setConfirmFinish(true)} aria-label="End session" className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[5px]" style={{ background: 'rgba(0,0,0,.12)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -353,19 +344,19 @@ export function GamsatRunner({
         ) : null}
         <span className="text-[17px] font-bold" style={{ letterSpacing: '-.01em' }}>{reviewing ? `${label} — Review` : label}</span>
         <div className="ml-auto flex items-center gap-5 text-[15px]">
-          {timed && !reviewing ? <span className="tabular-nums" style={{ color: remaining < 60 ? '#ffe08a' : '#fff' }}>{mmss(remaining)}</span> : null}
-          <span className="tabular-nums">{activeIndex + 1} of {total}</span>
+          {timed && !reviewing ? <span className={`${styles.timerChip} tabular-nums`} style={{ color: remaining < 60 ? '#ffe08a' : '#fff' }}>{mmss(remaining)}</span> : null}
+          <span className={`${styles.progressChip} tabular-nums`}>{activeIndex + 1} of {total}</span>
         </div>
       </div>
 
       {/* tab strip */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-3" style={{ background: '#f1f3f5' }}>
+      <div className={`${styles.questionStrip} flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-3`} style={{ background: '#f1f3f5' }}>
         {questionIds.map((qid, idx) => {
           const active = idx === activeIndex
           return (
             <button key={qid} onClick={() => { if (reviewing) setReviewPos(Math.max(0, reviewList.indexOf(idx))); else setI(idx) }}
               aria-current={active}
-              className="grid h-11 min-w-[46px] place-items-center rounded-md border-[1.5px] px-3 text-[15px] font-bold"
+              className={`${styles.questionTab} grid h-11 min-w-[46px] place-items-center border-[1.5px] px-3 text-[15px] font-bold`}
               style={{ borderColor: NAVY, background: active ? NAVY : '#fff', color: active ? '#fff' : NAVY }}>
               {idx + 1}
             </button>
@@ -375,9 +366,9 @@ export function GamsatRunner({
       </div>
 
       {/* body */}
-      <div className="grid flex-1 items-start gap-7 overflow-auto px-8 py-6 md:grid-cols-[minmax(0,1.32fr)_minmax(0,1fr)]" style={{ paddingBottom: 92 }}>
-        {!loaded && q === undefined ? (
-          <div className="col-span-full flex flex-col items-center justify-center gap-3 py-24"><span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1BA7C6]/25 border-t-[#1BA7C6]" /><p className="text-sm text-gray-500">Loading questions…</p></div>
+      <div className={`${styles.canvas} grid flex-1 items-start gap-7 overflow-auto px-8 py-6 md:grid-cols-[minmax(0,1.32fr)_minmax(0,1fr)]`} style={{ paddingBottom: 92 }}>
+        {!loaded ? (
+          <QuestionLoading error={loadError} onRetry={() => { setLoadError(false); setLoadAttempt((attempt) => attempt + 1) }} />
         ) : q === null ? (
           <p className="col-span-full text-gray-500">This question isn&rsquo;t available.</p>
         ) : (
@@ -386,12 +377,12 @@ export function GamsatRunner({
       </div>
 
       {/* footer */}
-      <div className="sticky bottom-0 flex items-center justify-between border-t border-gray-200 bg-white px-6 py-3">
+      <div className={`${styles.footer} sticky bottom-0 flex items-center justify-between border-t border-gray-200 bg-white px-6 py-3`}>
         <button onClick={() => (reviewing ? setPhase('summary') : setConfirmFinish(true))} className="rounded-md px-4 py-2.5 text-[15px] text-[#2B6CB0] hover:bg-gray-50">{reviewing ? '← Back to results' : 'End session'}</button>
         <div className="flex items-center gap-3">
           {!reviewing ? (
             <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} aria-pressed={bookmarked}
-              className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-[15px] font-bold text-white" style={{ background: bookmarked ? '#5a3fd6' : '#6b4ee6' }}>
+              className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-[15px] font-bold text-white" style={{ background: bookmarked ? '#49359b' : '#5b48ba' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
               Bookmark
             </button>
@@ -400,11 +391,11 @@ export function GamsatRunner({
             <button onClick={() => (reviewing ? reviewGo(-1) : go(-1))} className="rounded-md border border-gray-300 px-5 py-2.5 text-[15px] font-medium hover:bg-gray-50">Previous</button>
           ) : null}
           {reviewing ? (
-            reviewPos < reviewList.length - 1 ? <button onClick={() => reviewGo(1)} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Next</button> : <button onClick={() => setPhase('summary')} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Done</button>
+            reviewPos < reviewList.length - 1 ? <button onClick={() => reviewGo(1)} className={`${styles.primaryAction} rounded-md px-6 py-2.5 text-[15px] font-bold text-white`} style={{ background: '#2f9e44' }}>Next</button> : <button onClick={() => setPhase('summary')} className={`${styles.primaryAction} rounded-md px-6 py-2.5 text-[15px] font-bold text-white`} style={{ background: '#2f9e44' }}>Done</button>
           ) : activeIndex >= total - 1 ? (
-            <button onClick={() => setConfirmFinish(true)} className="rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Finish</button>
+            <button onClick={() => setConfirmFinish(true)} className={`${styles.primaryAction} rounded-md px-6 py-2.5 text-[15px] font-bold text-white`} style={{ background: '#2f9e44' }}>Finish</button>
           ) : (
-            <button onClick={() => go(1)} className="inline-flex items-center gap-2 rounded-md px-6 py-2.5 text-[15px] font-bold text-white" style={{ background: '#2f9e44' }}>Next
+            <button onClick={() => go(1)} className={`${styles.primaryAction} inline-flex items-center gap-2 rounded-md px-6 py-2.5 text-[15px] font-bold text-white`} style={{ background: '#2f9e44' }}>Next
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -415,15 +406,17 @@ export function GamsatRunner({
         <ExamConfirm
           title="Finish and submit?"
           message={(() => {
+            if (!allViewed) return `View all questions before marking. You still have ${unviewedCount} question${unviewedCount === 1 ? '' : 's'} to view.`
             const un = questionIds.filter((qid) => !hasPending(qid)).length
             return un > 0
               ? `You have ${un} unanswered question${un === 1 ? '' : 's'}. Once you finish, your answers are marked and you can review the worked solutions.`
               : 'Once you finish, your answers are marked and you can review the worked solutions.'
           })()}
           confirmLabel="Yes, finish"
-          cancelLabel="No, keep going"
+          confirmDisabled={!allViewed || grading}
+          cancelLabel={allViewed ? "No, keep going" : "View unseen questions"}
           onConfirm={() => { setConfirmFinish(false); submitAll() }}
-          onCancel={() => setConfirmFinish(false)}
+          onCancel={() => { setConfirmFinish(false); if (!allViewed && firstUnviewedIndex >= 0) setI(firstUnviewedIndex) }}
         />
       ) : null}
 

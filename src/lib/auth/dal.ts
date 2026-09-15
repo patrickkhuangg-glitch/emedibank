@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Profile, InterfaceMode } from '@/lib/supabase/types'
 import { homeForRole } from '@/lib/auth/roles'
+import { COMPLETE_PROFILE_PATH, hasRequiredPhone } from '@/lib/auth/profile-completion'
 
 /** The current authenticated user, or null. Cached per request. */
 export const getUser = cache(async () => {
@@ -47,6 +48,15 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     .maybeSingle()
   return data
 })
+
+/** Keep authenticated users without a mobile number outside the application
+ * until they complete the required profile step. */
+export async function requireCompletedProfile() {
+  const user = await requireUser()
+  const profile = await getProfile()
+  if (!hasRequiredPhone(profile)) redirect(COMPLETE_PROFILE_PATH)
+  return { user, profile }
+}
 
 /** True if the current user is an admin. */
 export async function isAdmin(): Promise<boolean> {

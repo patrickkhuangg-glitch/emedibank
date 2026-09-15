@@ -1,0 +1,111 @@
+import { CinematicHeading, ScrollPhrase } from '@/components/marketing/cinematic-page'
+import type { Metadata } from 'next'
+import { connection } from 'next/server'
+import Link from 'next/link'
+import { Container } from '@/components/container'
+import { INTERVIEW_MARKETING as config, INTERVIEW_FAQS, aud, foundingOfferAvailable } from '@/lib/interviews/marketing'
+import { TrackedLink, ObservedSection, MobileStart, Arrow, Faq, Pricing, LandingMotion } from '@/components/marketing/interviews/interactions'
+import styles from '@/components/marketing/interviews/landing.module.css'
+import sample from '@/lib/interviews/marketing-sample-review.json'
+
+export const metadata: Metadata = {
+  title: 'MMI & Panel Interview Preparation',
+  description: 'Practise Australian medical and dental interviews with timed MMI stations, panel questions, private recordings and tutor-reviewed feedback. Try Studocyte free.',
+  alternates: { canonical: config.route },
+}
+
+export default async function InterviewPreparationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string; error?: string }>
+}) {
+  await connection() // Evaluate offer expiry per request, not at build time.
+  const { checkout, error } = await searchParams
+  const founding = foundingOfferAvailable(config.complete.founding)
+  const checkoutError = error === 'paid_access_required'
+    ? 'Credit add-ons are available once you have a paid Interview plan.'
+    : error
+      ? 'That purchase is not available right now. Please try again or contact support.'
+      : null
+  return <LandingMotion>
+    <section id="interview-hero" className={styles.hero}>
+      <div className={styles.heroAtmosphere} aria-hidden="true"><span data-cinematic-parallax="-65"/><span data-cinematic-parallax="90"/></div>
+      <Container className={styles.heroGrid}>
+        <div className={styles.heroCopy}>
+          <p data-cinematic-enter="intro" className={styles.eyebrow}>Interview Preparation</p>
+          <CinematicHeading first="Practise the interview." second="Get feedback from an expert." />
+          <p data-cinematic-enter="body" className={styles.lead}>Practise realistic MMI and panel questions, then review your recording or request personal feedback from an EMeducate interview tutor.</p>
+          <p data-cinematic-enter="body" className={styles.guideNote}>Response guides show what makes an answer effective and the common pitfalls to avoid—even when you practise without tutor marking.</p>
+          <div data-cinematic-enter="actions" className={styles.actions}><TrackedLink href={config.startHref} event="hero_free_trial" className={styles.primary}>Try an expert-reviewed MMI free <Arrow/></TrackedLink><TrackedLink href="#platform" event="hero_explore" className={styles.textLink}>Explore the platform <Arrow/></TrackedLink></div>
+          <p data-cinematic-enter="note" className={styles.trust}>No card required · 2 marking credits included<br/>One MMI review · Target: two working days</p>
+        </div>
+        <figure data-cinematic-enter="preview" className={styles.heroFigure}><div data-cinematic-parallax><ReviewPreview/></div><figcaption>Summary of an illustrative review · open the sample for the full report.</figcaption></figure>
+      </Container>
+    </section>
+
+    <Container><section className={styles.facts} aria-label="Interview platform at a glance">{[[config.counts.mmi,'MMI stations'],[config.counts.panelThemes,'Panel themes'],[config.counts.stories,'Personal-story prompts'],['2 working days','Feedback target']].map(([value,label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</section><p className={styles.factNote}>Build your ideas, practise them aloud and improve with feedback you can act on.</p></Container>
+
+    <nav className={styles.sectionNav} aria-label="Explore interview preparation"><Container><a href="#platform">Practice</a><a href="#expert-feedback">Expert feedback</a><a href="#progress">Progress</a><a href="#stories">Stories</a><a href="#plans">Plans & pricing</a><a href="#questions">FAQs</a></Container></nav>
+
+    <section className={styles.chapterBridge}><Container><span className={styles.chapterLabel}>Your practice, one step at a time</span><ScrollPhrase>Prepare. Respond. Reflect.</ScrollPhrase><p>Build your ideas, practise them aloud and improve with feedback you can act on.</p></Container></section>
+
+    <section id="platform" className={styles.section}><Container className={styles.split}>
+      <div><h2>Practice that feels like an interview.</h2><p className={styles.body}>Work through ethical, communication, teamwork, cultural-safety, rural-health and professional-judgement scenarios written for Australian applicants.</p><ul className={styles.formatList}>{[['Individual MMI stations','2 minutes to prepare, 8 to respond'],['Eight-station MMI circuits','Keep your focus as the scenarios change'],['Individual panel questions','Build a thoughtful answer, one question at a time'],['Ten-question panel interviews','20 minutes, with 2 minutes per answer']].map(([title,detail]) => <li key={title}><Check/><div><strong>{title}</strong><span>{detail}</span></div></li>)}</ul><p className={styles.note}>Record your response or rehearse without recording. Both count as practice.</p></div>
+      <figure><div data-cinematic-parallax="42"><div className={styles.station}><div className={styles.previewTop}><span>Practice · MMI station</span><span className={styles.pill}>Ethics</span></div><h3>Confidentiality and patient safety</h3><div className={styles.timers}><div><span>Preparation</span><b>02:00</b></div><div><span>Response</span><b>08:00</b></div></div><p>You are a medical student on placement. Your friend Sam tells you they have been diagnosed with an STI and do not plan to tell a recent sexual partner. Sam asks you not to tell anyone.</p><p className={styles.prompt}>How would you support Sam while considering their partner’s wellbeing?</p><Link className={styles.lightButton} href="/interviews/practice">Start timed practice <Arrow/></Link></div></div><figcaption>Sample station preview. Timed mocks reveal each question when its timed conditions begin.</figcaption></figure>
+    </Container></section>
+
+    <section className={`${styles.section} ${styles.soft}`}><Container>
+      <div className={`${styles.split} ${styles.reverse}`}><figure><div data-cinematic-parallax="-38"><div className={styles.recording}><div className={styles.previewTop}><span>Your recorded response</span><span className={styles.private}><Lock/> Private</span></div><h3>Listen back. Notice the difference.</h3><div className={styles.audioVisual} role="img" aria-label="Illustrative audio waveform, 1 minute 48 seconds"><span className={styles.mic}><Mic/></span><div className={styles.wave}>{Array.from({length:38},(_,i)=><i key={i} style={{height:`${[12,26,19,38,46,25,34,16,41,30][i%10]}px`}}/>)}</div><span>01:48</span></div><div className={styles.transcript}><span>Private transcript · Question 2</span><p>“I’d start by thanking Sam for trusting me. Before offering advice, I’d ask what worries them most about telling their partner.”</p></div><div className={styles.reflection}><label htmlFor="example-reflection">My note for next time</label><textarea id="example-reflection" readOnly value="Make my next step more specific: offer to help Sam contact the clinic."/></div></div></div><figcaption>Illustrative recording and transcript. No audio is played or captured on this page.</figcaption></figure><div><h2>Hear what the interviewer will hear.</h2><p className={styles.body}>Record using your microphone or camera, then listen back, read your transcript and rate your performance. Notice unclear explanations, repeated phrases and answers that need more reflection.</p><p className={styles.body}>Keep one useful note from each attempt. Bring it into the next.</p></div></div>
+      <div className={styles.featureRow}>{[['Private recordings','Review your audio or video before deciding whether to request marking.'],['Automatic transcripts','Read your wording and find where an explanation became unclear.'],['Reflection notes','Save a specific improvement to carry into your next attempt.'],['Privacy controls','Download recordings to keep them. They are normally deleted after seven days; pending marking stays protected.']].map(([title,text])=><article key={title}><h3>{title}</h3><p>{text}</p></article>)}</div><p className={styles.note}>Transcripts and released feedback remain available under the <Link href="/interview-trial">account-retention policy</Link>.</p>
+    </Container></section>
+
+    <ObservedSection id="expert-feedback" event="sample_feedback_view" className={`${styles.section} ${styles.ink}`}><Container>
+      <div className={styles.reviewIntro}><p className={styles.eyebrow}>Expert human judgement</p><h2>Feedback written<br/>for <em>your</em> response.</h2></div>
+      <div className={styles.reviewSplit}><div><h3>More than a score.</h3><p>Your reviewer shows you what made the response effective, what limited it and how to approach the next attempt more clearly.</p><ul className={styles.dimensions}>{['Reasoning and structure','Ethical and professional judgement','Empathy and perspective','Communication and delivery','Reflection and insight','Specificity and relevance'].map(item=><li key={item}><Check/>{item}</li>)}</ul><p className={styles.darkNote}>These are aspects a tutor may consider. A station’s rubric determines which domains can be assessed; unassessed domains are kept separate.</p><TrackedLink href="/interview-preparation/sample-review" event="sample_review_open" className={styles.lightButton}>See a sample expert review <Arrow/></TrackedLink></div><figure><ReviewPreview/><figcaption className={styles.darkNote}>A summary of the illustrative review. Select “See a sample expert review” for the full feedback, domain scores and supporting evidence.</figcaption></figure></div>
+    </Container></ObservedSection>
+
+    <section className={styles.section}><Container className={styles.reviewerSection}><div><h2>The quality of the feedback depends on who gives it.</h2><p className={styles.body}>EMeducate interview tutors turn observations into clear, practical improvements. The aim is feedback that helps you understand your response, rather than memorise a model answer.</p></div><div className={styles.reviewerProcess}><div className={styles.reviewerRole}><span className={styles.roleMark}><Check/></span><div><strong>EMeducate interview tutor</strong><p>Your reviewer is identified on your released report.</p></div></div><Faq event="reviewer_process_interaction" items={[["What does the tutor review?",'Your original recording, the station context and the rubric assessment. They check the evidence, edit feedback and approve the report before release.']]}/></div></Container></section>
+
+    <section id="progress" className={`${styles.section} ${styles.soft}`}><Container className={styles.split}>
+      <div><h2>See your practice<br/>taking shape.</h2><p className={styles.body}>See when you practised, which themes you covered and how you rated your own responses. Your calendar turns separate sessions into a useful record.</p><p className={styles.body}>At launch, reviewed score trends and comparisons will bring tutor feedback into that picture, helping you choose what to work on next.</p><ul className={styles.plainList}><li>Practice frequency and theme coverage</li><li>MMI and panel practice, side by side</li><li>Self-ratings, private notes and marking credits</li><li>Planned: rubric trends and mock-to-mock improvement</li><li>Planned: recurring strengths, weaknesses and next practice</li></ul></div>
+      <figure><div data-cinematic-parallax="48"><DashboardPreview/></div><figcaption>Illustrative dashboard with synthetic activity. Extended reviewed-score analytics are planned for launch.</figcaption></figure>
+    </Container></section>
+
+    <section id="stories" className={styles.section}><Container className={`${styles.split} ${styles.reverse}`}>
+      <figure><div data-cinematic-parallax="-36"><div className={styles.story}><div className={styles.previewTop}><span>Your story bank</span><span className={styles.private}><Lock/> Private</span></div><div className={styles.storyThemes}><span className={styles.pill}>Teamwork</span><span>Leadership</span><span>Service</span></div><div className={styles.storyProgress}><span>Example: 12 of 104 reflected on</span><b>In progress</b></div><h3>A time you helped a team move forward.</h3><dl>{[['Situation','Our volunteer team disagreed about how to use a small events budget.'],['Action','I asked each person to explain what mattered most, then suggested a shared priority.'],['Outcome','We agreed on a simpler event and divided the remaining work.'],['Learning','Listening changed the discussion more than trying to win it.']].map(([label,text])=><div key={label}><dt>{label}</dt><dd>{text}</dd></div>)}</dl><Link href="/interviews/stories" className={styles.textLink}>Open your story bank <Arrow/></Link></div></div><figcaption>Illustrative reflection. Your saved stories are private and can be revisited and edited.</figcaption></figure>
+      <div><h2>Build the experiences behind your best answers.</h2><p className={styles.body}>Explore {config.counts.stories} guided prompts covering teamwork, leadership, resilience, communication, cultural humility, service, integrity, advocacy and personal growth.</p><p className={styles.body}>Save your experiences privately and return to refine them as your interview approaches.</p><p className={styles.pullquote}>Remember meaningful experiences. Let the answer sound like you.</p><TrackedLink href="/interviews/stories" event="story_bank_open" className={styles.textLink}>Reflect on your own experiences <Arrow/></TrackedLink></div>
+    </Container></section>
+
+    <section className={`${styles.section} ${styles.themesSection}`}><Container><div className={styles.sectionHeading}><h2>Australian scenarios.<br/>Nuanced decisions.</h2><p>Questions reveal how you think, communicate and reflect. They are not trivia questions, and there is rarely a single perfect answer.</p></div><ul className={styles.themes}>{['Aboriginal and Torres Strait Islander health','Rural and remote healthcare','Cultural safety and co-design','Patient autonomy and confidentiality','Health equity','Harm minimisation','Artificial intelligence in healthcare','Professional boundaries','Teamwork and conflict','Motivation for medicine'].map(theme=><li key={theme}>{theme}</li>)}</ul><p className={styles.note}>Studocyte covers the major MMI and panel themes used across Australian medical and dental interviews. Interview formats can change. Always confirm current timing and requirements directly with your university.</p></Container></section>
+
+    <section className={styles.section}><Container><div className={styles.sectionHeading}><h2>Practise freely.<br/>Choose when to get feedback.</h2><p>Recording and self-review are included with paid access. Marking credits are used only when you submit for tutor review.</p></div><div className={styles.credits}>{[[config.creditCosts.mmi,'One individual MMI station'],[config.creditCosts.mock,'One full MMI mock'],[config.creditCosts.panel,'One full panel interview']].map(([amount,label])=><article key={label}><strong>{amount} <span>credits</span></strong><p>{label}</p></article>)}</div></Container></section>
+
+    <ObservedSection id="plans" event="pricing_view" className={`${styles.section} ${styles.soft}`}><Container><div className={styles.pricingHeading}><p className={styles.eyebrow}>Free now. More feedback when you’re ready.</p><h2>Choose how much<br/>expert feedback you need.</h2><p>Every paid plan includes the complete Interview platform for one year. One payment, no automatic renewal. All prices are in Australian dollars.</p>{checkout === 'cancelled' ? <p role="status" className={styles.note}>Checkout was cancelled. No payment was taken.</p> : null}{checkoutError ? <p role="alert" className={styles.note}>{checkoutError}</p> : null}</div><Pricing/></Container></ObservedSection>
+
+    <ObservedSection id="complete" event="complete_package_view" className={styles.section}><Container><div className={styles.complete}><div><p className={styles.eyebrow}>Studocyte × EMeducate</p><h2>Prefer a complete,<br/>supported interview program?</h2><h3>{config.complete.name}</h3><p>Combine independent practice and reviewed responses with private EMeducate tutoring and a live mock interview.</p><ul><li>One year of complete Studocyte Interview access</li><li>All {config.counts.mmi} MMI stations, the panel bank and {config.counts.stories} story prompts</li><li>Recording, transcripts and progress features</li><li>{config.complete.credits} tutor-review credits</li><li>Two one-hour private tutoring sessions</li><li>One live mock, personalised debrief and improvement plan</li></ul></div><div className={styles.completeAction}><span>{founding ? 'Founding release' : 'Complete interview package'}</span><strong>{aud(founding ? config.complete.founding.price : config.complete.price)}</strong>{founding && <p>Available until 11:59 pm Sydney time on {new Date(Date.parse(config.complete.founding.closesAt!) - 1).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric',timeZone:'Australia/Sydney'})}. Standard price {aud(config.complete.price)} thereafter.</p>}<p>One payment. One year of Studocyte, plus private tutoring and a live mock with EMeducate.</p><TrackedLink href={config.programsHref} event="complete_outbound" className={styles.primary}>View the EMeducate program <Arrow external/></TrackedLink></div></div></Container></ObservedSection>
+
+    <section id="questions" className={`${styles.section} ${styles.faqSection}`}><Container className={styles.faqLayout}><div><h2>A few things<br/>you might be wondering.</h2><p className={styles.body}>Need a hand? <a href="mailto:support@emeducate.com.au">Ask the Studocyte team</a>.</p></div><Faq items={INTERVIEW_FAQS}/></Container></section>
+    <Container><aside className={styles.referral}><div><h2>Looking for live interview support?</h2><p>Private tutoring and live mock interviews are delivered separately by EMeducate.</p></div><TrackedLink href={config.programsHref} event="emeducate_referral" className={styles.textLink}>Explore Interview Programs <Arrow external/></TrackedLink></aside></Container>
+    <section className={styles.final}><Container><div data-footer-reveal><h2>Your next response<br/>starts here.</h2><p>Choose a realistic question, record your answer and use your two free credits for your first tutor-reviewed MMI.</p><div className={styles.actions}><TrackedLink href={config.startHref} event="final_free_trial" className={styles.primary}>Start free <Arrow/></TrackedLink><TrackedLink href="#plans" event="final_compare" className={styles.secondary}>Compare plans</TrackedLink></div><p className={styles.trust}>No card required · Private recordings · Tutor-reviewed feedback · Australian support</p></div></Container></section>
+    <MobileStart/>
+  </LandingMotion>
+}
+
+function Check() { return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m5 12 4 4L19 6" strokeLinecap="round" strokeLinejoin="round"/></svg> }
+function Lock() { return <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> }
+function Mic() { return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg> }
+function ReviewPreview() {
+  return <article className={`${styles.review} ${styles.compactReview}`} aria-label="Summarised sample expert review">
+    <div className={styles.previewTop}><span>MMI · Confidentiality</span><span className={styles.pill}>Review summary</span></div>
+    <div className={styles.reviewTitle}><div><h2>Trust, privacy<br/>and a clear next step.</h2><p>Four assessed domains · one unassessed</p></div><div className={styles.score}><strong>{sample.displayRating.score}<span>/7</span></strong><small>Sample · Questions 1–3</small></div></div>
+    <p className={styles.verdict}>{sample.closing.verdict}</p>
+    <div className={styles.feedbackColumns}>
+      <div><h4>What you did well</h4><ul><li>{sample.strengths[1].text}</li></ul></div>
+      <div><h4>What to improve</h4><ul><li>{sample.priorities[1].text}</li></ul></div>
+    </div>
+    <div className={styles.nextStation}><TrackedLink href="/interview-preparation/sample-review" event="sample_review_open" className={styles.textLink}>See a sample expert review <Arrow/></TrackedLink></div>
+  </article>
+}
+function DashboardPreview() {
+  return <div className={styles.dashboard}><div className={styles.previewTop}><span>Your interview dashboard</span><span className={styles.pill}>Example · 6 credits</span></div><h3>A little practice, kept consistent.</h3><div className={styles.calendarHeading}><strong>August</strong><span>12 practice days</span></div><div className={styles.calendar} role="img" aria-label="Illustrative August calendar: twelve days with practice"><div>{['M','T','W','T','F','S','S'].map((day,i)=><span key={i}>{day}</span>)}</div><div>{Array.from({length:35},(_,i)=>{const day=i-4;return <span key={i} data-level={[2,5,10,15,20,26].includes(day)?'2':[3,8,12,17,23,30].includes(day)?'1':'0'}>{day>0&&day<32?day:''}</span>})}</div></div><div className={styles.dashboardStats}><div><b>8</b><span>MMI responses</span></div><div><b>6</b><span>Panel responses</span></div><div><b>3.8/5</b><span>My average rating</span></div></div><div className={styles.themeSummary}><strong>Weekly themes · self-ratings</strong><div><span>Communication · 4 practised</span><b>4/5</b></div><div><span>Ethics · 3 practised</span><b>3.5/5</b></div></div><div className={styles.planned}><span>Planned reviewed-score view</span><p>MMI: 4 → 5/7 · Panel: 4 → 6/7</p><small>Compare mock results, rubric scores and self-ratings. Identify recurring strengths and a useful next station.</small></div></div>
+}

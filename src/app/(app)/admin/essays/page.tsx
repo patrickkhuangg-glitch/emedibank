@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { getPendingMarkings } from '@/lib/essays/data'
 import { TopUpForm } from './top-up-form'
@@ -13,14 +13,14 @@ export default async function AdminEssaysPage() {
   const queue = await getPendingMarkings()
 
   return (
-    <Container className="py-14">
-      <div className="mx-auto max-w-3xl space-y-8">
+    <Container>
+      <div className="w-full space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Essay marking</h1>
+            <h1 className="page-title">Essay marking</h1>
             <p className="mt-1 text-muted">Essays students have submitted for marking. Generate an AI draft, edit it, then approve to release it.</p>
           </div>
-          <Link href="/admin" className="whitespace-nowrap rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">← Admin</Link>
+          <Link href="/admin" className="whitespace-nowrap rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">← Admin</Link>
         </div>
 
         <section>

@@ -1,10 +1,5 @@
-import { Container } from '@/components/container'
-import { LoadingSplash } from '@/components/spinner'
+import { WorkspaceWelcome } from '@/components/workspace/workspace-welcome'
 
 export default function Loading() {
-  return (
-    <Container className="py-10">
-      <LoadingSplash />
-    </Container>
-  )
+  return <WorkspaceWelcome name="Student" persistent />
 }

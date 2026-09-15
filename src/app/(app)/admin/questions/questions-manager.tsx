@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { VideoUpload } from './video-upload'
 import type { QFilter } from '@/lib/admin/question-filter'
 import {
   bulkDeleteIds,
@@ -191,7 +190,6 @@ export function QuestionsManager({
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm">{q.stem}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-                    <VideoUpload questionId={q.id} status={q.videoStatus} />
                     <button disabled={pending} onClick={() => run(() => bulkSetPublishedIds([q.id], !q.published))} className="text-muted hover:text-foreground disabled:opacity-50">
                       {q.published ? 'Unpublish' : 'Publish'}
                     </button>

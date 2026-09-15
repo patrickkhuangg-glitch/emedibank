@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-09-05T22:29:05.802845+00:00",
+  "rule_id": "rule_p0_temporary_zoom_webhook_containment_SIPDQn",
+  "config_id": "waf_8bXCZYfnze1S",
+  "config_version": 1,
+  "effect": "Zoom webhook blocked; automatic Zoom lesson synchronization paused pending fixed deployment",
+  "results": [
+    {
+      "host": "studocyte.emeducate.com.au",
+      "path": "/api/zoom/webhook",
+      "status": 403,
+      "vercel_mitigated": "deny",
+      "unsigned_challenge_returned_hmac": false
+    },
+    {
+      "host": "emedibank-x1uw.vercel.app",
+      "path": "/api/zoom/webhook",
+      "status": 403,
+      "vercel_mitigated": "deny",
+      "unsigned_challenge_returned_hmac": false
+    },
+    {
+      "host": "studocyte.emeducate.com.au",
+      "path": "/",
+      "status": 200
+    },
+    {
+      "host": "studocyte.emeducate.com.au",
+      "path": "/login",
+      "status": 200
+    }
+  ]
+}

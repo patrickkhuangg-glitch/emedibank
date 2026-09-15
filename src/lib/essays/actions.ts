@@ -3,7 +3,7 @@ import { requireUser, requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccessSubtest } from '@/lib/access'
-import { countWords, parseQuotes, MARK_COST } from './config'
+import { countWords, parseQuotes } from './config'
 import { MARKING_SYSTEM, SECONDARY_MARKING_SYSTEM, RUBRIC_VERSION, buildMarkingUserMessage } from './marking-rubric'
 
 type Denied = { denied: true }
@@ -117,42 +117,17 @@ export async function submitEssayAction(
   plan?: string | null,
 ): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' | 'empty' | 'save_failed' }> {
   try {
-    const user = await requireUser()
+    await requireUser()
     const supabase = await createClient()
-    const { data: existing, error: loadError } = await supabase
-      .from('essay_responses')
-      .select('body, status')
-      .eq('id', responseId)
-      .eq('user_id', user.id)
-      .maybeSingle()
-    if (loadError || !existing || existing.status !== 'draft') return { ok: false, marked: false, reason: 'save_failed' }
-
-    // Prefer the editor's current value. If a client event arrives with a stale
-    // empty value, recover the latest autosaved draft rather than erasing it.
-    const finalBody = body.trim() ? body : existing.body
-    if (!finalBody.trim()) return { ok: false, marked: false, reason: 'empty' }
-
-    // Finalisation is server-controlled. The authenticated role can autosave
-    // editable fields only and cannot directly manipulate submission state.
-    const admin = createAdminClient()
-    const { data: saved, error: saveError } = await admin
-      .from('essay_responses')
-      .update({
-        body: finalBody,
-        word_count: countWords(finalBody),
-        time_spent_seconds: Math.max(0, Math.round(timeSpentSeconds)),
-        status: 'submitted',
-        updated_at: new Date().toISOString(),
-        ...(plan !== undefined ? { plan } : {}),
-      })
-      .eq('id', responseId)
-      .eq('user_id', user.id)
-      .eq('status', 'draft')
-      .select('id')
-      .maybeSingle()
-    if (saveError || !saved) return { ok: false, marked: false, reason: 'save_failed' }
+    const { data: result, error } = await supabase.rpc('submit_essay_response', {
+      p_response_id: responseId,
+      p_body: body,
+      p_time_spent_seconds: Math.max(0, Math.round(timeSpentSeconds)),
+      p_plan: plan ?? null,
+    })
+    if (error || result !== 'submitted') return { ok: false, marked: false, reason: result === 'empty' ? 'empty' : 'save_failed' }
     if (!forMarking) return { ok: true, marked: false }
-    const r = await requestMarkingFor(user.id, responseId)
+    const r = await requestMarkingFor(responseId)
     return { ok: true, marked: r.marked, reason: r.reason }
   } catch {
     return { ok: false, marked: false }
@@ -164,8 +139,8 @@ export async function requestMarkingAction(
   responseId: string,
 ): Promise<{ ok: boolean; marked: boolean; reason?: 'no_credits' | 'already' | 'empty' }> {
   try {
-    const user = await requireUser()
-    const r = await requestMarkingFor(user.id, responseId)
+    await requireUser()
+    const r = await requestMarkingFor(responseId)
     return { ok: true, marked: r.marked, reason: r.reason }
   } catch {
     return { ok: false, marked: false }
@@ -175,32 +150,14 @@ export async function requestMarkingAction(
 /** Spend credits and enter the marking queue. Anchored in essay_markings (admin-
  *  only), so a request cannot be forged, and credits are debited atomically. */
 async function requestMarkingFor(
-  userId: string,
   responseId: string,
 ): Promise<{ marked: boolean; reason?: 'no_credits' | 'already' | 'empty' }> {
-  const admin = createAdminClient()
-  const { data: resp } = await admin
-    .from('essay_responses').select('user_id, marking_status, body').eq('id', responseId).maybeSingle()
-  if (!resp || resp.user_id !== userId) return { marked: false, reason: 'already' }
-  if (resp.marking_status === 'pending' || resp.marking_status === 'approved') return { marked: false, reason: 'already' }
-  if (!resp.body.trim()) return { marked: false, reason: 'empty' }
-
-  // Atomic debit as the calling user (auth.uid() inside the function).
   const supabase = await createClient()
-  const { data: ok } = await supabase.rpc('spend_essay_credits', { p_amount: MARK_COST })
-  if (!ok) return { marked: false, reason: 'no_credits' }
-
-  const now = new Date().toISOString()
-  // Submitting for marking FINALISES the essay: it becomes submitted (locked, no
-  // more editing) at the same time it enters the queue.
-  await admin.from('essay_responses').update({
-    status: 'submitted', marking_status: 'pending', submitted_for_marking_at: now, credits_spent: MARK_COST, updated_at: now,
-  }).eq('id', responseId)
-  await admin.from('essay_markings').upsert(
-    { response_id: responseId, status: 'pending', updated_at: now },
-    { onConflict: 'response_id' },
-  )
-  return { marked: true }
+  const { data: result, error } = await supabase.rpc('request_essay_marking', { p_response_id: responseId })
+  if (error) throw error
+  if (result === 'marked') return { marked: true }
+  if (result === 'already' || result === 'no_credits' || result === 'empty') return { marked: false, reason: result }
+  throw new Error('Essay marking could not be requested.')
 }
 
 // ── Admin marking pipeline ───────────────────────────────────────────────────

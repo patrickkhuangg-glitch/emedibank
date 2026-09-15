@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
@@ -52,13 +52,13 @@ export default async function CategoryPage({
   if (!cats) notFound()
 
   return (
-    <Container className="py-10">
+    <Container>
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <main>
           <Link href={`/practice/${exam.slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
             <span aria-hidden>←</span> Back
           </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Select category</h1>
+          <h1 className="page-title mt-2">Select category</h1>
 
           <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-5 py-4">
             <div className="flex items-baseline gap-3">

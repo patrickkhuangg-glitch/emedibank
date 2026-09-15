@@ -1,16 +1,24 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import MuxPlayer from '@mux/mux-player-react'
-import Link from 'next/link'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import { ExamConfirm } from '@/components/exam-confirm'
 import { haptic } from '@/lib/haptics'
-import { fetchQuestionsAction, answerQuestionAction, loadExplanationVideoAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
+import { QuestionLoading } from '@/components/question-loading'
+import { loadQuestionSection } from '@/lib/practice/load-question-section'
+import { useQuestionViews } from '@/lib/practice/use-question-views'
+import { canMarkQuestions } from '@/lib/practice/question-views'
+import { fetchQuestionsAction, answerQuestionAction, submitGridAction, submitMostLeastAction, revealAnswerAction } from '@/lib/questions/actions'
 import { recordPracticeSessionAction, type StoredSessionResponse } from '@/lib/practice/session-actions'
+import { MockReview } from '@/components/mock-review'
+import { QuestionTimeTracker, type MockGraded, type ReviewItem } from '@/lib/mock/review'
+import type { SafeQuestion as ReviewQuestion } from '@/lib/access/questions'
+import styles from './exam-runner.module.css'
 
 type YesNo = 'Yes' | 'No'
 type SafeQuestion = {
+  kind: ReviewQuestion['kind']
+  review?: ReviewQuestion['review']
   id: string
   topic: string | null
   marks: number
@@ -67,10 +75,14 @@ export function SessionRunner({
   const total = questionIds.length
   const rootRef = useRef<HTMLDivElement>(null)
   const startedAtRef = useRef<number>(0)
+  const [questionClock] = useState(() => new QuestionTimeTracker())
+  const [reviewTimes, setReviewTimes] = useState<Record<string, number>>({})
 
   const [phase, setPhase] = useState<'intro' | 'running' | 'summary' | 'review'>('intro')
   const [readyModal, setReadyModal] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [grading, setGrading] = useState(false)
   const [i, setI] = useState(0)
   const [reviewList, setReviewList] = useState<number[]>([])
@@ -96,11 +108,17 @@ export function SessionRunner({
   const activeIndex = reviewing ? (reviewList[reviewPos] ?? 0) : i
   const id = questionIds[activeIndex]
   const q = cache[id]
+  const { allViewed, unviewedCount, firstUnviewedIndex } = useQuestionViews(questionIds, id, phase === 'running' && loaded && !!q)
   const isGrid = !!q?.statements
   const isML = !!q?.mostLeast
   const answered = answers[id]
   const gridAnswered = gridAnswers[id]
   const mlAnswered = mlAnswers[id]
+
+  useEffect(() => {
+    questionClock.switchTo(phase === 'running' && loaded && !grading && q ? id : null, performance.now())
+    return () => questionClock.switchTo(null, performance.now())
+  }, [questionClock, phase, loaded, grading, q, id])
 
   // Clear a half-made Most/Least selection when the question changes (render-time
   // reset — no effect needed).
@@ -111,11 +129,15 @@ export function SessionRunner({
   useEffect(() => {
     if (phase !== 'running' || loaded) return
     let alive = true
-    fetchQuestionsAction(questionIds).then((map) => {
-      if (alive) { setCache(map as Record<string, SafeQuestion | null>); setLoaded(true) }
-    })
+    loadQuestionSection(questionIds, () => fetchQuestionsAction(questionIds)).then((map) => {
+      if (alive) {
+        setCache(map as Record<string, SafeQuestion | null>)
+        startedAtRef.current = Date.now()
+        setLoaded(true)
+      }
+    }).catch(() => { if (alive) setLoadError(true) })
     return () => { alive = false }
-  }, [phase, loaded, questionIds])
+  }, [phase, loaded, questionIds, loadAttempt])
 
   const go = useCallback((d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))), [total])
   const reviewGo = (d: number) => setReviewPos((p) => Math.min(reviewList.length - 1, Math.max(0, p + d)))
@@ -125,12 +147,16 @@ export function SessionRunner({
   }
 
   // Grade every answered question at the end, then show the results screen.
-  const submitAll = useCallback(async () => {
+  const submitAll = useCallback(async (cause: 'manual' | 'timer' = 'manual') => {
+    if (!loaded || grading || !canMarkQuestions(allViewed, cause)) return
+    questionClock.switchTo(null, performance.now())
+    const times = questionClock.snapshot(performance.now())
+    setReviewTimes(times)
     setGrading(true)
     const nextA: Record<string, Answered> = {}
     const nextG: Record<string, GridAnswered> = {}
     const nextM: Record<string, MLAnswered> = {}
-    await Promise.all(
+    await Promise.allSettled(
       questionIds.map(async (qid) => {
         const cur = cache[qid]
         if (!cur) return
@@ -139,17 +165,17 @@ export function SessionRunner({
           if (Object.keys(ans).length === 0) return
           const asStr: Record<string, YesNo> = {}
           for (const k of Object.keys(ans)) asStr[k] = ans[Number(k)]
-          const r = await submitGridAction(qid, asStr)
+          const r = await submitGridAction(qid, asStr, Math.round(times[qid] ?? 0))
           if (!('denied' in r)) nextG[qid] = { result: r, video: null }
         } else if (cur.mostLeast) {
           const ch = mlPending[qid]
           if (ch?.most == null || ch?.least == null) return
-          const r = await submitMostLeastAction(qid, { most: ch.most, least: ch.least })
+          const r = await submitMostLeastAction(qid, { most: ch.most, least: ch.least }, Math.round(times[qid] ?? 0))
           if (!('denied' in r)) nextM[qid] = { result: r, video: null }
         } else {
           const sel = pending[qid]
           if (!sel) return
-          const r = await answerQuestionAction(qid, sel)
+          const r = await answerQuestionAction(qid, sel, Math.round(times[qid] ?? 0))
           if (!('denied' in r)) nextA[qid] = { selectedId: sel, result: r, video: null }
         }
       }),
@@ -198,22 +224,22 @@ export function SessionRunner({
         mode,
         total: sessionMaxMarks,
         correct: scoreSum,
-        timeSpentSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : null,
+        timeSpentSeconds: Math.round(Object.values(times).reduce((sum, seconds) => sum + seconds, 0)),
         questionIds,
         responses: storedResponses,
       })
     }
-  }, [questionIds, cache, gridPending, mlPending, pending, examSlug, subtestId, tag, mode])
+  }, [loaded, grading, allViewed, questionIds, cache, gridPending, mlPending, pending, examSlug, subtestId, tag, mode, questionClock])
 
   // Timer + a ref so its expiry always calls the latest submitAll.
   const submitRef = useRef(submitAll)
   useEffect(() => { submitRef.current = submitAll }, [submitAll])
   useEffect(() => {
-    if (phase !== 'running' || !timed) return
-    if (remaining <= 0) { submitRef.current(); return }
+    if (phase !== 'running' || !timed || !loaded) return
+    if (remaining <= 0) { submitRef.current('timer'); return }
     const t = setTimeout(() => setRemaining((r) => r - 1), 1000)
     return () => clearTimeout(t)
-  }, [phase, timed, remaining])
+  }, [phase, timed, remaining, loaded])
 
   useEffect(() => {
     if (phase !== 'running') return
@@ -260,28 +286,11 @@ export function SessionRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewing, id, answeredIds])
 
-  // In review, lazily fetch the signed video for a paid, ready explanation.
-  useEffect(() => {
-    if (!reviewing) return
-    const a = answers[id]; const g = gridAnswers[id]; const m = mlAnswers[id]
-    const res = a?.result ?? g?.result ?? m?.result
-    const hasVideo = a?.video ?? g?.video ?? m?.video
-    if (!res || hasVideo || !res.can_watch_video || !res.video_ready) return
-    let alive = true
-    loadExplanationVideoAction(id).then((v) => {
-      if (!alive || 'denied' in v) return
-      if (a) setAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
-      else if (g) setGridAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
-      else if (m) setMlAnswers((s) => ({ ...s, [id]: { ...s[id], video: v } }))
-    })
-    return () => { alive = false }
-  }, [reviewing, id, answers, gridAnswers, mlAnswers])
 
   function begin() {
     haptic(15)
     rootRef.current?.requestFullscreen?.().catch(() => {})
     setReadyModal(false)
-    startedAtRef.current = Date.now()
     setPhase('running')
   }
   function hasPending(qid: string) {
@@ -291,11 +300,11 @@ export function SessionRunner({
   // ---------- INTRO ----------
   if (phase === 'intro') {
     return (
-      <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
-        <div className="px-3 py-2 text-white" style={{ background: BAR }}><span className="text-xl font-normal">{label}</span></div>
-        <div className="h-8" style={{ background: SUBBAR }} />
-        <div className="flex-1 overflow-auto px-[18px] py-4 text-[#111]"><div className="max-w-none whitespace-pre-wrap text-[16px] leading-[1.36]">{instructions}</div></div>
-        <div className="flex items-center justify-between text-white" style={{ background: BAR }}>
+      <div ref={rootRef} className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: ARIAL }}>
+        <div className={`${styles.topbar} px-5 py-3 text-white`} style={{ background: BAR }}><span className="text-xl font-normal">{label}</span></div>
+        <div className={`${styles.subbar} h-3`} style={{ background: SUBBAR }} />
+        <div className={`${styles.introStage} flex-1 overflow-auto p-6 text-[#111] sm:p-8`}><div className={`${styles.introCard} max-w-none whitespace-pre-wrap text-[16px] leading-[1.5]`}>{instructions}</div></div>
+        <div className={`${styles.footerDark} flex items-center justify-between text-white`} style={{ background: BAR }}>
           <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-3 py-2 text-[16px] hover:bg-white/10">⤶ End Exam</button>
           <button onClick={() => setReadyModal(true)} className="border-l border-white/25 px-3 py-2 text-[16px] hover:bg-white/10">Next →</button>
         </div>
@@ -319,6 +328,34 @@ export function SessionRunner({
   }
 
   // ---------- SUMMARY (post-score review list) ----------
+  if (phase === 'summary' && examSlug === 'ucat') {
+    const times = reviewTimes
+    const items: ReviewItem[] = questionIds.map((qid, index) => {
+      const question = cache[qid] ?? null
+      const mcq = answers[qid], grid = gridAnswers[qid], ml = mlAnswers[qid]
+      const graded: MockGraded | undefined = mcq ? { kind: 'mcq', selectedId: mcq.selectedId, result: mcq.result }
+        : grid ? { kind: 'grid', answers: gridPending[qid] ?? {}, result: grid.result }
+        : ml ? { kind: 'ml', choice: { most: mlPending[qid]?.most ?? -1, least: mlPending[qid]?.least ?? -1 }, result: ml.result } : undefined
+      const attempted = hasPending(qid)
+      return {
+        id: qid, number: index + 1, section: subtestId ?? 'practice', sectionName: label,
+        setId: question?.review?.setId ?? qid, setTitle: question?.review?.setTitle ?? 'Question set',
+        questionType: question?.review?.questionType ?? question?.topic ?? 'Uncategorised',
+        question, graded, maximum: question?.marks ?? 1, score: attempted ? graded?.result.score ?? null : 0,
+        seconds: times[qid] ?? 0,
+        status: !attempted ? 'unanswered' : !graded ? 'unavailable' : graded.result.is_correct ? 'correct' : graded.result.score > 0 ? 'partial' : 'incorrect',
+      }
+    })
+    async function reveal(qid: string) {
+      if (hasPending(qid)) throw new Error('This response has not been graded. Its score remains unavailable.')
+      const r = await revealAnswerAction(qid)
+      if ('denied' in r) throw new Error('Review unavailable')
+      if (r.kind === 'grid') setGridAnswers(previous => ({ ...previous, [qid]: { result: r.result, video: null } }))
+      else if (r.kind === 'most_least') setMlAnswers(previous => ({ ...previous, [qid]: { result: r.result, video: null } }))
+      else setAnswers(previous => ({ ...previous, [qid]: { selectedId: '', result: r.result, video: null } }))
+    }
+    return <MockReview variant="practice" label={label} examSlug={examSlug} items={items} sections={[]} totalScore={null} totalPercentile={null} onReveal={reveal} />
+  }
   if (phase === 'summary') {
     const resultOf = (qid: string) => answers[qid]?.result ?? gridAnswers[qid]?.result ?? mlAnswers[qid]?.result
     const statusOf = (qid: string): 'Correct' | 'Partial' | 'Incorrect' | 'Unseen' => {
@@ -340,9 +377,9 @@ export function SessionRunner({
     const fmtMark = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
     return (
-      <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
-        <div className="px-5 py-3 text-white" style={{ background: BAR }}><span className="text-lg font-semibold">{label} Question Bank</span></div>
-        <div className="flex items-center gap-2 px-5 py-1.5 text-sm text-white" style={{ background: SUBBAR }}><span aria-hidden>🗎</span> Instructions</div>
+      <div ref={rootRef} className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: ARIAL }}>
+        <div className={`${styles.topbar} px-5 py-3 text-white`} style={{ background: BAR }}><span className="text-lg font-semibold">{label}</span></div>
+        <div className={`${styles.subbar} flex items-center gap-2 px-5 py-1.5 text-sm text-white`} style={{ background: SUBBAR }}><span aria-hidden>🗎</span> Instructions</div>
         <p className="pt-3 text-center text-[15px] text-[#1b1b1b]">Review Postscore: see which items are incorrect and return to them to see the solution</p>
         {answeredCount > 0 ? (
           <p className="pb-3 pt-1 text-center text-[15px] font-semibold text-[#1b2a46]">
@@ -366,7 +403,7 @@ export function SessionRunner({
             )
           })}
         </div>
-        <div className="flex items-center justify-between text-sm text-white" style={{ background: BAR }}>
+        <div className={`${styles.footerDark} flex items-center justify-between text-sm text-white`} style={{ background: BAR }}>
           <button onClick={() => router.push(`/practice/${examSlug}`)} className="px-5 py-3 hover:bg-white/10">⤶ End Review</button>
           <div className="flex">
             <button onClick={() => startReview(allIdx, 0)} className="flex items-center gap-1.5 border-l border-white/25 px-5 py-3 hover:bg-white/10"><span aria-hidden>✎</span>Review All</button>
@@ -388,24 +425,16 @@ export function SessionRunner({
     return { ...p, [id]: row }
   }) }
 
-  const Explanation = (result: Result | GridResult | MostLeastResult | undefined, video: Video | null | undefined, wasAnswered: boolean) => result ? (
+  const Explanation = (result: Result | GridResult | MostLeastResult | undefined, wasAnswered: boolean) => result ? (
     <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
       <p className={`text-sm font-semibold ${!wasAnswered ? 'text-[#6b7280]' : result.score >= 1 ? 'text-[#157d72]' : result.score > 0 ? 'text-[#b0761f]' : 'text-[#dc2626]'}`}>{!wasAnswered ? 'Not answered' : result.score >= 1 ? 'Correct' : result.score > 0 ? 'Partial credit (½ mark)' : 'Not quite'}</p>
-      {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p>{result.explanation_text}</div> : null}
-      {video ? (
-        <div className="overflow-hidden rounded border border-gray-200"><MuxPlayer playbackId={video.playbackId} tokens={{ playback: video.token }} streamType="on-demand" accentColor="#157d72" /></div>
-      ) : !result.has_video ? null : result.can_watch_video ? (result.video_ready ? null : <p className="text-sm text-gray-500">Video explanation is processing.</p>) : (
-        <div className="rounded border-2 border-[#157d72] bg-[#e2efec] p-5 text-center">
-          <p className="font-semibold text-[#1b2a46]">Video explanation</p>
-          <p className="mt-1 text-sm text-gray-600">Watch this worked through on video with a subscription.</p>
-          <Link href="/pricing" className="mt-3 inline-block rounded-md bg-[#157d72] px-4 py-2 text-sm font-medium text-white">See plans</Link>
-        </div>
-      )}
+      {result.explanation_text ? <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed"><p className="mb-1 font-semibold">Answer rationale</p><div className="whitespace-pre-line">{result.explanation_text}</div></div> : null}
+
     </div>
   ) : null
 
   const Tables = (q?.tables ?? []).map((table, tableIndex) => (
-    <div key={tableIndex} className="my-4 inline-block max-w-full overflow-x-auto align-top">
+    <div key={tableIndex} className="my-4 max-w-full overflow-x-auto">
       <table className="border-collapse text-sm">
         <thead><tr>{table.headers.map((h, k) => <th key={k} className="border border-gray-400 px-4 py-1.5 font-semibold">{h}</th>)}</tr></thead>
         <tbody>{table.rows.map((r, ri) => <tr key={ri}>{r.map((c, ci) => <td key={ci} className="border border-gray-400 px-4 py-1.5 text-center">{c}</td>)}</tr>)}</tbody>
@@ -415,13 +444,13 @@ export function SessionRunner({
 
   const selectedId = answered ? answered.selectedId : pending[id]
   const Options = q ? (
-    <div className="flex flex-col">
+    <div className={styles.options} role="radiogroup" aria-label="Answer options">
       {q.options.map((o) => {
         const sel = selectedId === o.id
         const correct = answered && answered.result.correct_option_id === o.id
         const wrong = answered && sel && !answered.result.is_correct
         return (
-          <button key={o.id} disabled={!!answered} onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }} className="flex items-start gap-3 py-2.5 text-left text-[16px]">
+          <button key={o.id} disabled={!!answered} role="radio" aria-checked={sel} data-result={correct?'correct':wrong?'wrong':undefined} onClick={() => { haptic(8); setPending((p) => ({ ...p, [id]: o.id })) }} className={`${styles.option} flex items-start gap-3 text-left text-[16px]`}>
             <span className={`mt-0.5 grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-2 ${correct ? 'border-[#157d72]' : wrong ? 'border-[#dc2626]' : sel ? 'border-[#1268ad]' : 'border-gray-500'}`}>
               {sel ? <span className={`h-2 w-2 rounded-full ${correct ? 'bg-[#157d72]' : wrong ? 'bg-[#dc2626]' : 'bg-[#1268ad]'}`} /> : null}
             </span>
@@ -437,7 +466,7 @@ export function SessionRunner({
     <div className="mt-2">
       <p className="mb-4 text-[16px]">Place ‘Yes’ if the conclusion does follow. Place ‘No’ if the conclusion does not follow.</p>
       <div className="flex items-start gap-[10px]">
-        <div className="flex flex-1 flex-col gap-[13px]">
+        <div className="flex flex-1 flex-col gap-[13px] lg:w-[calc(50vw+113px)] lg:flex-none">
           {q.statements.map((s) => {
             const chosen = gridAnswered ? undefined : gridPending[id]?.[s.index]
             const per = gridAnswered?.result.per_statement.find((p) => p.index === s.index)
@@ -487,7 +516,7 @@ export function SessionRunner({
   ))
 
   const ML = q?.mostLeast ? (
-    <div className="mt-6">
+    <div className="mt-6 lg:w-[50vw]">
       <div className="flex flex-col gap-3">
         {(['most', 'least'] as const).map((slot) => {
           const label2 = slot === 'most' ? 'Most Appropriate' : 'Least Appropriate'
@@ -526,51 +555,48 @@ export function SessionRunner({
   ) : null
 
   const Content = (
-    <div className={`flex-1 overflow-auto bg-white text-[#111] ${q?.passage ? 'p-0' : 'px-[18px] py-4'}`}>
-      {!loaded && q === undefined ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-24">
-          <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1268ad]/25 border-t-[#1268ad]" />
-          <p className="text-sm text-gray-500">Loading questions…</p>
-        </div>
+    <div className={`${styles.canvas} flex-1 overflow-auto text-[#111] ${q?.passage ? 'p-4 sm:p-6' : 'px-[18px] py-4'}`}>
+      {!loaded ? (
+        <QuestionLoading error={loadError} onRetry={() => { setLoadError(false); setLoadAttempt((attempt) => attempt + 1) }} />
       ) : q === undefined ? (
         <div className="flex items-center justify-center py-24"><span className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#1268ad]/25 border-t-[#1268ad]" /></div>
       ) : q === null ? (
         <p className="text-gray-500">This question isn&rsquo;t available.</p>
       ) : isGrid ? (
-        <div>
-          <p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
+        <div className={styles.questionSurface}>
+          <p className={`${styles.questionStem} whitespace-pre-wrap text-[16px]`}>{q.stem}</p>
           {Images}{Tables}{Grid}
-          {Explanation(gridAnswered?.result, gridAnswered?.video, answeredIds.has(id))}
+          {Explanation(gridAnswered?.result, answeredIds.has(id))}
         </div>
       ) : isML ? (
-        <div>
-          <p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
+        <div className={styles.questionSurface}>
+          <p className={`${styles.questionStem} whitespace-pre-wrap text-[16px]`}>{q.stem}</p>
           {Images}{ML}
-          {Explanation(mlAnswered?.result, mlAnswered?.video, answeredIds.has(id))}
+          {Explanation(mlAnswered?.result, answeredIds.has(id))}
         </div>
       ) : q.passage ? (
-        <div className="grid min-h-full md:grid-cols-[3fr_2fr] md:divide-x-[6px] md:divide-[#3b78aa]">
-          <div className="px-[18px] py-4"><p className="whitespace-pre-wrap text-[16px] leading-[1.36]">{q.passage}</p>{Images}{Tables}</div>
+        <div className={`${styles.questionSurface} grid min-h-full md:grid-cols-[3fr_2fr] md:divide-x md:divide-[#d8d5e5]`}>
+          <div className="px-[18px] py-4"><p className="whitespace-pre-wrap text-[16px] leading-[1.5]">{q.passage}</p>{Images}{Tables}</div>
           <div className="px-[18px] py-4">
-            <p className="text-[16px] leading-[1.36]">{q.stem}</p>
+            <p className={`${styles.questionStem} text-[16px]`}>{q.stem}</p>
             <div className="mt-5">{Options}</div>
-            {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
+            {Explanation(answered?.result, answeredIds.has(id))}
           </div>
         </div>
       ) : (
-        <div>
+        <div className={styles.questionSurface}>
           {q.topic ? <p className="text-xs font-semibold uppercase tracking-wide text-[#1268ad]">{q.topic}</p> : null}
-          <p className="mt-2 whitespace-pre-wrap text-[16px] leading-[1.36]">{q.stem}</p>
+          <p className={`${styles.questionStem} mt-2 whitespace-pre-wrap text-[16px]`}>{q.stem}</p>
           {Images}{Tables}
           <div className="mt-5">{Options}</div>
-          {Explanation(answered?.result, answered?.video, answeredIds.has(id))}
+          {Explanation(answered?.result, answeredIds.has(id))}
         </div>
       )}
     </div>
   )
 
   return (
-    <div ref={rootRef} className="fixed inset-0 z-[100] flex flex-col bg-white" style={{ fontFamily: ARIAL }}>
+    <div ref={rootRef} className={`${styles.shell} fixed inset-0 z-[100] flex flex-col`} style={{ fontFamily: ARIAL }}>
       {warn && !reviewing ? (
         <div className="flex items-center justify-between bg-[#dc2626] px-5 py-2 text-sm text-white">
           <span>You left the test window. In the real exam this isn&rsquo;t allowed.</span>
@@ -578,16 +604,16 @@ export function SessionRunner({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between px-3 py-2 text-white" style={{ background: BAR }}>
+      <div className={`${styles.topbar} flex items-center justify-between px-3 py-2 text-white`} style={{ background: BAR }}>
         <span className="text-xl font-normal">{reviewing ? `${label} · Review` : label}</span>
         <div className="flex items-center gap-5">
-          {timed && !reviewing ? <span className={`text-[16px] tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
-          <span className="flex items-center gap-2 text-[16px] tabular-nums"><CounterIcon />{activeIndex + 1} of {total}</span>
+          {timed && !reviewing ? <span className={`${styles.timerChip} text-[16px] tabular-nums ${remaining < 60 ? 'text-[#ffd21e]' : ''}`}>{mmss(remaining)}</span> : null}
+          <span className={`${styles.progressChip} flex items-center gap-2 text-[16px] tabular-nums`}><CounterIcon />{activeIndex + 1} of {total}</span>
         </div>
       </div>
 
       {reviewing ? (
-        <div className="flex items-center justify-between px-3 py-1.5 text-[16px] text-white" style={{ background: SUBBAR }}>
+        <div className={`${styles.subbar} flex items-center justify-between px-3 py-1.5 text-[16px] text-white`} style={{ background: SUBBAR }}>
           <button onClick={() => setPhase('summary')} className="hover:underline">← Back to results</button>
           <span>{(() => {
             if (!answeredIds.has(id)) return 'Not answered'
@@ -596,9 +622,8 @@ export function SessionRunner({
           })()}</span>
         </div>
       ) : (
-        <div className="flex items-center justify-between px-3 py-1.5 text-[16px] text-white" style={{ background: SUBBAR }}>
+        <div className={`${styles.subbar} flex items-center justify-between px-3 py-1.5 text-[16px] text-white`} style={{ background: SUBBAR }}>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5"><span aria-hidden>☼</span><span>Explain Answer</span></span>
             <button onClick={() => setCalcOpen((v) => !v)} className={`flex items-center gap-1.5 hover:underline ${calcOpen ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>▭</span><span>Calculator</span></button>
           </div>
           <button onClick={() => setFlags((f) => ({ ...f, [id]: !f[id] }))} className={`flex items-center gap-1.5 hover:underline ${flags[id] ? 'text-[#ffd21e]' : ''}`}><span aria-hidden>⚑</span><span>Flag for Review</span></button>
@@ -608,7 +633,7 @@ export function SessionRunner({
       {Content}
 
       {reviewing ? (
-        <div className="flex items-center justify-between text-[16px] text-white" style={{ background: BAR }}>
+        <div className={`${styles.footerDark} flex items-center justify-between text-[16px] text-white`} style={{ background: BAR }}>
           <button onClick={() => setPhase('summary')} className="px-3 py-2 hover:bg-white/10">⤶ Back to results</button>
           <div className="flex">
             {reviewPos > 0 ? <button onClick={() => reviewGo(-1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">← Previous</button> : null}
@@ -616,7 +641,7 @@ export function SessionRunner({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between text-[16px] text-white" style={{ background: BAR }}>
+        <div className={`${styles.footerDark} flex items-center justify-between text-[16px] text-white`} style={{ background: BAR }}>
           <button onClick={() => setConfirmFinish(true)} className="px-3 py-2 hover:bg-white/10">⤶ End Exam</button>
           <div className="flex">
             {i > 0 ? <button onClick={() => go(-1)} className="border-l border-white/25 px-3 py-2 text-[#ffd21e]">← Previous</button> : null}
@@ -632,15 +657,17 @@ export function SessionRunner({
         <ExamConfirm
           title="Finish and submit?"
           message={(() => {
+            if (!allViewed) return `View all questions before marking. You still have ${unviewedCount} question${unviewedCount === 1 ? '' : 's'} to view.`
             const un = questionIds.filter((qid) => !hasPending(qid)).length
             return un > 0
               ? `You have ${un} unanswered question${un === 1 ? '' : 's'}. Once you finish, your answers are marked and you can no longer change them.`
               : 'Once you finish, your answers are marked and you can no longer change them.'
           })()}
           confirmLabel="Yes, finish"
-          cancelLabel="No, keep going"
+          confirmDisabled={!allViewed || grading}
+          cancelLabel={allViewed ? "No, keep going" : "View unseen questions"}
           onConfirm={() => { setConfirmFinish(false); submitAll() }}
-          onCancel={() => setConfirmFinish(false)}
+          onCancel={() => { setConfirmFinish(false); if (!allViewed && firstUnviewedIndex >= 0) setI(firstUnviewedIndex) }}
         />
       ) : null}
 
@@ -655,11 +682,11 @@ export function SessionRunner({
 
       {navOpen && !reviewing ? (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40" onClick={(e) => { if (e.target === e.currentTarget) setNavOpen(false) }}>
-          <div className="max-h-[80vh] w-[min(520px,92vw)] overflow-auto rounded-lg bg-white">
-            <div className="flex items-center justify-between px-5 py-3 font-semibold text-white" style={{ background: '#1268ad' }}>Navigator <button onClick={() => setNavOpen(false)}>✕</button></div>
+          <div className={`${styles.navigator} max-h-[80vh] w-[min(520px,92vw)] overflow-auto bg-white`}>
+            <div className={`${styles.navigatorHeader} flex items-center justify-between px-5 py-3 font-semibold text-white`} style={{ background: '#1268ad' }}>Navigator <button onClick={() => setNavOpen(false)}>✕</button></div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2 p-4">
               {questionIds.map((qid, idx) => (
-                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`relative h-11 rounded border text-sm ${hasPending(qid) ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
+                <button key={qid} onClick={() => { setI(idx); setNavOpen(false) }} className={`${styles.navigatorButton} relative h-11 border text-sm ${hasPending(qid) ? 'border-[#7bb08a] bg-[#e2efe4]' : 'border-gray-300 bg-white'} ${idx === i ? 'outline outline-2 outline-[#1268ad]' : ''}`}>
                   {flags[qid] ? <span className="absolute right-1 top-0.5 text-[10px] text-[#c0392b]">⚑</span> : null}{idx + 1}
                 </button>
               ))}

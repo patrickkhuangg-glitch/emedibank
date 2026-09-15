@@ -1,0 +1,3 @@
+.curve{display:block;width:100%;max-width:195px;height:48px;overflow:visible;color:inherit}
+.axis{stroke:var(--border);stroke-width:1}.median{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3;opacity:.5}
+.tick{fill:var(--muted);font:11px var(--font-hanken),sans-serif}.marker{fill:currentColor;font:600 11px var(--font-hanken),sans-serif}

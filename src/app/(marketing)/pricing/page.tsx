@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import { headers } from 'next/headers'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { ButtonLink } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe/client'
 import { CURRENCIES, PAID_EXAM_SLUGS, type Currency } from '@/lib/stripe/pricing'
 import { PricingCards, type Plan } from './pricing-cards'
+import { paymentsAvailable } from '@/lib/security/payments'
 
 type IntervalAmounts = { month: number | null; year: number | null }
 type Amounts = Record<string, Record<Currency, IntervalAmounts>>
@@ -83,7 +84,7 @@ async function loadPlansUnsafe(): Promise<Plan[]> {
   }
 
   return products
-    .filter((p) => p.stripe_product_id)
+    .filter((p) => p.stripe_product_id && (!p.exam_id || examSlugById.get(p.exam_id) !== 'interviews'))
     .sort((a, b) => order(a) - order(b))
     .map((p) => {
       const amt = amounts[p.stripe_product_id as string] ?? emptyCurrencyAmounts()
@@ -92,25 +93,26 @@ async function loadPlansUnsafe(): Promise<Plan[]> {
     })
 }
 
-export default async function PricingPage({ searchParams }: { searchParams: Promise<{ signup?: string; checkout?: string }> }) {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ signup?: string; checkout?: string; error?: string }> }) {
   const plans = await loadPlans()
-  const { signup, checkout } = await searchParams
+  const { signup, checkout, error } = await searchParams
   const requestHeaders = await headers()
   const country = requestHeaders.get('x-vercel-ip-country')?.toUpperCase() ?? 'AU'
   const defaultCurrency = COUNTRY_CURRENCY[country] ?? 'aud'
 
   return (
-    <Container className="py-16">
+    <Container>
       <div className="mx-auto max-w-3xl text-center">
-        <h1 className="text-4xl font-semibold tracking-tight">Everything, priced by the week</h1>
+        <h1 className="page-title">Everything, priced by the week</h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
-          Start free with full mock exams. For a limited time, every annual academic plan includes
-          Interviews and 25 marked MMI stations free. Local pricing is shown in your currency.
+          Start free with full mock exams. Annual academic plans include Interview practice access;
+          tutor-review credits are available through the dedicated Interview packages. Local pricing is shown in your currency.
         </p>
-        {signup === 'success' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-mint-muted px-4 py-3 text-sm font-medium text-mint-deep">Your email is verified. Choose a plan to start your 7-day trial. Add card details only if you choose to continue when it ends.</p> : null}
+        {signup === 'success' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-mint-muted px-4 py-3 text-sm font-medium text-mint-deep">Your email is verified. Try Interviews free, choose an academic trial, or subscribe for immediate full access.</p> : null}
         {checkout === 'cancelled' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-surface-muted px-4 py-3 text-sm text-muted">Checkout was cancelled. Your account is ready whenever you are.</p> : null}
       </div>
 
+      {error === 'existing_subscription' && <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-surface-muted p-4 text-sm">You already have a subscription for this plan. <Link href="/account" className="font-semibold text-brand underline">Manage your subscription in your account</Link> to avoid paying twice.</p>}
       <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-surface p-6 text-center">
         <h2 className="text-lg font-semibold">Free</h2>
         <p className="mt-1 text-sm text-muted">
@@ -119,11 +121,24 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         <ButtonLink href="/signup" className="mt-4 w-full">Start free</ButtonLink>
       </div>
 
-      {plans.length > 0 ? (
+      <section className="mx-auto mt-6 max-w-md rounded-2xl border border-brand/20 bg-brand-muted/30 p-6 text-center" aria-labelledby="interview-trial-heading">
+        <h2 id="interview-trial-heading" className="text-lg font-semibold">Try Interviews free for seven days</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">15 MMI stations, one question from each panel theme, two trial mocks, 60 minutes of transcription and 2 marking credits. No card required.</p>
+        <ButtonLink href="/interview-preparation" className="mt-4 w-full">Try Interviews free</ButtonLink>
+        <Link href="/interview-trial" className="mt-3 block text-xs text-brand underline">View trial allowances and privacy</Link>
+        <p className="mt-3 text-xs text-muted">Ready for the full question bank? Subscribe below without taking a trial.</p>
+      </section>
+
+      {!paymentsAvailable() ? <p role="status" className="mt-8 text-center text-sm text-muted">Paid subscriptions are not available yet. You can continue using the free resources.</p> : plans.length > 0 ? (
         <PricingCards plans={plans} defaultCurrency={defaultCurrency} />
       ) : (
         <p className="mt-8 text-center text-sm text-muted">Paid plans are being finalised.</p>
       )}
+
+      <p className="mx-auto mt-6 max-w-xl text-center text-sm text-muted">
+        The interview trial starts with your first practice. Academic subscription trials start when you first open checkout; returning keeps the original end date. Choose “Subscribe now” to skip the trial and start billing immediately.
+      </p>
+      <p className="mx-auto mt-4 max-w-xl text-center text-xs text-muted">No GST charged. Cancel future renewals at any time. <a className="underline" href="https://emeducate.com.au/studocyte/terms">Subscription terms</a> · <a className="underline" href="https://emeducate.com.au/refunds">Refunds and cancellations</a> · <a className="underline" href="mailto:support@emeducate.com.au">Support</a></p>
 
       <p className="mt-10 text-center text-sm text-muted">
         Already have an account?{' '}

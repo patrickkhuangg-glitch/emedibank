@@ -93,6 +93,10 @@ diagnostic instead of crashing.)
    Environment Variables**.
 4. Deploy. Pushes to `main` redeploy automatically.
 
+The isolated pre-production setup is documented in
+[`docs/STAGING.md`](./docs/STAGING.md). Staging uses a dedicated Vercel target and
+Supabase database; it must never reuse production data or credentials.
+
 ## Project layout
 
 ```

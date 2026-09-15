@@ -1,0 +1,13 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
+import {vercel,team,vercelProject} from './lib/interview-operator.mjs'
+const dir='artifacts/qr-exclusive-mocks-release';mkdirSync(dir,{recursive:true})
+const paths=['src/lib/mock/config.ts','src/app/(app)/mock/[examSlug]/page.tsx','src/app/(app)/mock/[examSlug]/mini/[subtestSlug]/page.tsx','src/lib/access/questions.ts','src/lib/questions/session.ts','src/lib/practice/sets.ts','src/lib/practice/stats.ts','src/lib/dashboard/stats.ts','src/app/(app)/exams/[examSlug]/[subtestSlug]/page.tsx','src/app/(app)/practice/[examSlug]/[subtestSlug]/start/page.tsx','src/lib/questions/availability.ts']
+const project=await vercel(`/v9/projects/${vercelProject}?teamId=${team}`)
+const deployment=await vercel(`/v13/deployments/${project.targets.production.id}?teamId=${team}`)
+const tree=await vercel(`/v6/deployments/${deployment.id}/files?teamId=${team}`),manifest=[]
+function walk(nodes,prefix=''){for(const n of nodes){const path=prefix+n.name;if(n.type==='directory')walk(n.children??[],path+'/');else manifest.push({file:path,sha:n.uid,mode:n.mode??33188})}}
+walk(tree.find(n=>n.name==='src').children)
+const production={},local={}
+for(const path of paths){const entry=manifest.find(e=>e.file===path);production[path]=entry?Buffer.from((await vercel(`/v8/deployments/${deployment.id}/files/${entry.sha}?teamId=${team}`)).data,'base64').toString('utf8'):null;try{local[path]=readFileSync(path,'utf8')}catch{local[path]=null}}
+for(const [name,value]of Object.entries({deployment,manifest,production,local,paths}))writeFileSync(`${dir}/${name}.json`,JSON.stringify(value,null,2)+'\n')
+console.log(JSON.stringify({deployment:deployment.id,sourceFiles:manifest.length,differing:paths.filter(p=>local[p]!==production[p])}))

@@ -1,0 +1,6847 @@
+{
+  "scope": "Local migrations only; hosted project not verified",
+  "buckets": [
+    {
+      "id": "interview-recordings",
+      "public": false,
+      "mime_types": [
+        "video/webm",
+        "video/mp4",
+        "audio/webm",
+        "audio/mp4",
+        "audio/mpeg"
+      ],
+      "size_limit": 157286400
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "(active = true)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "exams",
+      "permissive": "PERMISSIVE",
+      "policyname": "Active exams are readable by everyone",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can read their own profile",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their own profile",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "public"
+      ],
+      "tablename": "subtests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Subtests are readable by everyone",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "public"
+      ],
+      "tablename": "products",
+      "permissive": "PERMISSIVE",
+      "policyname": "Products are readable by everyone",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "subtests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage subtests",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "products",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage products",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "exams",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage exams",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "subscriptions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own subscriptions",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "entitlements",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own entitlements",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "questions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage questions",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "question_options",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage question options",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "subscription_benefit_grants",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own subscription benefit grants",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "question_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users manage their own attempts",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "stimuli",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage stimuli",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "practice_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Own practice sessions are readable",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "public"
+      ],
+      "tablename": "practice_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users insert their own practice sessions",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(published OR is_admin(auth.uid()))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "essay_prompts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Published essay prompts are readable",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "essay_prompts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage essay prompts",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "essay_responses",
+      "permissive": "PERMISSIVE",
+      "policyname": "Own essay responses are readable",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "essay_responses",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users delete their own essay responses",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "essay_markings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage essay markings",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "interview_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own interview attempts",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'interview-recordings'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own interview recordings",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "interview_study_notes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their own interview study notes",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "public"
+      ],
+      "tablename": "interview_study_notes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users add their own interview study notes",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = user_id) OR is_admin(auth.uid()))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plans",
+      "permissive": "PERMISSIVE",
+      "policyname": "Students read their own study plans",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plans",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage study plans",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM study_plans plan\n  WHERE ((plan.id = study_plan_items.plan_id) AND ((plan.user_id = auth.uid()) OR is_admin(auth.uid())))))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plan_items",
+      "permissive": "PERMISSIVE",
+      "policyname": "Students read items in their own study plans",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plan_items",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage study plan items",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_admin(auth.uid())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "tutoring_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins manage tutoring sessions",
+      "schemaname": "public",
+      "with_check": "is_admin(auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((auth.uid() = user_id) OR is_admin(auth.uid()))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plan_exam_dates",
+      "permissive": "PERMISSIVE",
+      "policyname": "Students manage their own exam dates",
+      "schemaname": "public",
+      "with_check": "((auth.uid() = user_id) OR is_admin(auth.uid()))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((auth.uid() = user_id) OR is_admin(auth.uid()))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "study_plan_tasks",
+      "permissive": "PERMISSIVE",
+      "policyname": "Students manage their own study plan tasks",
+      "schemaname": "public",
+      "with_check": "((auth.uid() = user_id) OR is_admin(auth.uid()))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "Upload immutable interview shell media",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'interview-recordings'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text) AND (EXISTS ( SELECT 1\n   FROM interview_attempts a\n  WHERE ((a.user_id = auth.uid()) AND (a.upload_status = ANY (ARRAY['awaiting_upload'::text, 'uploading'::text])) AND (a.created_at > (now() - '24:00:00'::interval)) AND ((objects.name = a.recording_path) OR (objects.name = a.transcription_audio_path))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "essay_responses",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users insert their own essay responses",
+      "schemaname": "public",
+      "with_check": "((auth.uid() = user_id) AND (status = 'draft'::text))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = user_id) AND (status = 'draft'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "essay_responses",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users update their own essay responses",
+      "schemaname": "public",
+      "with_check": "((auth.uid() = user_id) AND (status = 'draft'::text))"
+    }
+  ],
+  "functions": [
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "require_signup_authorization()",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "is_admin(uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "spend_essay_credits(integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "handle_new_user()",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public"
+      ],
+      "signature": "grant_subscription_benefit(uuid,text,text,timestamp with time zone,integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "complete_tutoring_session(uuid,integer,boolean)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "approve_tutoring_overrun(uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "protect_interview_credit_balance()",
+      "security_definer": false
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "consume_signup_attempt(text,integer,integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "fail_interview_job(uuid,text,text,integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "review_interview_marking(uuid,uuid,integer,text,jsonb,text,text,boolean)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "enqueue_interview_retention(integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "reserve_interview_deletion(uuid,uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "enforce_interview_recording_quota()",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "consume_interview_transcription(uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "defer_interview_transcription(uuid,text)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "refund_interview_marking(uuid,uuid,text)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "claim_next_interview_job(text)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "complete_interview_job(uuid,text,jsonb)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "finalise_interview_upload(uuid,uuid,integer,jsonb,boolean)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "retry_interview_job(uuid,text,uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "list_interview_review_queue(text,text,integer)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "reserve_account_trial(uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "settings": [
+        "search_path=\"\""
+      ],
+      "signature": "authorize_signup(text,text)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "request_essay_marking(uuid)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "submit_essay_response(uuid,text,integer,text)",
+      "security_definer": true
+    },
+    {
+      "grants": [
+        "postgres=X/postgres",
+        "service_role=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "submit_interview_for_marking(uuid)",
+      "security_definer": true
+    }
+  ],
+  "relations": [
+    {
+      "rls": false,
+      "kind": "r",
+      "name": "buckets",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "storage",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "objects",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "storage",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "exams",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "questions",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "question_options",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "signup_rate_limits",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "google_calendar_connections",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "study_plan_exam_dates",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "study_plan_tasks",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_markings",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_processing_jobs",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_marking_events",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "account_trial_windows",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_security_limits",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_resource_usage",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "mock_question_assignments",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "launch_waitlist",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "signup_authorizations",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "subtests",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "products",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "stimuli",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "essay_prompts",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "essay_markings",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "study_plans",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "study_plan_items",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "tutoring_sessions",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "profiles",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "subscriptions",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "entitlements",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "subscription_benefit_grants",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "question_attempts",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_attempts",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "practice_sessions",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=ar/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "interview_study_notes",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=ar/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "essay_responses",
+      "grants": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=rd/postgres"
+      ],
+      "schema": "public",
+      "options": null
+    }
+  ],
+  "publications": null,
+  "column_grants": [
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "active",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "instructions",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "quotes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "stripe_product_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "suggested_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "task",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "theme",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "active",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "active",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "active",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "actual_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "actual_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "actual_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "ai_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "ai_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "ai_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "amount",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "answered_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "approved_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "base_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "base_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "base_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "benefit",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "body",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "booked_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "booked_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "booked_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "cancelled_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "completed_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "completed_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "completed_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "created_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "credits_spent",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "credits_spent",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "current_period_end",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "data",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "difficulty",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "difficulty",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "difficulty",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "draft_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "draft_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "draft_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "duration_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "duration_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "duration_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "ends_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "ends_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "ends_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "essay_credits",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_date",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_date",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_date",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "exam_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "exam_scope",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "exam_scope",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "exam_scope",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "expires_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "explanation_text",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "explanation_text",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "explanation_text",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "format",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "full_name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "full_name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "google_calendar_event_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "google_calendar_event_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "google_calendar_event_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "homework",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "homework",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "homework",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "instructions",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "instructions",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "instructions",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "interface_mode",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "interface_mode",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "is_completed",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "is_completed",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "is_completed",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "is_correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "is_correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "is_correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "is_correct",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "is_free",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "marked_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "marked_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "marked_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "marked_by",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "marking_preflight_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "marking_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "marking_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "media_kind",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "mmi_credits",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "mode",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "mode",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_asset_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_asset_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_asset_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_playback_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_playback_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "mux_playback_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "name",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_deducted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "overrun_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "period_end",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "phone_number",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "phone_number",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "plan",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "plan",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "plan",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_item_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_item_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "plan_item_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "price_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "primary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "product_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "prompt_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "prompt_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "published",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "question_events",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "question_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "question_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "question_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "question_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "question_ids",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "question_ids",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "questions",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "quotes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "quotes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "quotes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "recording_mime_type",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "recording_path",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "released_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "response",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "response_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "response_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "response_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "responses",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "responses",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "reviewed_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "role",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "rubric_version",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "rubric_version",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "rubric_version",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "scheduled_for",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "scheduled_for",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "scheduled_for",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "secondary_provider",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "selected_option_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "sitting_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "sitting_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "exams",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "slug",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_options",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subtests",
+      "column_name": "sort_order",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "source",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "starts_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "starts_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "starts_on",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "station_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "station_snapshot",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "station_title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stem",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stem",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stem",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stimulus_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stimulus_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "stimulus_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "profiles",
+      "column_name": "stripe_customer_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "stripe_customer_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "stripe_product_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "stripe_product_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "products",
+      "column_name": "stripe_product_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "stripe_subscription_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "stripe_subscription_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_email",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_email",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_email",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "student_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "submitted_for_marking_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "submitted_for_marking_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "subtest_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "suggested_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "suggested_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "suggested_minutes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "tag",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "tag",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "tags",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "tags",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "tags",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "task",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "task",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "task",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "theme",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "theme",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_prompts",
+      "column_name": "theme",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "time_spent_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "timed",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "timed",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "stimuli",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "title",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "topic",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "topic",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "topic",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "total",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "total",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "total_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "total_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "total_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "transcript",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "transcription_audio_path",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "transcription_model",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "transcription_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "tutor_feedback",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_notes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_notes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "tutor_notes",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "unit_label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "unit_label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "unit_label",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_markings",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "updated_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "upload_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "used_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "used_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_items",
+      "column_name": "used_units",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "entitlements",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_study_notes",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "practice_sessions",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "question_attempts",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_exam_dates",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plan_tasks",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "study_plans",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscription_benefit_grants",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "subscriptions",
+      "column_name": "user_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "interview_attempts",
+      "column_name": "video_deleted_at",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_duration_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_duration_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_duration_seconds",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "questions",
+      "column_name": "video_status",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "word_count",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "word_count",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "essay_responses",
+      "column_name": "word_count",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_join_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_join_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_join_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_id",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_uuid",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_uuid",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_meeting_uuid",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_start_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_start_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "tutoring_sessions",
+      "column_name": "zoom_start_url",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "default_grants": [
+    {
+      "type": "r",
+      "owner": "postgres",
+      "grants": [
+        "service_role=arwdDxtm/postgres"
+      ]
+    },
+    {
+      "type": "S",
+      "owner": "postgres",
+      "grants": [
+        "service_role=rwU/postgres"
+      ]
+    },
+    {
+      "type": "f",
+      "owner": "postgres",
+      "grants": [
+        "postgres=X/postgres"
+      ]
+    }
+  ]
+}

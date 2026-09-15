@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-6 py-12">
+    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center page-frame page-shell">
       <div className="w-full max-w-sm">
         <Link href="/" className="mb-8 flex items-center justify-center" aria-label="Studocyte home">
           <Wordmark className="text-2xl" />

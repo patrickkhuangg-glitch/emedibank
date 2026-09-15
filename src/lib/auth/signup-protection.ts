@@ -4,15 +4,15 @@ import { createHmac } from 'node:crypto'
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSupabaseSecretKey } from '@/lib/supabase/env'
+import { authorizeSignup } from '@/lib/auth/signup-authorization'
 
 const HOUR = 60 * 60
-const MONTH = 30 * 24 * HOUR
 
 export async function verifySignupProtection(email: string, turnstileToken: string) {
   const requestHeaders = await headers()
   const ip = clientIp(requestHeaders)
   const [ipAllowed, emailAllowed] = await Promise.all([
-    consume('ip', ip, 4, MONTH),
+    consume('ip-burst', ip, 30, HOUR),
     consume('email', email.toLowerCase(), 3, HOUR),
   ])
   if (!ipAllowed || !emailAllowed) return { error: 'Too many signup attempts. Please try again later.' }
@@ -38,7 +38,9 @@ export async function verifySignupProtection(email: string, turnstileToken: stri
     return { error: 'The security check is unavailable. Please try again shortly.' }
   }
 
-  return { error: null }
+  const authorization = await authorizeSignup(email)
+  if (!authorization) return { error: 'Signup protection is unavailable. Please try again shortly.' }
+  return { error: null, authorization }
 }
 
 export function normalisePhone(value: string) {

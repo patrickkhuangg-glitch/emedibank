@@ -51,7 +51,7 @@ export default async function EssayWriterPage({
 
   return (
     <EssayRunner
-      label="Section II: Written Communication"
+      label={`Studocyte ${exam.name} Section II: Written Communication`}
       examSlug={exam.slug}
       prompt={prompt}
       resume={resume}

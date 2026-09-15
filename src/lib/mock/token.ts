@@ -11,6 +11,8 @@ import crypto from 'node:crypto'
 const SECRET = process.env.SUPABASE_SECRET_KEY ?? 'insecure-dev-mock-secret'
 
 export type MockManifest = {
+  r?: string // unique completed-report identity, issued with this sitting
+  k?: string // canonical assigned mock form
   u: string // user id
   e: string // exam id
   q: string[] // allowed question ids
@@ -25,7 +27,7 @@ function b64url(buf: Buffer): string {
 
 /** Sign a manifest, stamping an expiry ttlMs from now. */
 export function signManifest(m: Omit<MockManifest, 'x'>, ttlMs: number = DEFAULT_TTL_MS): string {
-  const full: MockManifest = { ...m, x: Date.now() + ttlMs }
+  const full: MockManifest = { ...m, r: crypto.randomUUID(), x: Date.now() + ttlMs }
   const payload = b64url(Buffer.from(JSON.stringify(full)))
   const sig = b64url(crypto.createHmac('sha256', SECRET).update(payload).digest())
   return `${payload}.${sig}`

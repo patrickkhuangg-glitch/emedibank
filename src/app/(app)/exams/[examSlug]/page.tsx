@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { hasActiveEntitlement } from '@/lib/access'
@@ -42,14 +42,14 @@ export default async function ExamPage({
   const entitled = await hasActiveEntitlement(user.id, exam.id)
 
   return (
-    <Container className="py-16">
-      <div className="mx-auto max-w-3xl">
+    <Container>
+      <div className="w-full">
         <p className="text-sm text-muted">
           <Link href="/exams" className="hover:text-foreground">Exams</Link> / {exam.name}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">{exam.name}</h1>
+        <h1 className="page-title mt-2">{exam.name}</h1>
 
-        <div className="mt-8 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+        <div className="mt-8 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
           {(subtests ?? []).length === 0 ? (
             <p className="px-4 py-4 text-sm text-muted">No subtests yet for this exam.</p>
           ) : (

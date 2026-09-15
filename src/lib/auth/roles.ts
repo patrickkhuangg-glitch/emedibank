@@ -7,5 +7,14 @@ export function homeForRole(role: UserRole | null | undefined) {
 }
 
 export function safeInternalPath(value: string | null | undefined) {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : null
+  if (!value?.startsWith('/') || value.startsWith('//') || /[\\\u0000-\u001f\u007f]/.test(value)) return null
+  try {
+    const base = 'https://internal.invalid'
+    const url = new URL(value, base)
+    const decodedPath = decodeURIComponent(url.pathname)
+    if (url.origin !== base || decodedPath.startsWith('//') || /[\\\u0000-\u001f\u007f]/.test(decodedPath)) return null
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return null
+  }
 }

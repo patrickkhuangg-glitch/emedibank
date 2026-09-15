@@ -1,0 +1,84 @@
+.notice {
+  margin-block: 1.25rem;
+  padding: 1.15rem 1.35rem;
+  border: 1px solid #d5a13c;
+  border-left: 5px solid #b8750b;
+  border-radius: 1rem;
+  background: #fff0be;
+  color: #634312;
+  font-size: .875rem;
+  line-height: 1.65;
+}
+.header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.headerActions { display: flex; align-items: center; gap: .65rem; flex-shrink: 0; }
+.toggle { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 2.75rem; padding: .5rem .65rem; border: 1px solid #ba944d; border-radius: .6rem; background: #fffaf0; color: #634312; font-size: .75rem; font-weight: 650; cursor: pointer; }
+.toggle:hover { background: #fff; }
+.toggle:focus-visible { outline: 3px solid #56318c; outline-offset: 3px; }
+.chevronOpen { transform: rotate(180deg); }
+.label { margin: 0 0 .2rem; color: #825010; font-size: .625rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.title { margin: 0; color: #422b0c; font-size: 1.125rem; font-weight: 750; line-height: 1.3; letter-spacing: -.02em; }
+.subscribe {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 2.75rem;
+  padding: .65rem 1.1rem;
+  border: 1px solid #56318c;
+  border-radius: .65rem;
+  background: #56318c;
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 3px 8px #422b0c24;
+  transition: background 150ms ease, transform 150ms ease;
+}
+.subscribe:hover { background: #40216e; }
+.subscribe:active { transform: translateY(1px); }
+.notice a:focus-visible { outline: 3px solid #56318c; outline-offset: 4px; }
+.allowance { margin-top: .85rem; padding-top: .75rem; border-top: 1px solid #d5a13c80; }
+.notice strong { color: #422b0c; font-weight: 700; }
+.details { margin-top: .5rem; }
+.paused { margin-top: .65rem; font-weight: 650; }
+.footer { margin-top: .7rem; font-size: .75rem; }
+.footer a { color: #56318c; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.comparison { margin-top: 1rem; overflow: hidden; border: 1px solid #c7b38a; border-radius: .75rem; }
+.comparisonHeader, .comparisonRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.trialCell, .paidCell { min-width: 0; padding: .75rem 1rem; }
+.trialCell { background: #fffaf0; color: #634312; }
+.paidCell { background: #30234e; color: #e1d8ee; }
+.comparisonHeader .trialCell { background: #f5dfaa; }
+.comparisonHeader .paidCell { background: #49316d; }
+.planLabel { display: block; font-size: .625rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; margin-bottom: .1rem; }
+.comparisonHeader strong { font-size: 1rem; }
+.comparisonRow .trialCell { border-top: 1px solid #e5d9bf; }
+.comparisonRow .paidCell { border-top: 1px solid #ffffff20; }
+.notice .paidCell strong { color: #fff; }
+.paidCell p { margin: .25rem 0 0 1.3rem; font-size: .75rem; line-height: 1.5; }
+.included { display: flex; align-items: baseline; gap: .5rem; }
+.included > span { color: #d9ff8c; }
+.lockedPreview { position: relative; overflow: hidden; isolation: isolate; margin-top: .4rem; padding: .35rem .45rem; border: 1px dashed #b5ac9d; border-radius: .35rem; background: #e9e5de; }
+.previewLines { position: absolute; z-index: -1; inset: -.2rem .5rem; display: flex; flex-direction: column; justify-content: space-around; filter: blur(3px); opacity: .55; pointer-events: none; }
+.previewLines i { display: block; height: 5px; background: #b4a99b; border-radius: 5px; width: 85%; }
+.previewLines i:nth-child(2) { width: 60%; }
+.previewLines i:nth-child(3) { width: 72%; }
+.lockedLabel { display: inline-flex; align-items: center; gap: .4rem; padding: .1rem .25rem; border-radius: .2rem; background: #f8f5efed; color: #544b40; font-size: .6875rem; font-weight: 650; line-height: 1.4; }
+.lockedLabel svg { flex-shrink: 0; }
+.marking { margin-top: .65rem; font-size: .75rem; line-height: 1.55; }
+@media (max-width: 600px) {
+  .notice { padding: 1rem; }
+  .header { align-items: stretch; flex-direction: column; gap: .85rem; }
+  .subscribe { width: 100%; }
+  .headerActions { width: 100%; align-items: stretch; }
+  .headerActions .subscribe { width: auto; flex: 1; }
+  .toggle { flex-shrink: 0; font-size: .6875rem; padding-inline: .5rem; }
+  .trialCell, .paidCell { padding: .65rem .6rem; font-size: .75rem; }
+  .comparisonHeader strong { display: block; font-size: .875rem; line-height: 1.4; }
+  .planLabel { font-size: .5625rem; letter-spacing: .04em; }
+  .paidCell p { margin-left: 0; font-size: .6875rem; }
+  .lockedLabel { font-size: .625rem; padding: .1rem 0; }
+  .lockedPreview { padding: .25rem; }
+}
+@media (prefers-reduced-motion: reduce) { .subscribe { transition: none; }.subscribe:active { transform: none; } }

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getProfile, getUser } from '@/lib/auth/dal'
-import { homeForRole, safeInternalPath } from '@/lib/auth/roles'
+import { safeInternalPath } from '@/lib/auth/roles'
+import { destinationAfterSignIn } from '@/lib/auth/profile-completion'
 import { GoogleButton } from '@/components/ui/google-button'
 import { Alert } from '@/components/ui/alert'
 import { LoginForm } from './login-form'
@@ -14,9 +15,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ redirectTo?: string; error?: string }>
 }) {
-  if (await getUser()) redirect(homeForRole((await getProfile())?.role))
   const { redirectTo, error } = await searchParams
   const safeRedirect = safeInternalPath(redirectTo) ?? undefined
+  if (await getUser()) redirect(destinationAfterSignIn(await getProfile(), safeRedirect))
 
   return (
     <div className="space-y-6">
@@ -24,7 +25,7 @@ export default async function LoginPage({
         <h1 className="text-xl font-semibold">Welcome back</h1>
         <p className="mt-1 text-sm text-muted">Log in to your account.</p>
       </div>
-      {error ? <Alert>Sign-in failed. Please try again.</Alert> : null}
+      {error ? <Alert>{error === 'session_replaced' ? 'This account was signed in on another device. Sign in again to continue here.' : 'Sign-in failed. Please try again.'}</Alert> : null}
       <GoogleButton redirectTo={safeRedirect} />
       <Divider />
       <LoginForm redirectTo={safeRedirect} />

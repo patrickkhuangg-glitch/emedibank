@@ -3,6 +3,7 @@ import type Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe/client'
 import { getStripeWebhookSecret } from '@/lib/stripe/env'
 import { upsertSubscriptionFromStripe } from '@/lib/stripe/sync-subscription'
+import { fulfilInterviewPurchase } from '@/lib/stripe/interview-purchase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,15 +19,22 @@ export async function POST(request: Request) {
   let event: Stripe.Event
   try {
     event = stripe.webhooks.constructEvent(body, signature, getStripeWebhookSecret())
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Invalid signature'
-    return NextResponse.json({ error: msg }, { status: 400 })
+  } catch {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+  }
+  if (!['production','staging','development'].includes(process.env.APP_ENV ?? '')
+    || event.livemode !== (process.env.APP_ENV === 'production')) {
+    return NextResponse.json({ error: 'Webhook environment mismatch' }, { status: 400 })
   }
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+        if (session.mode === 'payment') {
+          await fulfilInterviewPurchase(session)
+          break
+        }
         const subId =
           typeof session.subscription === 'string'
             ? session.subscription
@@ -40,14 +48,14 @@ export async function POST(request: Request) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        await upsertSubscriptionFromStripe(event.data.object as Stripe.Subscription)
+        // Fetch current state so a delayed/replayed event cannot restore canceled access.
+        const current = await stripe.subscriptions.retrieve((event.data.object as Stripe.Subscription).id)
+        await upsertSubscriptionFromStripe(current)
         break
       }
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        const subRef = (invoice as unknown as {
-          subscription?: string | { id: string }
-        }).subscription
+        const subRef = invoice.parent?.subscription_details?.subscription
         const subId = typeof subRef === 'string' ? subRef : subRef?.id
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId)
@@ -58,10 +66,9 @@ export async function POST(request: Request) {
       default:
         break
     }
-  } catch (err) {
+  } catch {
     // Return 500 so Stripe retries — handlers must be safe to run again.
-    const msg = err instanceof Error ? err.message : 'Handler error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: 'Unable to synchronize billing. Please retry.' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

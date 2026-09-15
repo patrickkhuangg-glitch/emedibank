@@ -1,94 +1,39 @@
 'use client'
-import { useEffect, useState, useTransition } from 'react'
-import { selectExamAction } from '@/lib/exam/actions'
+import { useFormStatus } from 'react-dom'
+import { selectExamFormAction } from '@/lib/exam/actions'
+import { WorkspaceEntryLink } from '@/components/workspace/entry-link'
+import { WorkspaceLoading } from '@/components/workspace/workspace-loading'
 import { haptic } from '@/lib/haptics'
-import { Wordmark } from '@/components/ui/wordmark'
-import { Spinner } from '@/components/spinner'
 import type { InterfaceMode } from '@/lib/supabase/types'
+import styles from '@/components/workspace/entry-motion.module.css'
 
 const BLURB: Record<string, string> = {
-  ucat: 'University Clinical Aptitude Test',
-  gamsat: 'Graduate Medical School Admissions Test',
-  isat: 'International Student Admissions Test',
-  interviews: 'MMI & panel interview preparation',
+  ucat: 'Build speed and confidence across all four sections.',
+  gamsat: 'Work on reasoning, sciences and essay writing.',
+  isat: 'Develop your critical and quantitative reasoning.',
+  interviews: 'Prepare for MMI stations and panel interviews.',
 }
-
 type Exam = { id: string; slug: string; name: string; kind: 'mcq' | 'interview'; entitled: boolean }
 
-/** Full-screen first-run greeting. Covers the whole LMS, then fades out cleanly
- *  once an exam is chosen before the destination loads underneath. */
-export function ExamPicker({ first, exams, variant = 'playful' }: { first: string | null; exams: Exam[]; variant?: InterfaceMode }) {
-  const [greeting, setGreeting] = useState('Welcome back')
-  const [leaving, setLeaving] = useState<string | null>(null)
-  const [, start] = useTransition()
-
-  useEffect(() => {
-    const h = new Date().getHours()
-    // Varies by the viewer's local hour (0-4 counts as evening, not morning).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- greeting needs the client's local time
-    setGreeting(h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening')
-  }, [])
-
-  function pick(slug: string) {
-    if (leaving) return
-    haptic(12)
-    setLeaving(slug)
-    // let the overlay fade before the navigation begins
-    setTimeout(() => start(() => { selectExamAction(slug) }), 460)
-  }
-
-  return (
-    <div
-      className={`fixed inset-0 z-[70] overflow-auto bg-background transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${leaving ? 'scale-[0.98] opacity-0' : 'scale-100 opacity-100'}`}
-    >
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60rem 32rem at 50% -12%, rgba(106,69,201,0.12), transparent 70%)' }} />
-      <div className="relative mx-auto flex min-h-[100dvh] max-w-3xl flex-col justify-center px-6 py-16">
-        <div className="eb-rise">
-          <Wordmark className="text-lg" variant={variant} />
-          <h1 className="mt-6 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            {greeting}{first ? `, ${first}` : ''}.
-          </h1>
-          <p className="mt-3 text-lg text-muted">What would you like to work on today?</p>
-        </div>
-
-        <div className="mt-9 grid gap-4 sm:grid-cols-2">
-          {exams.map((e, i) => {
-            const going = leaving === e.slug
-            return (
-              <button
-                key={e.id}
-                onClick={() => pick(e.slug)}
-                disabled={!!leaving}
-                style={{ animationDelay: `${90 + i * 70}ms` }}
-                className={`eb-rise eb-press eb-soft group flex items-center gap-4 rounded-3xl border bg-surface p-5 text-left transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:border-brand/40 disabled:cursor-default ${going ? 'border-brand ring-2 ring-brand' : 'border-border'}`}
-              >
-                <span className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-brand-muted font-display text-base font-bold text-brand transition-transform duration-300 group-hover:scale-110">
-                  {e.name.slice(0, 1)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="font-display text-lg font-semibold">{e.name}</span>
-                    {e.entitled ? <span className="rounded-full bg-success-muted px-2 py-0.5 text-[11px] font-medium text-success">Unlocked</span> : null}
-                  </span>
-                  <span className="mt-0.5 block text-sm text-muted">{BLURB[e.slug] ?? 'Question bank & mocks'}</span>
-                </span>
-                {going ? <Spinner size={20} /> : <Arrow />}
-              </button>
-            )
-          })}
-
-        </div>
-
-        <p className="eb-rise mt-6 text-xs text-muted" style={{ animationDelay: '420ms' }}>You can switch exams any time from the top-left.</p>
-      </div>
-    </div>
-  )
+/** Exam selection lives inside the dashboard shell and submits without a timer. */
+export function ExamPicker({ first, exams, preview = false }: { first: string | null; exams: Exam[]; variant?: InterfaceMode; preview?: boolean }) {
+  return <div className="page-frame page-shell">
+    <header className={styles.intro}><p className={styles.eyebrow}>{first ? `${first}’s study space` : 'Your study space'}</p><h1 className="page-title">Choose your exam.</h1><p>We’ll open the right workspace and keep your progress where you left it.</p></header>
+    {exams.length ? preview ? <div className={styles.choices}><div className={styles.grid}>{exams.map(exam => <WorkspaceEntryLink key={exam.id} href={`/prototypes/workspace?exam=${exam.slug}&view=dashboard`} className={styles.card}><ExamContent exam={exam} /></WorkspaceEntryLink>)}</div></div> :
+      <form action={selectExamFormAction}><ExamChoices exams={exams} /></form> : <p className={styles.empty}>No exams are available yet. Please check back soon.</p>}
+    <p className={styles.foot}><span aria-hidden>↗</span> You can switch exams later from your workspace.</p>
+  </div>
 }
 
-function Arrow() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-none -translate-x-1 text-muted opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:text-brand group-hover:opacity-100" aria-hidden>
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  )
+function ExamChoices({ exams }: { exams: Exam[] }) {
+  const { pending, data } = useFormStatus()
+  const selected = exams.find(exam => exam.slug === data?.get('exam'))
+  return <div className={styles.choices}>
+    <div className={styles.grid} data-pending={pending} aria-busy={pending}>{exams.map(exam => <button type="submit" name="exam" value={exam.slug} key={exam.id} disabled={pending} onClick={() => haptic(12)} className={styles.card}><ExamContent exam={exam} /></button>)}</div>
+    {pending && <div className={styles.choiceLoading}><WorkspaceLoading label={selected ? `Opening ${selected.name}` : 'Opening your dashboard'} detail="Bringing your progress and next steps together." /></div>}
+  </div>
+}
+
+function ExamContent({ exam }: { exam: Exam }) {
+  return <><span className={styles.icon} aria-hidden><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{exam.kind === 'interview' ? <><path d="M4 4h16v12H9l-5 4V4Z"/><path d="M8 8h8M8 12h5"/></> : <><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></>}</svg></span><span className={styles.copy}><span className={styles.title}>{exam.name}{exam.entitled && <em>Unlocked</em>}</span><span className={styles.description}>{BLURB[exam.slug] ?? 'Question banks, practice and progress.'}</span></span><svg className={styles.arrow} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14m-5-5 5 5-5 5"/></svg></>
 }

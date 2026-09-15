@@ -1,0 +1,389 @@
+.sessionBackdrop {
+  position: relative;
+  min-height: 100vh;
+  overflow: clip;
+  isolation: isolate;
+  background: #f7f6fb;
+  color: var(--foreground);
+}
+
+:global([data-study-workspace]) .sessionBackdrop {
+  min-height: calc(100dvh - 4.25rem);
+}
+
+.sessionBackdrop::before,
+.sessionBackdrop::after {
+  position: absolute;
+  z-index: -1;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  filter: blur(68px);
+  opacity: .24;
+  pointer-events: none;
+  content: '';
+}
+
+.sessionBackdrop::before {
+  top: -9rem;
+  right: -7rem;
+  background: #cfc0ff;
+}
+
+.sessionBackdrop::after {
+  bottom: 4rem;
+  left: -10rem;
+  background: #aee6d4;
+}
+
+.sessionShell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 68rem);
+  margin-inline: auto;
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 2.5rem) 5rem;
+}
+
+.sessionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.eyebrow {
+  margin-bottom: .65rem;
+  color: var(--brand);
+  font-size: .75rem;
+  font-weight: 760;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 48rem;
+  text-wrap: balance;
+  letter-spacing: -.035em;
+}
+
+.liveBadge,
+.phaseBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .55rem;
+  min-height: 2.35rem;
+  padding: .55rem .85rem;
+  border: 1px solid rgba(68, 48, 111, .14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 12px 30px -24px rgba(38, 29, 61, .8);
+  color: #44306f;
+  font-size: .75rem;
+  font-weight: 720;
+  letter-spacing: .04em;
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.liveDot {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: #ec626d;
+  box-shadow: 0 0 0 4px rgba(236, 98, 109, .13);
+}
+
+.setupCard,
+.activeStage,
+.reviewCard,
+.completionCard {
+  border: 1px solid rgba(55, 43, 78, .1);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 30px 70px -48px rgba(42, 31, 70, .7);
+  backdrop-filter: blur(24px) saturate(145%);
+}
+
+.setupCard,
+.reviewCard,
+.completionCard {
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  animation: materialize .48s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.setupLead {
+  max-width: 44rem;
+  color: #4f4b59;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.setupLead > * + * { margin-top: .55rem; }
+.setupLead strong { color: #25202e; }
+
+.factGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  margin-block: 1.5rem;
+}
+
+.factCard {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid rgba(68, 48, 111, .09);
+  border-radius: 1.25rem;
+  background: #f1eef8;
+}
+
+.factCard:nth-child(2) { background: #eaf6f2; }
+.factCard:nth-child(3) { background: #f7f0e9; }
+
+.factLabel {
+  display: block;
+  margin-bottom: .35rem;
+  color: #6f6680;
+  font-size: .67rem;
+  font-weight: 760;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.factValue {
+  color: #292332;
+  font-size: .93rem;
+  font-weight: 680;
+  line-height: 1.4;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+}
+
+.privacyNote {
+  margin-top: 1rem;
+  color: #746f7c;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.activeStage {
+  padding: clamp(.9rem, 2.4vw, 1.35rem);
+  animation: stageIn .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.stageTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.25rem;
+  margin-bottom: .85rem;
+  padding: .65rem .8rem .65rem 1rem;
+  border-radius: 1.1rem;
+  background: #27213b;
+  color: rgba(255, 255, 255, .78);
+}
+
+.stageTopline strong {
+  color: #fff;
+  font-size: .82rem;
+  letter-spacing: .01em;
+}
+
+.stageTopline .liveDot {
+  background: #ff7781;
+  box-shadow: 0 0 0 4px rgba(255, 119, 129, .15);
+}
+
+.stageBody {
+  display: grid;
+  gap: clamp(.9rem, 1.6vw, 1.25rem);
+  animation: materialize .38s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.transitionCard {
+  display: grid;
+  min-height: 15rem;
+  place-items: center;
+  border-radius: 1.5rem;
+  background: #f1eef8;
+  color: #5d497f;
+  font-weight: 700;
+  animation: breathe .9s ease-in-out infinite alternate;
+}
+
+.sessionDock {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: .85rem .9rem .85rem 1.1rem;
+  border: 1px solid rgba(67, 52, 94, .12);
+  border-radius: 1.35rem;
+  background: rgba(250, 249, 253, .82);
+  box-shadow: 0 18px 44px -30px rgba(38, 28, 60, .85);
+  backdrop-filter: blur(22px) saturate(155%);
+}
+
+.sessionDock p {
+  max-width: 38rem;
+  color: #706a79;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.cameraCard {
+  overflow: hidden;
+  padding: .55rem;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 1.75rem;
+  background: #201a30;
+  box-shadow: 0 28px 64px -38px rgba(22, 16, 34, .9);
+  animation: materialize .45s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.cameraVideo {
+  display: block;
+  width: 100%;
+  max-height: 54vh;
+  border-radius: 1.3rem;
+  background: #0e0c13;
+  object-fit: cover;
+}
+
+.cameraFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem .65rem .45rem;
+  color: rgba(255, 255, 255, .72);
+}
+
+.cameraFooter strong { color: #fff; }
+
+.recordingList { display: grid; gap: .75rem; margin-block: 1.25rem; }
+
+.recordingItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(67, 52, 94, .11);
+  border-radius: 1.25rem;
+  background: #f7f5fa;
+  transition: transform 180ms cubic-bezier(.22, 1, .36, 1), border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.recordingItem:hover {
+  border-color: rgba(104, 76, 170, .28);
+  box-shadow: 0 14px 34px -30px rgba(53, 36, 88, .75);
+  transform: translateY(-1px);
+}
+
+.progressTrack {
+  width: 100%;
+  height: .65rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #e8e3f0;
+  accent-color: var(--brand);
+}
+
+.errorBanner {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(185, 58, 72, .22);
+  border-radius: 1.2rem;
+  background: #fff2f3;
+  color: #872d39;
+  line-height: 1.6;
+}
+
+.studyNotesPanel {
+  margin-top: clamp(1rem, 1.8vw, 1.35rem);
+}
+
+.studyNotesPanel > section[data-interview-tour='study-notes'] {
+  border-radius: 2rem;
+  border-color: rgba(55, 43, 78, .1);
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 30px 70px -48px rgba(42, 31, 70, .7);
+  backdrop-filter: blur(24px) saturate(145%);
+}
+
+.backLink { display: inline-flex; margin-top: 1.25rem; }
+
+@keyframes materialize {
+  from { opacity: 0; transform: translateY(10px) scale(.992); filter: blur(5px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes stageIn {
+  from { opacity: .35; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes breathe {
+  from { opacity: .62; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 700px) {
+  .sessionHeader { flex-direction: column; }
+  .factGrid { grid-template-columns: 1fr; }
+  .sessionDock,
+  .cameraFooter { align-items: flex-start; flex-direction: column; }
+  .sessionDock { bottom: .6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setupCard,
+  .activeStage,
+  .reviewCard,
+  .completionCard,
+  .stageBody,
+  .cameraCard,
+  .transitionCard { animation: none; }
+  .recordingItem { transition: none; }
+  .recordingItem:hover { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liveBadge,
+  .phaseBadge,
+  .setupCard,
+  .activeStage,
+  .reviewCard,
+  .completionCard,
+  .sessionDock,
+  .studyNotesPanel > section[data-interview-tour='study-notes'] {
+    background: #fff;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .liveBadge,
+  .phaseBadge,
+  .setupCard,
+  .activeStage,
+  .reviewCard,
+  .completionCard,
+  .sessionDock,
+  .factCard,
+  .recordingItem,
+  .studyNotesPanel > section[data-interview-tour='study-notes'] { border-color: currentColor; }
+}

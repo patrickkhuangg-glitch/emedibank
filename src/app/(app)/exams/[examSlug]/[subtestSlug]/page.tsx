@@ -1,3 +1,4 @@
+import { PRACTICE_QUESTION_FILTER } from '@/lib/questions/availability'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Container } from '@/components/container'
@@ -40,7 +41,7 @@ export default async function SubtestPage({
     .from('questions')
     .select('id')
     .eq('subtest_id', subtest.id)
-    .eq('published', true)
+    .eq('published', true).or(PRACTICE_QUESTION_FILTER)
     .order('sort_order')
   const questionIds = (questions ?? []).map((q) => q.id)
 

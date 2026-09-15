@@ -27,6 +27,7 @@ export function SignupForm() {
       />
       <input type="hidden" name="turnstileToken" value={turnstileToken} />
       <Turnstile onTokenChange={setTurnstileToken} />
+      <p className="text-xs leading-5 text-muted">By creating an account, you agree to our <a className="underline" href="https://emeducate.com.au/studocyte/terms">Terms</a> and <a className="underline" href="https://emeducate.com.au/acceptable-use">Acceptable Use Policy</a>. Read how we handle your information in our <a className="underline" href="https://emeducate.com.au/privacy">Privacy Policy</a>.</p>
       <p className="text-xs leading-5 text-muted">Verify your email, then choose a plan. If you continue after the 7-day trial, card details are collected securely by Stripe.</p>
       <Button type="submit" className="w-full" disabled={pending || !turnstileToken}>
         {pending ? 'Creating account…' : 'Create free account'}

@@ -1,0 +1,77 @@
+{
+  "status": "published; hosted smoke checks passed",
+  "previous_public_deployment": "dpl_4723aQ5FCsmABUYpQUs6vxL2bDgs",
+  "release_directory": "/Users/patrick/Documents/ChatGPT/EMeducate/studocyte/.vercel/mock-interviews-public-release",
+  "files": [
+    {
+      "file": "src/components/site-nav.tsx",
+      "sha256": "08fa5f8c0994c4ed694a186bc020442012c1dcd8434161da5c651ae4f51bea7e"
+    },
+    {
+      "file": "src/lib/interviews/stations.ts",
+      "sha256": "49e80589a81cb37f5a0fe5ea469c48384e2c3a021a98f54d7550ec9757c88a76"
+    },
+    {
+      "file": "src/lib/interviews/mock-types.ts",
+      "sha256": "8f7d49474481986b54e1ca00b7a2d2984e0437bf8a4524d62e533b07ae8a794e"
+    },
+    {
+      "file": "src/lib/interviews/mock-plan.ts",
+      "sha256": "b17b9b15625df436e922c67e7e28f68ee24672d129bcbe91f08bbf4eeabb100a"
+    },
+    {
+      "file": "src/lib/interviews/mock-session.ts",
+      "sha256": "c020a382a5eed16a7a7d382005d743c2448a69ff5a200ac6cc0e7d6ab1974eeb"
+    },
+    {
+      "file": "src/lib/interviews/mock-local.ts",
+      "sha256": "6a541c0f5e4f345184a9a8f702e176f90f3d96dcc0aee469da546b6dda2c6283"
+    },
+    {
+      "file": "src/lib/interviews/media-validation.ts",
+      "sha256": "066afa23cf8bc36ccd650a301a77a893c87241ce6e6f0e5edd13217b150e1289"
+    },
+    {
+      "file": "src/lib/interviews/video-validation.ts",
+      "sha256": "9c6926103b49ab121e8984b31bc9c7c56fd0c0841fd0e7788c4d75d6f96829e6"
+    },
+    {
+      "file": "src/lib/interviews/video-upload.ts",
+      "sha256": "169f10dc711ec0394e53d91547ebe42bbf3185c9780e58697c6644c9e6d943cf"
+    },
+    {
+      "file": "src/app/api/interviews/mock-session/route.ts",
+      "sha256": "9af2768e0309708747b740ceb5bd966d32365a612d91776d6ddec65cc145d616"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/initiate/route.ts",
+      "sha256": "7552059336902024c6cd24799a9e6be06d947d2696825e0b73db0c04745f6857"
+    },
+    {
+      "file": "src/components/interviews/mock-lobby.tsx",
+      "sha256": "202d45695cf664e5a361f9ce057edb195b97d74af4592d4dee31d4685583c2f8"
+    },
+    {
+      "file": "src/components/interviews/mock-session-runner.tsx",
+      "sha256": "a13eb4298a02808df967e3844a23a9d3bca0aad96bc03a5f78d7c70b04b55cf8"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/page.tsx",
+      "sha256": "43849adc070923ca149791a645a56b7a4ce9ceac3b3b6e5b82758db3de18a776"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/session/page.tsx",
+      "sha256": "65e8a33a0be7c950735b3a2e3aa3b30061c0bbf2b647ea1f6016e8711ec74ed7"
+    },
+    {
+      "file": "tests/interview-api.test.ts",
+      "sha256": "8cd60c8756cc28cad55716da63571afe88963be5e384fc7694df17bd64b5bdab"
+    },
+    {
+      "file": "tests/interview-mock.test.ts",
+      "sha256": "66a76af1baf988109d9db5bc3d1e1f8794958bec2e8b41591c806ee0edc3ca95"
+    }
+  ],
+  "deployment_id": "dpl_8xfhqx5mto3zqaCryViNuEVbYmo4",
+  "deployment_url": "https://emedibank-x1uw-c37haf910-em-educate.vercel.app"
+}

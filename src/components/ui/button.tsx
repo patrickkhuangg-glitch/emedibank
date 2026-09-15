@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost'
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 min-h-11 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60 disabled:pointer-events-none'
 const variants: Record<Variant, string> = {
   primary: 'bg-brand text-brand-foreground hover:opacity-90',
   secondary: 'border border-border bg-surface hover:bg-surface-muted',

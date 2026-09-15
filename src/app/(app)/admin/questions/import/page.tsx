@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { ImportForm } from './import-form'
 
@@ -10,15 +10,15 @@ export const metadata: Metadata = { title: 'Import questions' }
 export default async function ImportPage() {
   await requireAdmin()
   return (
-    <Container className="py-16">
-      <div className="mx-auto max-w-3xl space-y-8">
+    <Container>
+      <div className="w-full space-y-8">
         <div>
           <p className="text-sm text-muted"><Link href="/admin/questions" className="hover:text-foreground">Questions</Link> / Import</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Bulk import</h1>
+          <h1 className="page-title mt-2">Bulk import</h1>
           <p className="mt-1 text-muted">Fill in the template spreadsheet, export it as CSV, and drop it here.</p>
         </div>
 
-        <div className="rounded-xl border border-border bg-surface p-6 text-sm leading-relaxed">
+        <div className="rounded-2xl border border-border bg-surface p-6 text-sm leading-relaxed">
           <h2 className="font-semibold">Columns</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
             <li><code>exam</code>, <code>subtest</code> — e.g. <code>UCAT</code>, <code>Verbal Reasoning</code> (must match exactly).</li>

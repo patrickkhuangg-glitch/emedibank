@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { setSubtestFreeAction } from '@/lib/admin/actions'
 import { createClient } from '@/lib/supabase/server'
@@ -20,9 +20,9 @@ export default async function AdminAccessPage() {
   for (const section of subtests ?? []) byExam.set(section.exam_id, [...(byExam.get(section.exam_id) ?? []), section])
   const free = (subtests ?? []).filter((section) => section.is_free).length
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-4xl">
+  return <Container><main className="w-full">
     <Link href="/admin" className="text-sm font-medium text-muted transition-colors hover:text-foreground">← Admin dashboard</Link>
-    <div className="mt-5 flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Student access</p><h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Free content controls</h1><p className="mt-3 max-w-2xl text-muted">A free section bypasses subscription gating for every signed-in student. Changes take effect immediately.</p></div><div className="rounded-2xl bg-brand-muted px-5 py-3"><p className="font-mono text-2xl font-semibold text-brand tabular-nums">{free}/{subtests?.length ?? 0}</p><p className="text-xs text-muted">sections free</p></div></div>
+    <div className="mt-5 flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">Student access</p><h1 className="page-title mt-2">Free content controls</h1><p className="mt-3 max-w-2xl text-muted">A free section bypasses subscription gating for every signed-in student. Changes take effect immediately.</p></div><div className="rounded-2xl bg-brand-muted px-5 py-3"><p className="font-mono text-2xl font-semibold text-brand tabular-nums">{free}/{subtests?.length ?? 0}</p><p className="text-xs text-muted">sections free</p></div></div>
 
     <div className="mt-8 space-y-5">{(exams ?? []).map((exam) => {
       const list = byExam.get(exam.id) ?? []

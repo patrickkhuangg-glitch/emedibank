@@ -2,7 +2,10 @@
 // (performance) and their daily streak (consistency). Kept in one place so the
 // mascot, its caption and any future surfaces all agree.
 
-export type CytoMood = 'sad' | 'worried' | 'focused' | 'sleepy' | 'happy' | 'thriving' | 'celebrate'
+export type CytoMood =
+  | 'sad' | 'worried' | 'focused' | 'sleepy' | 'happy' | 'thriving' | 'celebrate'
+  | 'studying' | 'thinking' | 'correct' | 'incorrect' | 'confused' | 'exhausted'
+  | 'levelup' | 'streak' | 'complete' | 'revision'
 
 export function cytoMood(input: {
   accuracy: number | null
@@ -28,4 +31,14 @@ export const CYTO_CAPTION: Record<CytoMood, string> = {
   happy: 'Looking good — nice and steady.',
   thriving: 'Cyto’s thriving. Keep it lit! 👑',
   celebrate: 'Level up! 🎉',
+  studying: 'Cyto is studying with you.',
+  thinking: 'Give it a moment. You’ve got this.',
+  correct: 'Correct. Immunity gained!',
+  incorrect: 'Not this time. Review it and grow.',
+  confused: 'A tricky one. Try the hint.',
+  exhausted: 'A short break will help.',
+  levelup: 'New level unlocked!',
+  streak: 'Your streak is alive.',
+  complete: 'Exam complete. Results ready.',
+  revision: 'A useful weak spot to revisit.',
 }

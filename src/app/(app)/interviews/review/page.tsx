@@ -1,42 +1,6 @@
-import type { Metadata } from 'next'
-import { InterviewAttemptReview } from '@/components/interview-attempt-review'
-import { requireUser } from '@/lib/auth/dal'
-import { getInterviewStation } from '@/lib/interviews/stations'
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export const metadata: Metadata = {
-  title: 'Previous interview attempts',
-}
-
-export default async function InterviewReviewPage() {
-  const user = await requireUser('/interviews/review')
-  const supabase = await createClient()
-  const { data: attempts } = await supabase
-    .from('interview_attempts')
-    .select('id, format, station_id, station_title, questions, duration_seconds, recording_path, created_at, transcript, transcription_status')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  const reviewAttempts = await Promise.all((attempts ?? []).map(async (attempt) => {
-    const { data: recording } = await supabase.storage
-      .from('interview-recordings')
-      .createSignedUrl(attempt.recording_path, 60 * 60)
-
-    return {
-      id: attempt.id,
-      format: attempt.format,
-      stationTitle: attempt.station_title,
-      questions: attempt.questions,
-      durationSeconds: attempt.duration_seconds,
-      createdAt: attempt.created_at,
-      audioUrl: recording?.signedUrl ?? null,
-      examinerFeedback: getInterviewStation(attempt.format, attempt.station_id)?.examinerFeedback,
-      transcript: attempt.transcript,
-      transcriptionStatus: attempt.transcription_status,
-    }
-  }))
-
-  return <InterviewAttemptReview attempts={reviewAttempts} />
+// Preserve bookmarks for recordings created before Mock Interviews had its own section.
+export default function InterviewReviewRedirect() {
+  redirect('/interviews/mock-interviews/review')
 }

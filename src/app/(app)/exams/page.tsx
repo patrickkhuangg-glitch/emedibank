@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 
@@ -17,9 +17,9 @@ export default async function ExamsPage() {
     .order('created_at')
 
   return (
-    <Container className="py-16">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight">Exams</h1>
+    <Container>
+      <div className="w-full">
+        <h1 className="page-title">Exams</h1>
         <p className="mt-1 text-muted">Choose an exam to see its subtests.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {(exams ?? []).map((exam) => (

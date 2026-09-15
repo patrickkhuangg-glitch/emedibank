@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { StudyPlanTimeline } from '@/components/study-plan-timeline'
+import type { TimelineEvent } from '@/lib/study-plans/timeline'
+import { PageContainer as Container } from '@/components/container'
 import { StudyPlanChecklist, StudyPlanExamDateDialog, type StudyPlanExamOption } from '@/components/study-plan-controls'
 import { requireUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -46,14 +48,14 @@ export default async function StudyPlanPage() {
     .filter((entry): entry is { date: StudyPlanExamDate; exam: StudyPlanExamOption } => Boolean(entry.exam) && daysFromToday(entry.date.exam_date, now) >= 0)
     .sort((a, b) => a.date.exam_date.localeCompare(b.date.exam_date))[0]
 
-  return <Container className="py-10 sm:py-14">
-    <main className="mx-auto max-w-7xl">
+  return <Container>
+    <main className="w-full">
       <header className="flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
-        <div><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Study Plan</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Every exam date, lesson, package and next step in one place.</p></div>
+        <div><h1 className="page-title">Study Plan</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Every exam date, lesson, package and next step in one place.</p></div>
         <div className="flex flex-wrap items-center gap-2" aria-label="Unlocked exams">{activeExams.length ? activeExams.map((exam) => <span key={exam.id} className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">{exam.name}</span>) : <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted">No full exams unlocked</span>}<Link href="/bookings" className="eb-press inline-flex h-9 items-center rounded-full border border-border bg-surface px-4 text-xs font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">Open bookings</Link></div>
       </header>
 
-      <Timeline events={timeline} />
+      <StudyPlanTimeline events={timeline} now={now} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-12 lg:items-start">
         <div className="space-y-6 lg:col-span-8">
@@ -64,21 +66,6 @@ export default async function StudyPlanPage() {
       </div>
     </main>
   </Container>
-}
-
-type TimelineEvent = {
-  id: string
-  kind: 'exam' | 'lesson'
-  title: string
-  detail: string
-  date: string
-}
-
-function Timeline({ events }: { events: TimelineEvent[] }) {
-  return <section className="mt-8 overflow-hidden rounded-3xl bg-ink text-white eb-soft">
-    <header className="border-b border-white/10 px-6 py-5 sm:px-8"><h2 className="font-display text-2xl font-semibold tracking-tight">Your preparation timeline</h2><p className="mt-1 text-sm text-white/65">The next lessons and exam days across your account.</p></header>
-    {events.length ? <><div className="snap-x snap-mandatory overflow-x-auto px-6 py-8 sm:px-8"><ol className="relative grid min-w-[720px] gap-5" style={{ gridTemplateColumns: `repeat(${events.length + 1}, minmax(9rem, 1fr))` }}><li aria-hidden className="absolute left-3 right-3 top-[0.43rem] h-px bg-white/18"><span className="eb-bar block h-px bg-mint" /></li><li className="relative snap-start"><span className="block h-3.5 w-3.5 rounded-full border-[3px] border-ink bg-mint ring-1 ring-mint" /><p className="mt-5 font-display text-lg font-semibold">Today</p><p className="mt-1 font-mono text-xs text-white/55">{formatShortDate(new Date().toISOString())}</p></li>{events.map((event) => <li key={event.id} className="relative snap-start"><span className={`block h-3.5 w-3.5 rounded-full border-[3px] border-ink ring-1 ${event.kind === 'exam' ? 'bg-white ring-white' : 'bg-mint ring-mint'}`} /><p className="mt-5 line-clamp-2 min-h-11 font-display text-lg font-semibold leading-snug">{event.title}</p><p className="mt-1 text-xs text-white/60">{event.detail}</p><p className="mt-2 font-mono text-xs text-white/45">{formatShortDate(event.date)}</p></li>)}</ol></div><p className="flex items-center gap-2 border-t border-white/10 px-6 py-3 text-xs text-white/60 sm:hidden">Swipe to see later dates <ArrowRight /></p></> : <div className="px-6 py-10 sm:px-8"><p className="max-w-xl font-display text-2xl font-semibold tracking-tight">Start by adding an exam date.</p><p className="mt-2 max-w-xl text-sm leading-6 text-white/65">Your plan will then arrange each lesson and milestone in the order it is coming up.</p></div>}
-  </section>
 }
 
 function UpcomingLessons({ sessions, nextExam, now, exams, dates }: { sessions: TutoringSession[]; nextExam?: { date: StudyPlanExamDate; exam: StudyPlanExamOption }; now: Date; exams: StudyPlanExamOption[]; dates: StudyPlanExamDate[] }) {
@@ -99,16 +86,15 @@ function Package({ plan, items }: { plan: StudyPlan; items: StudyPlanItem[] }) {
 }
 
 function buildTimeline(dates: StudyPlanExamDate[], sessions: TutoringSession[], examById: Map<string, StudyPlanExamOption>, now: Date): TimelineEvent[] {
-  const examEvents = dates.filter((date) => daysFromToday(date.exam_date, now) >= 0).map((date) => ({ id: `exam-${date.id}`, kind: 'exam' as const, title: date.label === 'Exam day' ? examById.get(date.exam_id)?.name ?? 'Exam' : date.label, detail: 'Exam day', date: `${date.exam_date}T12:00:00` }))
+  const examEvents = dates.filter((date) => daysFromToday(date.exam_date, now) >= 0).map((date) => ({ id: `exam-${date.id}`, kind: 'exam' as const, title: date.label === 'Exam day' ? examById.get(date.exam_id)?.name ?? 'Exam' : date.label, detail: 'Exam day', date: date.exam_date }))
   const lessonEvents = sessions.map((session) => ({ id: `lesson-${session.id}`, kind: 'lesson' as const, title: session.title, detail: 'Tutoring lesson', date: session.scheduled_for }))
-  return [...examEvents, ...lessonEvents].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 6)
+  return [...examEvents, ...lessonEvents].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
 
 function groupItems(items: StudyPlanItem[]) { const grouped = new Map<string, StudyPlanItem[]>(); for (const item of items) grouped.set(item.plan_id, [...(grouped.get(item.plan_id) ?? []), item]); return grouped }
 function sortExams(exams: StudyPlanExamOption[]) { const order = new Map([['gamsat', 0], ['ucat', 1], ['isat', 2], ['interviews', 3]]); return [...exams].sort((a, b) => (order.get(a.slug) ?? 99) - (order.get(b.slug) ?? 99)) }
 function daysFromToday(date: string, now: Date) { const [targetYear, targetMonth, targetDay] = date.split('-').map(Number); const today = sydneyDateParts(now); return Math.round((Date.UTC(targetYear, targetMonth - 1, targetDay) - Date.UTC(today.year, today.month - 1, today.day)) / 86_400_000) }
 function sydneyDateParts(date: Date) { const parts = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(date); const number = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value); return { year: number('year'), month: number('month'), day: number('day') } }
-function formatShortDate(value: string) { return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }).format(new Date(value)) }
 function formatLongDate(value: string) { return new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' }).format(new Date(`${value}T12:00:00+10:00`)) }
 function formatLessonDate(value: string) { return new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Brisbane' }).format(new Date(value)) }
 function formatMinutes(minutes: number) { return minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)} h ` : ''}${minutes % 60} min` }

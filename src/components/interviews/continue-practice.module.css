@@ -1,0 +1,14 @@
+.card { display: flex; min-width: 0; height: 100%; flex-direction: column; border: 1px solid color-mix(in srgb,var(--brand) 24%,var(--border)); border-radius: 1.35rem; padding: 1.25rem; background: color-mix(in srgb,var(--brand-muted) 42%,var(--surface)); overflow: hidden; }
+.label { color: var(--brand); font-size: .67rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.card h2 { margin-top: .75rem; font-size: 1.25rem; font-weight: 720; line-height: 1.2; letter-spacing: -.025em; }
+.station { margin-top: .65rem; color: var(--foreground); font-size: .8rem; font-weight: 650; line-height: 1.5; }
+.mascot { display: flex; min-height: 7.4rem; align-items: center; justify-content: center; gap: .45rem; margin-block: auto; padding-block: .8rem .5rem; }
+.mascot svg { flex: 0 0 auto; filter: drop-shadow(0 14px 12px rgba(45,30,69,.13)); }
+.mascot p { display: grid; max-width: 8rem; gap: .2rem; }
+.mascot strong { font-size: .73rem; line-height: 1.35; }
+.mascot span { color: var(--muted); font-size: .65rem; line-height: 1.4; }
+.action { display: inline-flex; min-height: 2.75rem; align-self: flex-start; align-items: center; gap: .5rem; border-radius: 999px; padding: .7rem 1rem; background: var(--brand); color: var(--brand-foreground); font-size: .76rem; font-weight: 750; transition: transform 140ms cubic-bezier(.23,1,.32,1),background-color 160ms ease,box-shadow 160ms ease; }
+.action:active { transform: scale(.97); }
+@media (hover:hover) and (pointer:fine) { .action:hover { background: #5936b4; box-shadow: 0 9px 22px -14px rgba(31,27,48,.8); transform: translateY(-1px) scale(1.015); } }
+@media (max-width:980px) { .card { min-height: 18rem; }.mascot { justify-content: flex-start; } }
+@media (prefers-reduced-motion:reduce) { .action { transition: none; } }

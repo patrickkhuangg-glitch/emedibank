@@ -9,11 +9,12 @@ export async function getOrCreateCustomerId(
   fullName: string | null | undefined,
 ): Promise<string> {
   const supabase = createAdminClient()
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('stripe_customer_id')
     .eq('id', userId)
     .maybeSingle()
+  if (profileError || !profile) throw new Error('Your billing profile could not be loaded.')
 
   if (profile?.stripe_customer_id) return profile.stripe_customer_id
 
@@ -21,10 +22,11 @@ export async function getOrCreateCustomerId(
     email: email || undefined,
     name: fullName || undefined,
     metadata: { supabase_user_id: userId },
-  })
-  await supabase
+  }, { idempotencyKey: `studocyte-customer-${userId}` })
+  const { error } = await supabase
     .from('profiles')
     .update({ stripe_customer_id: customer.id })
     .eq('id', userId)
+  if (error) throw error
   return customer.id
 }

@@ -1,4 +1,4 @@
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 
 /** Instant placeholder shown the moment a navigation starts, while the dynamic
  *  page renders on the server. Shape roughly matches the list-style pages. */
@@ -6,7 +6,7 @@ export function PageSkeleton({ rows = 4, sidebar = false }: { rows?: number; sid
   const list = (
     <div className="space-y-3">
       <div className="eb-skeleton h-8 w-52 rounded-lg" />
-      <div className="eb-skeleton h-4 w-72 rounded" />
+      <div className="eb-skeleton h-4 w-72 max-w-full rounded" />
       <div className="mt-6 space-y-2.5">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="eb-skeleton h-16 rounded-2xl" style={{ opacity: 1 - i * 0.12 }} />
@@ -15,7 +15,7 @@ export function PageSkeleton({ rows = 4, sidebar = false }: { rows?: number; sid
     </div>
   )
   return (
-    <Container className="py-10">
+    <Container>
       {sidebar ? (
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           {list}

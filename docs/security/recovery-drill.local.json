@@ -1,0 +1,21 @@
+{
+  "scope": "Isolated local PGlite, synthetic data only; NOT a hosted production backup restore",
+  "startedAt": "2026-09-15T01:41:06.712Z",
+  "completedAt": "2026-09-15T01:41:07.647Z",
+  "elapsedSeconds": 0.94,
+  "backupBytes": 5753048,
+  "result": "passed",
+  "verified": [
+    "75 application tables restored",
+    "synthetic account and private record restored",
+    "anonymous access denied",
+    "cross-account access denied",
+    "owner access allowed"
+  ],
+  "notVerified": [
+    "Supabase hosted backup/PITR",
+    "Storage file bytes",
+    "provider configuration and SMTP",
+    "production recovery time or recovery point"
+  ]
+}

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSafeQuestion, loadMeta, type SafeQuestion } from '@/lib/access/questions'
 import type { StoredSessionResponse } from '@/lib/practice/session-actions'
+import { canAccessExam } from '@/lib/access'
 
 export type PracticeSession = {
   id: string
@@ -44,6 +45,7 @@ export async function getPracticeSessions(userId: string, examId: string): Promi
     })
   }
   if (!current.data) return []
+  const canReview = await canAccessExam(userId, examId)
   return current.data.map((r) => {
     const sub = r.subtests as { name: string; slug: string } | null
     return {
@@ -56,7 +58,7 @@ export async function getPracticeSessions(userId: string, examId: string): Promi
       correct: r.correct,
       timeSpentSeconds: r.time_spent_seconds,
       createdAt: r.created_at,
-      reviewAvailable: (r.question_ids ?? []).length > 0,
+      reviewAvailable: canReview && (r.question_ids ?? []).length > 0,
     }
   })
 }
@@ -88,7 +90,8 @@ export type HistoricalPracticeReview = {
 }
 
 /** Load one immutable completed session for its owner, including answer keys.
- * Ownership is verified before any secure question data is assembled. */
+ * Ownership and current exam access are verified before assembling secure data.
+ * Session rows are student-writable and are never evidence of entitlement. */
 export async function getPracticeSessionReview(userId: string, sessionId: string): Promise<HistoricalPracticeReview | null> {
   const db = createAdminClient()
   const { data: session } = await db.from('practice_sessions')
@@ -97,6 +100,7 @@ export async function getPracticeSessionReview(userId: string, sessionId: string
     .eq('user_id', userId)
     .maybeSingle()
   if (!session || !session.question_ids?.length) return null
+  if (!(await canAccessExam(userId, session.exam_id))) return null
 
   const [{ data: exam }, { data: subtest }] = await Promise.all([
     db.from('exams').select('name,slug').eq('id', session.exam_id).maybeSingle(),
@@ -108,7 +112,7 @@ export async function getPracticeSessionReview(userId: string, sessionId: string
 
   const items = (await Promise.all(session.question_ids.map(async (questionId): Promise<HistoricalReviewItem | null> => {
     const meta = await loadMeta(questionId)
-    if (!meta || meta.exam_id !== session.exam_id) return null
+    if (!meta || !meta.published || meta.exam_id !== session.exam_id) return null
     const question = await buildSafeQuestion(meta)
     const saved = responseById.get(questionId)
     let correctOptionId: string | null = null

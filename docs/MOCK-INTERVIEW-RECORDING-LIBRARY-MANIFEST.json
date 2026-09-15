@@ -1,0 +1,101 @@
+{
+  "deployment_id": "dpl_3toQeHSCCVgtgvu95rXYUSk3GHZQ",
+  "previous_deployment_id": "dpl_9gmpouoQD1CRCEq8VnJt5boSX7uV",
+  "files": [
+    {
+      "file": "scripts/verify-full-mock-marking.mjs",
+      "sha256": "3037793e28a4f2134fa6b4d4d20af1b8e70870d90afa7070cf1f3ccde6ac2fdf"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/review/page.tsx",
+      "sha256": "b02d8ea29ed8a5e1888c42b13b83e721c68b561811dce0f78627488278ef8749"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/submit-marking/route.ts",
+      "sha256": "25c7cc9017f74e552c56a61b1dfdf752b35d5f46ecb6dffe03e47bbd99467180"
+    },
+    {
+      "file": "src/app/api/interviews/mock-sessions/[sessionId]/marking/route.ts",
+      "sha256": "1a04e581228d1968fb5b5c985fe15b438ed151a69a1f8da43c99925e62851498"
+    },
+    {
+      "file": "src/components/interview-attempt-review.tsx",
+      "sha256": "6bc331297c758c025686651d854559971399d630569f0af652bdc1e6e1cd72ea"
+    },
+    {
+      "file": "src/components/interviews/mock-lobby.tsx",
+      "sha256": "3330ed3570193e3fe563c6e8d7fbb347d090f3b7c1ea30f21063f35167137086"
+    },
+    {
+      "file": "src/components/interviews/mock-marking-actions.tsx",
+      "sha256": "59931a7150f19f74d4af69132bfa896329ace8502599522cbf33ffc04f8345fe"
+    },
+    {
+      "file": "src/components/interviews/mock-session-runner.tsx",
+      "sha256": "6ea168233e534b1114ac517137e8563a780357bdfcfdff2bd30497cbeb54c872"
+    },
+    {
+      "file": "src/components/interviews/student-actions.tsx",
+      "sha256": "19b54b1c1cf55458fd4c6abcc3be77dfdd4ecfbabba3594e0f374fab786faf41"
+    },
+    {
+      "file": "src/lib/interviews/mock-marking.ts",
+      "sha256": "5462b764723481e85ebae5d9a787674070316f4a23c1bdc682d65aeeb03e4d80"
+    },
+    {
+      "file": "src/lib/interviews/review-library.ts",
+      "sha256": "d4154354352a7c02de34bbabb11975f9a5f3878e03bb00a613df401045f89f2a"
+    },
+    {
+      "file": "src/lib/supabase/types.ts",
+      "sha256": "8b7a5574559612653b2b36e146186672e137d83d257fa207b007511da7c7dbc1"
+    },
+    {
+      "file": "supabase/migrations/0039_interview_marking_prices.sql",
+      "sha256": "fcf7628acc6563312067d03b39a15a9256b171a1ee996da81f3f9d9dacf55ae1"
+    },
+    {
+      "file": "supabase/operations/verify-mock-batch-rollback.sql",
+      "sha256": "5cb50903d0acd527876908015b51683568ef99db2c69c07f1c7072b803844186"
+    },
+    {
+      "file": "tests/interview-api.test.ts",
+      "sha256": "db871d754eb55a2afdbc2e7fea31382a148693ba94df7e6560ae646074d0ae67"
+    },
+    {
+      "file": "tests/interview-batch-api.test.ts",
+      "sha256": "ed10268252be7466d73500a8129d19595d99fa9384776e9a3ae87db8d0e0b581"
+    },
+    {
+      "file": "tests/interview-batch-marking.test.ts",
+      "sha256": "023870edd78a01368740ad3f5151779f40da6a58d5246daf7287831453c472d2"
+    },
+    {
+      "file": "tests/interview-mock.test.ts",
+      "sha256": "be111eb9180f57a782fa369e5c36b79ddb325e104189a6122b6049103cb3d7c3"
+    },
+    {
+      "file": "tests/interview-review-library.test.ts",
+      "sha256": "53f845648420610066035dc895644e16f11f68b43930def1c21d163df769133e"
+    }
+  ],
+  "published_aliases": [
+    "studocyte.emeducate.com.au",
+    "emedibank-x1uw.vercel.app"
+  ],
+  "verification": {
+    "interview_tests": 25,
+    "lint_errors": 0,
+    "pre_existing_lint_warnings": 1,
+    "local_production_build": "passed",
+    "hosted_production_build": "passed",
+    "hosted_api_and_rollback_checks": "passed",
+    "synthetic_responses": 50
+  },
+  "pricing": {
+    "mmi_station": 2,
+    "panel_response": 1,
+    "full_mmi": 12,
+    "full_panel": 12
+  }
+}

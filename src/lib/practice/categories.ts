@@ -17,9 +17,9 @@ export const CATEGORY_TAXONOMY: Record<string, Record<string, string[]>> = {
     ],
     'decision-making': [
       'Syllogisms',
-      'Interpreting Information',
-      'Strongest Argument',
       'Logic Puzzles',
+      'Recognising Assumptions',
+      'Interpreting Information',
       'Venn Diagrams',
       'Probability',
     ],
@@ -59,7 +59,7 @@ export function canonicalCategories(examSlug: string, subtestSlug: string): stri
 }
 
 /** DM questions carry granular analytics tags (for example bayes and
- * expected-value), but students should only see the six stable drill subsets. */
+ * expected-value), but students should only see the five stable drill subsets. */
 export function hidesExtraCategories(examSlug: string, subtestSlug: string): boolean {
   return (examSlug === 'ucat' && subtestSlug === 'decision-making')
     || (examSlug === 'gamsat' && subtestSlug === 'humanities-social-sciences')

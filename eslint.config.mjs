@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Local Vercel release snapshots and their generated build output.
+    ".vercel/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

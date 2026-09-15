@@ -4,11 +4,10 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Container } from './container'
 import { Wordmark } from './ui/wordmark'
 import { MobileNav } from './mobile-nav'
+import { WorkspaceEntryLink } from './workspace/entry-link'
 
-// Public site chrome. A translucent glass layer (content scrolls under it) that
-// only grows its divider + soft lift once you scroll — Apple's scroll-edge, not
-// a permanent 1px border. Desktop keeps the pure-CSS hover dropdowns; below md
-// the links live in the fluid MobileNav sheet.
+// Opaque public navigation keeps the launch banner and scrolled content
+// from showing through the links. The divider appears after scrolling.
 export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -20,7 +19,7 @@ export function MarketingHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 eb-glass border-b transition-[box-shadow,border-color] duration-300 ${
+      className={`sticky top-0 z-50 shrink-0 bg-surface border-b transition-[box-shadow,border-color] duration-300 ${
         scrolled ? 'border-border shadow-[0_2px_28px_-18px_rgba(31,27,48,0.32)]' : 'border-transparent'
       }`}
     >
@@ -31,10 +30,10 @@ export function MarketingHeader() {
 
         <nav className="hidden items-center gap-1 md:flex">
           <Dropdown label="Courses">
-            <MenuLink href="/#exams">UCAT</MenuLink>
-            <MenuLink href="/#exams">GAMSAT</MenuLink>
-            <MenuLink href="/#exams">ISAT</MenuLink>
-            <MenuLink href="/interviews">Interviews</MenuLink>
+            <MenuLink href="/ucat-preparation">UCAT</MenuLink>
+            <MenuLink href="/gamsat-preparation">GAMSAT</MenuLink>
+            <MenuLink href="/isat-preparation">ISAT</MenuLink>
+            <MenuLink href="/interview-preparation">Interviews</MenuLink>
           </Dropdown>
           <NavLink href="/pricing">Pricing</NavLink>
           <Dropdown label="Resources">
@@ -61,12 +60,12 @@ export function MarketingHeader() {
           <Link href="/login" className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground md:inline">
             Log in
           </Link>
-          <Link
+          <WorkspaceEntryLink
             href="/app"
             className="eb-press inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_34px_-16px_rgba(31,27,48,0.4)]"
           >
             Open Studocyte <ArrowUpRight />
-          </Link>
+          </WorkspaceEntryLink>
           <MobileNav />
         </div>
       </Container>

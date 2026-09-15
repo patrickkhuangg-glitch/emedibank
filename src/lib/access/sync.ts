@@ -19,6 +19,7 @@ type DesiredEntitlement = {
   exam_id: string
   source: EntitlementSource
   expires_at: string | null
+  interview_trial_only: boolean
 }
 
 export async function syncEntitlementsForUser(userId: string): Promise<void> {
@@ -27,7 +28,7 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
   // 1. Access-granting subscriptions for this user.
   const { data: subs, error: subErr } = await supabase
     .from('subscriptions')
-    .select('product_id, stripe_subscription_id, current_period_end')
+    .select('product_id, stripe_subscription_id, current_period_end, status')
     .eq('user_id', userId)
     .in('status', [...ACCESS_GRANTING_STATUSES])
   if (subErr) throw subErr
@@ -81,17 +82,21 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
   let allExamIds: string[] | null = null
   let interviewExamId: string | null | undefined
 
-  const add = (examId: string, source: EntitlementSource, expires: string | null) => {
+  const add = (examId: string, source: EntitlementSource, expires: string | null, interviewTrialOnly = false) => {
     const existing = desired.get(examId)
+    if (existing && existing.interview_trial_only !== interviewTrialOnly) {
+      if (!interviewTrialOnly) desired.set(examId, { exam_id: examId, source, expires_at: expires, interview_trial_only: false })
+      return
+    }
     if (!existing) {
-      desired.set(examId, { exam_id: examId, source, expires_at: expires })
+      desired.set(examId, { exam_id: examId, source, expires_at: expires, interview_trial_only: interviewTrialOnly })
       return
     }
     // null expiry ("never") always wins; otherwise keep the later date.
     if (existing.expires_at === null || expires === null) {
-      desired.set(examId, { exam_id: examId, source, expires_at: null })
+      desired.set(examId, { exam_id: examId, source, expires_at: null, interview_trial_only: interviewTrialOnly })
     } else if (new Date(expires) > new Date(existing.expires_at)) {
-      desired.set(examId, { exam_id: examId, source, expires_at: expires })
+      desired.set(examId, { exam_id: examId, source, expires_at: expires, interview_trial_only: interviewTrialOnly })
     }
   }
 
@@ -114,7 +119,12 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
         }
         for (const examId of allExamIds) add(examId, 'bundle', sub.current_period_end)
       } else if (product.exam_id) {
-        add(product.exam_id, 'subscription', sub.current_period_end)
+        if (sub.status === 'trialing' && interviewExamId === undefined) {
+          const { data: exam, error } = await supabase.from('exams').select('id').eq('kind', 'interview').maybeSingle()
+          if (error) throw error
+          interviewExamId = exam?.id ?? null
+        }
+        add(product.exam_id, 'subscription', sub.current_period_end, sub.status === 'trialing' && product.exam_id === interviewExamId)
       }
     }
 
@@ -127,7 +137,7 @@ export async function syncEntitlementsForUser(userId: string): Promise<void> {
         if (interviewErr) throw interviewErr
         interviewExamId = interviewExam?.id ?? null
       }
-      if (interviewExamId) add(interviewExamId, 'subscription', sub.current_period_end)
+      if (interviewExamId) add(interviewExamId, 'subscription', sub.current_period_end, sub.status === 'trialing')
     }
   }
 

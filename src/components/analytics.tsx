@@ -1,9 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 
-const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || 'G-886N2HS3Q2'
+const PRODUCTION_SITE = 'https://studocyte.emeducate.com.au'
+const ANALYTICS_ENABLED = process.env.NEXT_PUBLIC_SITE_URL === PRODUCTION_SITE
+const MEASUREMENT_ID = ANALYTICS_ENABLED
+  ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || 'G-886N2HS3Q2'
+  : ''
 const CONSENT_COOKIE = 'em_analytics_consent'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180
 
@@ -15,6 +19,8 @@ declare global {
     dataLayer?: unknown[]
     gtag?: (...args: unknown[]) => void
     __emeducateAnalyticsStarted?: boolean
+    __emeducateAnalyticsConsent?: AnalyticsConsent
+    __emeducateLastPageViewKey?: string
   }
 }
 
@@ -45,43 +51,69 @@ function subscribeToLocation() {
 
 function initialiseQueue() {
   window.dataLayer ??= []
-  window.gtag ??= (...args: unknown[]) => { window.dataLayer?.push(args) }
+  window.gtag ??= function gtag() {
+    // gtag.js requires the function's Arguments object, not a rest-parameter array.
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer?.push(arguments)
+  }
 }
 
-function sendPageView(pathname = window.location.pathname) {
+function updateAnalyticsConsent(consent: AnalyticsConsent) {
+  if (window.__emeducateAnalyticsConsent === consent) return
+  window.gtag?.('consent', 'update', {
+    analytics_storage: consent === 'granted' ? 'granted' : 'denied',
+  })
+  window.__emeducateAnalyticsConsent = consent
+}
+
+function sendPageView() {
+  const pageViewKey = window.location.href
+  if (window.__emeducateLastPageViewKey === pageViewKey) return
+  window.__emeducateLastPageViewKey = pageViewKey
   window.gtag?.('event', 'page_view', {
-    page_location: `${window.location.origin}${pathname}`,
+    page_location: `${window.location.origin}${window.location.pathname}`,
     page_title: document.title,
+    page_referrer: document.referrer ? new URL(document.referrer).origin : '',
   })
 }
 
-function startAnalytics() {
-  if (!MEASUREMENT_ID || window.__emeducateAnalyticsStarted) return
+function startAnalytics(consent: AnalyticsConsent = readConsent()) {
+  if (!MEASUREMENT_ID || consent !== 'granted') return
+
+  if (window.__emeducateAnalyticsStarted) {
+    updateAnalyticsConsent(consent)
+    return
+  }
+
   window.__emeducateAnalyticsStarted = true
   initialiseQueue()
   window.gtag?.('consent', 'default', {
-    analytics_storage: 'denied',
+    analytics_storage: consent === 'granted' ? 'granted' : 'denied',
     ad_storage: 'denied',
     ad_user_data: 'denied',
     ad_personalization: 'denied',
+    wait_for_update: 500,
   })
-  window.gtag?.('consent', 'update', { analytics_storage: 'granted' })
+  window.__emeducateAnalyticsConsent = consent
+  window.gtag?.('set', 'ads_data_redaction', true)
   window.gtag?.('js', new Date())
   window.gtag?.('config', MEASUREMENT_ID, {
     send_page_view: false,
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
-    cookie_domain: 'emeducate.com.au',
+    cookie_domain: 'auto',
   })
 
+  if (document.querySelector(`script[data-studocyte-ga="${MEASUREMENT_ID}"]`)) return
   const script = document.createElement('script')
   script.async = true
   script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`
+  script.dataset.studocyteGa = MEASUREMENT_ID
   document.head.appendChild(script)
 }
 
 function revokeAnalytics() {
-  window.gtag?.('consent', 'update', { analytics_storage: 'denied' })
+  updateAnalyticsConsent('denied')
   const analyticsCookies = ['_ga', ...(MEASUREMENT_ID ? [`_ga_${MEASUREMENT_ID.replace(/^G-/, '')}`] : [])]
   analyticsCookies.forEach((name) => {
     document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.emeducate.com.au; SameSite=Lax; Secure`
@@ -91,7 +123,7 @@ function revokeAnalytics() {
 
 export function trackAnalyticsEvent(name: string, parameters: AnalyticsParameters = {}) {
   if (!MEASUREMENT_ID || typeof window === 'undefined' || readConsent() !== 'granted') return
-  startAnalytics()
+  startAnalytics(readConsent())
   window.gtag?.('event', name, parameters)
 }
 
@@ -107,18 +139,18 @@ export function Analytics() {
   const consent = useSyncExternalStore(subscribeToConsent, readConsent, () => null)
   const search = useSyncExternalStore(subscribeToLocation, () => window.location.search, () => '')
   const [editing, setEditing] = useState(false)
-  const previousPath = useRef<string | null>(null)
-  const publicPage = pathname === '/' || pathname === '/pricing' || pathname === '/signup' || pathname === '/login'
+  const publicPage = pathname === '/' || pathname === '/interview-preparation' || pathname === '/isat-preparation' || pathname === '/pricing' || pathname === '/signup' || pathname === '/login'
   const conversionReturn = pathname === '/dashboard'
     && (search.includes('signup=success') || search.includes('checkout=success'))
   const analyticsAllowedOnPage = publicPage || conversionReturn
 
   useEffect(() => {
-    if (consent !== 'granted' || !analyticsAllowedOnPage) return
-    startAnalytics()
+    if (!analyticsAllowedOnPage) return
+    const currentConsent = readConsent()
+    if (currentConsent !== 'granted') return
+    startAnalytics(currentConsent)
 
-    if (publicPage && previousPath.current !== pathname) sendPageView(pathname)
-    previousPath.current = pathname
+    if (publicPage) sendPageView()
 
     const params = new URLSearchParams(search)
     if (pathname === '/dashboard' && params.get('signup') === 'success') {
@@ -136,10 +168,7 @@ export function Analytics() {
     setEditing(false)
     window.dispatchEvent(new Event('emeducate-analytics-consent'))
     if (value === 'granted') {
-      previousPath.current = null
-      if (window.__emeducateAnalyticsStarted) {
-        window.gtag?.('consent', 'update', { analytics_storage: 'granted' })
-      }
+      startAnalytics(value)
     } else {
       revokeAnalytics()
     }
@@ -150,7 +179,7 @@ export function Analytics() {
       <aside className="fixed inset-x-4 bottom-4 z-[100] ml-auto grid max-w-2xl gap-4 rounded-2xl border border-border bg-surface p-5 text-foreground shadow-2xl sm:grid-cols-[1fr_auto] sm:items-center" aria-label="Analytics preferences">
         <div>
           <strong className="font-display text-lg">Optional analytics</strong>
-          <p className="mt-1.5 text-xs leading-relaxed text-muted">Allow anonymous usage measurement so we can understand which pages lead to signups. Names, contact details and answers are never sent to analytics. <a className="underline underline-offset-2" href="https://emeducate.com.au/privacy">Privacy notice</a></p>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted">If you allow analytics, we use Google Analytics to understand visits and signups. Names, contact details and answers are never sent to analytics. You can decline or change your choice at any time. <a className="underline underline-offset-2" href="https://emeducate.com.au/privacy">Privacy notice</a></p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="rounded-full border border-border px-4 py-2 text-xs font-semibold" type="button" onClick={() => choose('denied')}>Decline</button>

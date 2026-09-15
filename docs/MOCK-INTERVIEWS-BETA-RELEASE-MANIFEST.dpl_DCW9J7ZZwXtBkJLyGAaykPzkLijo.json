@@ -1,0 +1,453 @@
+{
+  "base": "aaa357a52bd11c6a0d28c62384ccbb659415f1bf",
+  "deployment_id": "dpl_DCW9J7ZZwXtBkJLyGAaykPzkLijo",
+  "source_directory": "/Users/patrick/Documents/ChatGPT/EMeducate/studocyte/.vercel/mock-interviews-public-release",
+  "files": [
+    {
+      "file": ".vercelignore",
+      "status": "added",
+      "sha256": "86aae88749798ab37b72498b0a69d8633f9727cf0986dd950f967a8a6711de36"
+    },
+    {
+      "file": "next.config.ts",
+      "status": "modified",
+      "sha256": "e14a1e42a19083e6205c6fe28aac7caf9c601363114d60c2ddd629b35a940cdd"
+    },
+    {
+      "file": "package-lock.json",
+      "status": "modified",
+      "sha256": "7ffc9e86421820d1b44d89a0cec634ee71e46099e878c9e9cf462198a2a36c68"
+    },
+    {
+      "file": "package.json",
+      "status": "modified",
+      "sha256": "39325993f8cce7afc8930232dd84576e4534a56077a51d9d3c4b3236b2e968d8"
+    },
+    {
+      "file": "scripts/verify-interview-introduction.mjs",
+      "status": "added",
+      "sha256": "5bef0412985925e944e4270dd1d61d040b8f89953d9d6483333e689f6aadc526"
+    },
+    {
+      "file": "src/app/(app)/account/page.tsx",
+      "status": "modified",
+      "sha256": "108cb3acae25439880683662a1245c1b9a00bd36d3edaab533d6687a9e51b9a9"
+    },
+    {
+      "file": "src/app/(app)/admin/interviews/[attemptId]/page.tsx",
+      "status": "added",
+      "sha256": "b2121c13914a401752fb3a7fafe8c81c6aff9243b2c787669fb1131ce58c9c3d"
+    },
+    {
+      "file": "src/app/(app)/admin/interviews/page.tsx",
+      "status": "modified",
+      "sha256": "8c2fa736c64c73062bfbe05cd573d1641e1d5f72665f416c3d906245b221b3ae"
+    },
+    {
+      "file": "src/app/(app)/admin/page.tsx",
+      "status": "modified",
+      "sha256": "8278f6a9a3426a8f747c98b80de82f6f05f3bf1aac5f6601258bf0d2b6f87d90"
+    },
+    {
+      "file": "src/app/(app)/exams/[examSlug]/[subtestSlug]/runner.tsx",
+      "status": "modified",
+      "sha256": "bdad49c01f336dcc4300089fe0bd5a68b3b8e38cde5d8b6dd6d73298990b7aa5"
+    },
+    {
+      "file": "src/app/(app)/interviews/layout.tsx",
+      "status": "added",
+      "sha256": "c690d4f9b34863c54ed59a9d08406c7b6f564be5aa2c39aa25bf8a08ad10b467"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/page.tsx",
+      "status": "added",
+      "sha256": "43849adc070923ca149791a645a56b7a4ce9ceac3b3b6e5b82758db3de18a776"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/review/page.tsx",
+      "status": "added",
+      "sha256": "b02d8ea29ed8a5e1888c42b13b83e721c68b561811dce0f78627488278ef8749"
+    },
+    {
+      "file": "src/app/(app)/interviews/mock-interviews/session/page.tsx",
+      "status": "added",
+      "sha256": "65e8a33a0be7c950735b3a2e3aa3b30061c0bbf2b647ea1f6016e8711ec74ed7"
+    },
+    {
+      "file": "src/app/(app)/interviews/practice/session/page.tsx",
+      "status": "modified",
+      "sha256": "9c3897af30b02f0ae7b2a7ca0d69a9385ef1cbea46136636ae6df1d40d55f38c"
+    },
+    {
+      "file": "src/app/(app)/interviews/review/page.tsx",
+      "status": "modified",
+      "sha256": "923eaa0b017945b22f38c14f2b836e69de31bac9b93fa83875cf36c0304f3010"
+    },
+    {
+      "file": "src/app/(app)/interviews/stories/page.tsx",
+      "status": "added",
+      "sha256": "cf253fa0da3cdc220c8e3d77e38b47d4ec9ed5631a9bdbc4a86ff1c37d219faf"
+    },
+    {
+      "file": "src/app/api/internal/interviews/cleanup/route.ts",
+      "status": "added",
+      "sha256": "0c8732063c6fdb5286a8cf8d2adf9897b4554ff5381ef657e89c6f3fc51cd848"
+    },
+    {
+      "file": "src/app/api/internal/interviews/process/route.ts",
+      "status": "added",
+      "sha256": "15e0f516c80a5a00188555c01967660da23690e2a7ff5604b1fd198d892e3187"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/finalise/route.ts",
+      "status": "added",
+      "sha256": "257f80c4c223d3f4e2c7880d478d3e33273e682b1e1e612654db8d25e4d78536"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/media/route.ts",
+      "status": "added",
+      "sha256": "bf9844fcbc364673c33c790239d7d90b0f2012754706b191cc815dc68a18ddc1"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/route.ts",
+      "status": "added",
+      "sha256": "2742c4df433b19c3f0f0cba9271c5355749fee2544783855bec051003cf7a7f3"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/submit-marking/route.ts",
+      "status": "added",
+      "sha256": "25c7cc9017f74e552c56a61b1dfdf752b35d5f46ecb6dffe03e47bbd99467180"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/[attemptId]/transcript/route.ts",
+      "status": "modified",
+      "sha256": "b3299be0edbfba3148701ede2827f6cd7ab6eb7fc40622af6df62f7b605804af"
+    },
+    {
+      "file": "src/app/api/interviews/attempts/initiate/route.ts",
+      "status": "added",
+      "sha256": "7552059336902024c6cd24799a9e6be06d947d2696825e0b73db0c04745f6857"
+    },
+    {
+      "file": "src/app/api/interviews/introduction/route.ts",
+      "status": "added",
+      "sha256": "d65e7b742360fe9718f5fb16cb8347943939779a00570d98b89cfa1c6356203e"
+    },
+    {
+      "file": "src/app/api/interviews/mock-session/route.ts",
+      "status": "added",
+      "sha256": "9af2768e0309708747b740ceb5bd966d32365a612d91776d6ddec65cc145d616"
+    },
+    {
+      "file": "src/app/api/interviews/mock-sessions/[sessionId]/marking/route.ts",
+      "status": "added",
+      "sha256": "1a04e581228d1968fb5b5c985fe15b438ed151a69a1f8da43c99925e62851498"
+    },
+    {
+      "file": "src/app/api/interviews/recordings/route.ts",
+      "status": "modified",
+      "sha256": "a6bcc160b58e9d4d1f1a80e95c552714a6b077647abd31b7cf41e6c8a026658d"
+    },
+    {
+      "file": "src/app/api/interviews/stories/[storyId]/route.ts",
+      "status": "added",
+      "sha256": "05a3eb86f000dd48dc6e27df3fbda6f6eee490065cb24e103ea0c093f8c054db"
+    },
+    {
+      "file": "src/app/api/interviews/stories/route.ts",
+      "status": "added",
+      "sha256": "f899371da361d9cbe30dc6aa39c4f8230d6fd81bd64ff6dea2cde3199844d2a2"
+    },
+    {
+      "file": "src/app/prototypes/interviews/page.tsx",
+      "status": "modified",
+      "sha256": "bb9975519302e6a506eed103c3d9eb581a49e2dcd69b282e94f9640eeb4de546"
+    },
+    {
+      "file": "src/app/prototypes/interviews/practice/session/page.tsx",
+      "status": "modified",
+      "sha256": "ebeab685a5a53de63696e96034f66a64269c690759d86b0f8e9a5767320661ba"
+    },
+    {
+      "file": "src/components/interview-attempt-review.tsx",
+      "status": "modified",
+      "sha256": "99f4835a1cad6e584a659835e2c05320f2bca7e339cd91f04895cca3eb4be27b"
+    },
+    {
+      "file": "src/components/interview-practice-lobby.tsx",
+      "status": "modified",
+      "sha256": "2deb4226831de1aa99c079a32167e8ab49e4735b5ba732d7ef688a9def97bdc8"
+    },
+    {
+      "file": "src/components/interview-practice-runner.tsx",
+      "status": "modified",
+      "sha256": "4f9027977454cd956963cacc46161813bd83e94265a6086991cfe5c8ef569e4a"
+    },
+    {
+      "file": "src/components/interview-practice-tabs.tsx",
+      "status": "deleted",
+      "sha256": null
+    },
+    {
+      "file": "src/components/interview-study-notes.tsx",
+      "status": "added",
+      "sha256": "3565b22112455d8b3fc89d7354d9a68aa9880ac74f353748b522a3c4ae68b1f5"
+    },
+    {
+      "file": "src/components/interview-transcript.tsx",
+      "status": "modified",
+      "sha256": "1e9489be9469b1308165c32c36e3f20f3a0e5ca7e1ba2524a6147875a89a9cf8"
+    },
+    {
+      "file": "src/components/interviews/admin-review.tsx",
+      "status": "added",
+      "sha256": "528da17abb4c8be19687a20a706daa14a04fcd3ebc6fec679d7a40a62b64ad70"
+    },
+    {
+      "file": "src/components/interviews/feedback-editor.tsx",
+      "status": "added",
+      "sha256": "c84795710a83d1ea26ab4d792ba249996bd588ef43187adaf248506d1932411a"
+    },
+    {
+      "file": "src/components/interviews/feedback-view.tsx",
+      "status": "added",
+      "sha256": "9eb3012146ee0d7199679a3b00d6cfce587dcee2357207e8de174ad952ea1460"
+    },
+    {
+      "file": "src/components/interviews/introduction.tsx",
+      "status": "added",
+      "sha256": "4b429c1b35f399d60e81e6e24f1e88d344146852fd8e5d394f76d282c0eb37c3"
+    },
+    {
+      "file": "src/components/interviews/media-player.tsx",
+      "status": "added",
+      "sha256": "329c3b86a118977eac17648103b16b6313837f03db2ff43156d5f9a41e8e54a2"
+    },
+    {
+      "file": "src/components/interviews/mock-lobby.tsx",
+      "status": "added",
+      "sha256": "324985a8d843172ee68579975afb8c86063bb3be0fff3e1e533e72b5e9d6bb71"
+    },
+    {
+      "file": "src/components/interviews/mock-marking-actions.tsx",
+      "status": "added",
+      "sha256": "59931a7150f19f74d4af69132bfa896329ace8502599522cbf33ffc04f8345fe"
+    },
+    {
+      "file": "src/components/interviews/mock-session-runner.tsx",
+      "status": "added",
+      "sha256": "6ea168233e534b1114ac517137e8563a780357bdfcfdff2bd30497cbeb54c872"
+    },
+    {
+      "file": "src/components/interviews/mock-tabs.tsx",
+      "status": "added",
+      "sha256": "ed5ecf951d0534571943ae79b9333d556c0017e1bcc13f386480d589aacfbd0d"
+    },
+    {
+      "file": "src/components/interviews/rehearsal-runner.tsx",
+      "status": "added",
+      "sha256": "a5f99b9a059190cef43fb9da845e71e9e55c86b80c0513816dfe3c58277a943d"
+    },
+    {
+      "file": "src/components/interviews/story-bank.tsx",
+      "status": "added",
+      "sha256": "f7eb6a80130c45ce8ebbe3ed15afe5f030c79e39d8a910a92106451ca5f642dd"
+    },
+    {
+      "file": "src/components/interviews/student-actions.tsx",
+      "status": "added",
+      "sha256": "19b54b1c1cf55458fd4c6abcc3be77dfdd4ecfbabba3594e0f374fab786faf41"
+    },
+    {
+      "file": "src/components/site-nav.tsx",
+      "status": "modified",
+      "sha256": "08fa5f8c0994c4ed694a186bc020442012c1dcd8434161da5c651ae4f51bea7e"
+    },
+    {
+      "file": "src/lib/admin/student-actions.ts",
+      "status": "modified",
+      "sha256": "2047296a4f2b1ba5de0a979e2bfce5cec19c2470921c036e0d770a2dcef3a793"
+    },
+    {
+      "file": "src/lib/interviews/api.ts",
+      "status": "added",
+      "sha256": "296adebba93acb92c0061ab35776a5bffa2feb8ba283c48f5361f17234d0eccb"
+    },
+    {
+      "file": "src/lib/interviews/config.ts",
+      "status": "added",
+      "sha256": "b4f79dd8501fc130167f5991bd928553a424f0821cc92de7dce21555d7d00641"
+    },
+    {
+      "file": "src/lib/interviews/introduction.ts",
+      "status": "added",
+      "sha256": "2d52cd8cac9fc2e42af0a62aab7a6529484e9d6482a376132cd2ddb796496d56"
+    },
+    {
+      "file": "src/lib/interviews/jobs.ts",
+      "status": "added",
+      "sha256": "9c17a0201486d0aa735c7b957bd78f0062119149d83f0348d7e7f9235577d92d"
+    },
+    {
+      "file": "src/lib/interviews/marking-actions.ts",
+      "status": "added",
+      "sha256": "2625c1809a898de6047221a203179fed07e8b81ff90b78a0eb350b2ce60be0b5"
+    },
+    {
+      "file": "src/lib/interviews/marking-data.ts",
+      "status": "added",
+      "sha256": "f8665baedda6afdab51e2f8629bbeb34f51edc73331565dc2d3d5d40f22abd34"
+    },
+    {
+      "file": "src/lib/interviews/marking-rubric.ts",
+      "status": "added",
+      "sha256": "bdd7a1514fe66dcb912c91aabdafde1af2bcc52e4fa8eb06079a9b8b8bf1d8c3"
+    },
+    {
+      "file": "src/lib/interviews/marking-validation.ts",
+      "status": "added",
+      "sha256": "0b5d9cf7a0ec52c70b0a7b876433f77c7dceff3a9adf33454523763a597bcd5d"
+    },
+    {
+      "file": "src/lib/interviews/media-validation.ts",
+      "status": "added",
+      "sha256": "066afa23cf8bc36ccd650a301a77a893c87241ce6e6f0e5edd13217b150e1289"
+    },
+    {
+      "file": "src/lib/interviews/mock-local.ts",
+      "status": "added",
+      "sha256": "6a541c0f5e4f345184a9a8f702e176f90f3d96dcc0aee469da546b6dda2c6283"
+    },
+    {
+      "file": "src/lib/interviews/mock-marking.ts",
+      "status": "added",
+      "sha256": "5462b764723481e85ebae5d9a787674070316f4a23c1bdc682d65aeeb03e4d80"
+    },
+    {
+      "file": "src/lib/interviews/mock-plan.ts",
+      "status": "added",
+      "sha256": "b17b9b15625df436e922c67e7e28f68ee24672d129bcbe91f08bbf4eeabb100a"
+    },
+    {
+      "file": "src/lib/interviews/mock-session.ts",
+      "status": "added",
+      "sha256": "c020a382a5eed16a7a7d382005d743c2448a69ff5a200ac6cc0e7d6ab1974eeb"
+    },
+    {
+      "file": "src/lib/interviews/mock-types.ts",
+      "status": "added",
+      "sha256": "8f7d49474481986b54e1ca00b7a2d2984e0437bf8a4524d62e533b07ae8a794e"
+    },
+    {
+      "file": "src/lib/interviews/provider.ts",
+      "status": "added",
+      "sha256": "8705c09d41df3f823b9722c12bd56a034d9d76acad6c23314d56f89b54f4599f"
+    },
+    {
+      "file": "src/lib/interviews/recording.ts",
+      "status": "added",
+      "sha256": "ca6e67c278c6df6accd9c2755a92bc32d4518df39c9f2bfd3e13513e10b064f4"
+    },
+    {
+      "file": "src/lib/interviews/review-library.ts",
+      "status": "added",
+      "sha256": "d4154354352a7c02de34bbabb11975f9a5f3878e03bb00a613df401045f89f2a"
+    },
+    {
+      "file": "src/lib/interviews/stations.ts",
+      "status": "added",
+      "sha256": "49e80589a81cb37f5a0fe5ea469c48384e2c3a021a98f54d7550ec9757c88a76"
+    },
+    {
+      "file": "src/lib/interviews/storage-cleanup.ts",
+      "status": "added",
+      "sha256": "c631be3082db800b98b675284a4a6a92fa5ffe291e7ba40e1d17c7f91204e5f2"
+    },
+    {
+      "file": "src/lib/interviews/stories.ts",
+      "status": "added",
+      "sha256": "c774df4733394cf44b25a4baa51eae25dba91d66c8901cd48369402f78d98f42"
+    },
+    {
+      "file": "src/lib/interviews/transcription.ts",
+      "status": "modified",
+      "sha256": "666ff49a15a6402503a7df7c4f4061b859a5870e4f2cbeda9b798b51085b4ae4"
+    },
+    {
+      "file": "src/lib/interviews/video-upload.ts",
+      "status": "added",
+      "sha256": "88ef834628876fbdde0e4830c3c3c798bca26e349f6e44199bfec0e39d772278"
+    },
+    {
+      "file": "src/lib/interviews/video-validation.ts",
+      "status": "added",
+      "sha256": "9c6926103b49ab121e8984b31bc9c7c56fd0c0841fd0e7788c4d75d6f96829e6"
+    },
+    {
+      "file": "src/lib/interviews/worker-auth.ts",
+      "status": "added",
+      "sha256": "195930a8ecf78fc2ba6a491ce1491d89608d87a4f2ae6fa38ebf5631683bfaf6"
+    },
+    {
+      "file": "src/lib/security/payments.ts",
+      "status": "added",
+      "sha256": "01ae643fd5d6a34052a7eb3f605e22cd1048ff0188a24223ece873477b06805d"
+    },
+    {
+      "file": "src/lib/stripe/actions.ts",
+      "status": "modified",
+      "sha256": "25d064e9cb3c24512524f352685093e0fbd3a1f081936823e026a833ca75a197"
+    },
+    {
+      "file": "src/lib/supabase/types.ts",
+      "status": "modified",
+      "sha256": "5a2df21006a1b570f71c56df4662bcf11a83f4fa1ad3eee7b1d43c8db591ca51"
+    },
+    {
+      "file": "supabase/migrations/0040_interview_story_bank.sql",
+      "status": "added",
+      "sha256": "b7d2cc1125a9c1af62e79b0c4756f3b2f9d696156d0229c96a8c7aa496831c81"
+    },
+    {
+      "file": "tests/interview-introduction-api.test.ts",
+      "status": "added",
+      "sha256": "bb5118fb155444f1360d3b2537e4ec193d60b14aee7e5b029e6eae7212451332"
+    },
+    {
+      "file": "tests/interview-introduction-stories.test.ts",
+      "status": "added",
+      "sha256": "a5434b5572d4706487d95416a1de1c71c2960178d59844a756ece86cc511d1c0"
+    },
+    {
+      "file": "vercel.json",
+      "status": "modified",
+      "sha256": "036f353bb61c09b80aeb7d1baf739f3fc10f0ef16f048c29eacf1426ede54470"
+    }
+  ],
+  "applied_migrations": [
+    {
+      "file": "supabase/migrations/0033_interview_video_marking.sql",
+      "sha256": "08ac6162e50dce475f505a55cc23b1051eb2df106189ec77c6b75d8029c6e40b"
+    },
+    {
+      "file": "supabase/migrations/0035_security_hardening.sql",
+      "sha256": "12f1cd87dc4c43dfd69b69a17acab880778d62d68aec5a40bcd359a9ae49b0b0"
+    },
+    {
+      "file": "supabase/migrations/0038_mock_interview_batch_marking.sql",
+      "sha256": "fd657996da72127f7f8ef5314dba8c9dbb0199aaf7bcae9f6d065d72ed8dc8b1"
+    },
+    {
+      "file": "supabase/migrations/0039_interview_marking_prices.sql",
+      "sha256": "fcf7628acc6563312067d03b39a15a9256b171a1ee996da81f3f9d9dacf55ae1"
+    },
+    {
+      "file": "supabase/migrations/0040_interview_story_bank.sql",
+      "sha256": "b7d2cc1125a9c1af62e79b0c4756f3b2f9d696156d0229c96a8c7aa496831c81"
+    }
+  ],
+  "generated_files_excluded": [
+    "next-env.d.ts"
+  ],
+  "previous_deployment_id": "dpl_GtwoyXj7BPY41y2RbYDqkKnxfmGv"
+}

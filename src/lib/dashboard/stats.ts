@@ -1,9 +1,11 @@
+import { PRACTICE_QUESTION_FILTER } from '@/lib/questions/availability'
 // Gamified dashboard, computed entirely on read from question_attempts + question
 // tags — no extra tables, so it self-updates as the student practises. XP, levels,
 // streaks, a weakness heatmap, mastery states, a spaced-review queue and a rough
 // score band all fall out of the attempt log.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { dashboardActivity, type DashboardActivity } from './activity'
 import { canonicalCategories } from '@/lib/practice/categories'
 
 const DAY = 86_400_000
@@ -46,6 +48,7 @@ export type MasterySection = { name: string; nodes: MasteryNode[] }
 export type ReviewItem = { questionId: string; section: string; tag: string | null; daysAgo: number }
 
 export type Dashboard = {
+  activity?: DashboardActivity
   hasData: boolean
   totalXp: number
   level: number
@@ -197,6 +200,7 @@ export async function getDashboard(userId: string, examSlug: string, examId: str
   const lv = levelFromXp(totalXp)
 
   return {
+    activity: dashboardActivity(rows.map(a => a.answered_at)),
     hasData: attempted > 0,
     totalXp,
     level: lv.level,
@@ -234,7 +238,8 @@ export async function resolveReviewQuestionIds(userId: string, examId: string): 
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('question_attempts')
-    .select('question_id, is_correct, answered_at')
+    .select('question_id, is_correct, answered_at, questions!inner(id)')
+    .or(PRACTICE_QUESTION_FILTER, { referencedTable: 'questions' })
     .eq('user_id', userId)
     .eq('exam_id', examId)
     .order('answered_at', { ascending: true })

@@ -1,0 +1,206 @@
+{
+  "title": "Confidentiality and patient safety",
+  "scenario": "You are a medical student on placement. During a break, your friend Sam tells you they have recently been diagnosed with a sexually transmitted infection. Sam is embarrassed and asks you not to tell anyone. Sam then says they do not plan to tell a recent sexual partner because they are worried about being judged and believe the partner is “probably fine”. Consider how you would respond.",
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "What are the main ethical and practical issues in this scenario?",
+      "answer": "There are several ethical issues here. First, there's a tension between Sam's autonomy and the duty to prevent harm to a third party. Sam has a right to control their own health information, but there's a real risk that their partner could be unknowingly exposed to an infection. Second, there's the question of confidentiality — Sam has confided in me as a friend, not as a treating clinician, so I don't have the same legal or professional obligations a doctor would have. Third, there's non-maleficence, because untreated STIs can lead to serious complications, so there's a genuine wellbeing concern for both Sam and the partner. And finally, there's an element of justice — the partner deserves the same standard of information and care that anyone in their position would want.\n\nPractically, I'm not Sam's doctor, so I have no clinical authority or legal duty to disclose anything. I also need to be careful that if I push too hard, Sam might distance themselves from me, or worse, avoid engaging with healthcare services altogether."
+    },
+    {
+      "number": 2,
+      "prompt": "How would you respond to Sam in a supportive and non-judgemental way?",
+      "answer": "I'd start by thanking Sam for trusting me with something this personal, and acknowledge that it must have been difficult to bring up. I wouldn't jump straight into advice — I'd listen first. I'd try to normalise the situation a bit, reminding Sam that STIs are common and this isn't a reflection of their character. Then I'd ask open questions rather than lecture them — for example, asking what's making them worried about telling their partner, or whether they've spoken to the clinic about next steps. I'd avoid giving ultimatums, like saying they have to tell their partner or I will, because that would damage their trust in me and could push them away from getting support at all."
+    },
+    {
+      "number": 3,
+      "prompt": "How would you balance Sam’s confidentiality with concern for the sexual partner’s wellbeing?",
+      "answer": "As a friend, I'm not in a position of clinical authority, so I can't and shouldn't personally disclose this to the partner — that would breach Sam's trust and isn't my role. Instead, I'd focus on empowering Sam to act themselves. I'd explain why partner notification matters, both for the partner's health and to prevent further transmission. I'd also mention that sexual health clinics often provide confidential partner notification services, where the partner can be contacted without Sam being named, which can take away a lot of the fear of judgement. I'd encourage Sam to raise this specific concern with their treating clinician, since they're trained to manage exactly this kind of situation. If I were treating Sam as a doctor rather than as a friend, the situation would be different — clinicians do have frameworks for breaching confidentiality when there's a serious and identifiable risk to a third party, but only as an absolute last resort after every other option has been exhausted."
+    },
+    {
+      "number": 4,
+      "prompt": "Tell us about a time you had to manage sensitive information, maintain someone’s trust, or navigate a difficult conversation. What did you learn?",
+      "answer": null
+    }
+  ],
+  "global": {
+    "status": "insufficient_evidence",
+    "score": null,
+    "reason": "Only Questions 1–3 have candidate responses. Question 4’s separate reflection task cannot be assessed, so a complete-station rating would overstate coverage."
+  },
+  "domains": [
+    {
+      "key": "communication_rapport",
+      "status": "scored",
+      "score": 5,
+      "evidence": [
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "First, there's a tension between Sam's autonomy and the duty to prevent harm to a third party.",
+          "references": [
+            "T1"
+          ]
+        },
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "I wouldn't jump straight into advice",
+          "references": [
+            "T2"
+          ]
+        }
+      ],
+      "rationale": "You explain the conflict between Sam’s privacy and the partner’s safety clearly, and your answer is easy to follow. I’d make the discussion more concise by explaining your role once, rather than returning to it in both Questions 1 and 3. That would leave more space to explain what you would do next. I can assess your wording here, but not your tone, pace or listening without a recording.",
+      "improvement": "Explain the friend/student boundary once, then use the space to make the immediate next step clear in plain language.",
+      "needed_evidence": ""
+    },
+    {
+      "key": "content_reasoning",
+      "status": "scored",
+      "score": 5,
+      "evidence": [
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "I also need to be careful that if I push too hard, Sam might distance themselves from me, or worse, avoid engaging with healthcare services altogether.",
+          "references": [
+            "T1"
+          ]
+        },
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "I'd encourage Sam to raise this specific concern with their treating clinician, since they're trained to manage exactly this kind of situation.",
+          "references": [
+            "T3"
+          ]
+        }
+      ],
+      "rationale": "You explain why pressuring Sam could damage their trust and make them less likely to seek help. Referring Sam back to the clinic gives your answer a practical direction. I’d like you to take that further: when would you help Sam contact the clinic, and how would you check that they had received advice? At the moment, you identify a useful option without fully explaining how you would follow it through.",
+      "improvement": "Turn the clinic suggestion into a concrete agreed next step, such as offering help to contact the clinic and checking later whether Sam was able to get advice.",
+      "needed_evidence": ""
+    },
+    {
+      "key": "ethical_professional",
+      "status": "scored",
+      "score": 5,
+      "evidence": [
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "Sam has a right to control their own health information, but there's a real risk that their partner could be unknowingly exposed to an infection.",
+          "references": [
+            "T1"
+          ]
+        },
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "As a friend, I'm not in a position of clinical authority, so I can't and shouldn't personally disclose this to the partner",
+          "references": [
+            "T3"
+          ]
+        }
+      ],
+      "rationale": "You recognise that Sam’s privacy matters while keeping the partner’s possible risk in view. Involving Sam’s clinician also respects the limits of your role. I’d be more careful with the claim that you have no legal duty or could never disclose. The scenario does not give enough information to settle that. Explain where you would seek confidential advice if you remained concerned about serious harm.",
+      "improvement": "Keep non-disclosure as your starting position, but qualify absolute legal claims and explain that unresolved serious risk would prompt confidential advice from an appropriate supervisor or sexual-health professional, sharing only what is needed.",
+      "needed_evidence": ""
+    },
+    {
+      "key": "empathy",
+      "status": "scored",
+      "score": 5,
+      "evidence": [
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "asking what's making them worried about telling their partner, or whether they've spoken to the clinic about next steps.",
+          "references": [
+            "T2"
+          ]
+        },
+        {
+          "kind": "quote",
+          "speaker": "candidate",
+          "text": "I'd also mention that sexual health clinics often provide confidential partner notification services, where the partner can be contacted without Sam being named, which can take away a lot of the fear of judgement.",
+          "references": [
+            "T3"
+          ]
+        }
+      ],
+      "rationale": "Asking what worries Sam about telling their partner shows that you are trying to understand their hesitation. Suggesting confidential partner notification responds to that concern. I’d also want you to check that you have understood Sam’s worry and ask which support option they feel able to take. You describe a supportive approach, but leave out that final check before agreeing on a plan.",
+      "improvement": "After exploring Sam’s worry, check that you have understood it and ask which support option feels workable to them before agreeing the next step.",
+      "needed_evidence": ""
+    },
+    {
+      "key": "insight_reflection",
+      "status": "insufficient_evidence",
+      "score": null,
+      "evidence": [],
+      "rationale": "I can’t assess your personal reflection because there is no answer to Question 4. I’d need to hear what happened, what you did and what you learned from the experience. The missing answer does not tell me how well you can reflect.",
+      "improvement": "",
+      "needed_evidence": "A real response to Question 4 describing the situation, your own action and what you learned."
+    }
+  ],
+  "strengths": [
+    {
+      "domain": "ethical_professional",
+      "text": "You keep both Sam and their partner in mind throughout your answer. Explaining the risk to the partner while protecting Sam’s trust gives a clear reason for involving the clinic.",
+      "references": [
+        "T1",
+        "T3"
+      ]
+    },
+    {
+      "domain": "empathy",
+      "text": "Asking what worries Sam about telling their partner is a useful starting point. Your suggestion of anonymous notification then responds to that fear.",
+      "references": [
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "domain": "content_reasoning",
+      "text": "You explain how an ultimatum might make Sam pull away or avoid getting help. That gives a practical reason for keeping the conversation supportive.",
+      "references": [
+        "T1",
+        "T2"
+      ]
+    }
+  ],
+  "priorities": [
+    {
+      "domain": "ethical_professional",
+      "text": "Be careful about saying you have no legal duty or could never disclose. This scenario doesn’t give you enough detail to settle that. Explain who you’d ask for confidential advice if you remained worried about serious harm.",
+      "references": [
+        "T1",
+        "T3"
+      ]
+    },
+    {
+      "domain": "content_reasoning",
+      "text": "The clinic suggestion is useful. Take it a step further by explaining how you’d help Sam make contact and when you’d check back to see whether they got advice.",
+      "references": [
+        "T3"
+      ]
+    },
+    {
+      "domain": "empathy",
+      "text": "After Sam explains their worry, check you’ve understood it before agreeing on a plan. Ask which of the support options they’d feel able to take.",
+      "references": [
+        "T2",
+        "T3"
+      ]
+    }
+  ],
+  "closing": {
+    "verdict": "A solid attempt at this MMI station. You explain the tension between Sam’s trust and the partner’s wellbeing, and your supportive approach gives you a useful starting point. I’d like you to be more careful with the legal claims and clearer about how you would help Sam take the next step. There’s no personal answer to Question 4, so I can’t assess that part.",
+    "successful_improvement": "Explain how you would agree on a plan with Sam and when you would check back to see whether they had received advice."
+  },
+  "displayRating": {
+    "score": 4,
+    "label": "Sample score · Questions 1–3",
+    "basis": "Illustrative score for the supplied answers, set for this sample. Question 4 remains unassessed."
+  }
+}

@@ -2,6 +2,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import { WorkspaceEntryLink } from './workspace/entry-link'
 
 // Fluid mobile menu (Apple lens): a hamburger that morphs to an X, opening a
 // translucent sheet that materializes from its top-right trigger origin over a
@@ -15,10 +16,10 @@ type Group = { title: string; items: LinkItem[] }
 
 const GROUPS: Group[] = [
   { title: 'Courses', items: [
-    { label: 'UCAT', href: '/#exams' },
-    { label: 'GAMSAT', href: '/#exams' },
-    { label: 'ISAT', href: '/#exams' },
-    { label: 'Interviews', href: '/interviews' },
+    { label: 'UCAT', href: '/ucat-preparation' },
+    { label: 'GAMSAT', href: '/gamsat-preparation' },
+    { label: 'ISAT', href: '/isat-preparation' },
+    { label: 'Interviews', href: '/interview-preparation' },
   ] },
   { title: 'Explore', items: [
     { label: 'Pricing', href: '/pricing' },
@@ -88,14 +89,14 @@ export function MobileNav() {
               </div>
             ))}
             <div className="eb-divide" />
-            <Link
+            <WorkspaceEntryLink
               href="/app"
               onClick={() => setOpen(false)}
               className="mx-1.5 mt-2 flex items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-3.5 font-display text-base font-semibold text-brand-foreground"
               style={{ opacity: 0, animation: open ? `eb-rise 0.5s var(--ease-out) both` : undefined, animationDelay: `${0.05 + idx * 0.035}s` }}
             >
               Open Studocyte <ArrowUpRight />
-            </Link>
+            </WorkspaceEntryLink>
           </div>
         </>,
         document.body,

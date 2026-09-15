@@ -6,6 +6,7 @@ export function ExamConfirm({
   message,
   confirmLabel = 'Yes',
   cancelLabel = 'No',
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: {
@@ -13,6 +14,7 @@ export function ExamConfirm({
   message: string
   confirmLabel?: string
   cancelLabel?: string
+  confirmDisabled?: boolean
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -25,7 +27,7 @@ export function ExamConfirm({
           <p className="text-[15px]">{message}</p>
         </div>
         <div className="flex justify-center gap-4 pb-6">
-          <button onClick={onConfirm} className="min-w-[88px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10">{confirmLabel}</button>
+          <button onClick={onConfirm} disabled={confirmDisabled} className="min-w-[88px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40">{confirmLabel}</button>
           <button onClick={onCancel} className="min-w-[88px] rounded border border-white/70 px-4 py-1.5 hover:bg-white/10">{cancelLabel}</button>
         </div>
       </div>

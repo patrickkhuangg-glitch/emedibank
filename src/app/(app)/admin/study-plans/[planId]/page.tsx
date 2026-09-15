@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { CancelTutoringSessionButton } from '@/components/cancel-tutoring-session-button'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -33,9 +33,9 @@ export default async function StudyPlanDetailPage({ params }: { params: Promise<
   const studentName = profile?.full_name || userResult.data.user?.email || 'Student'
   const email = userResult.data.user?.email ?? ''
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-5xl">
+  return <Container><main className="w-full">
     <Link href="/admin/study-plans" className="text-sm font-medium text-muted transition-colors hover:text-foreground">← Student study plans</Link>
-    <header className="mt-5 flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{studentName}</h1><p className="mt-2 text-muted">{email}</p></div><Link href="/study-plan" className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">Student view</Link></header>
+    <header className="mt-5 flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="page-title">{studentName}</h1><p className="mt-2 text-muted">{email}</p></div><Link href="/study-plan" className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">Student view</Link></header>
     <section className="mt-8 rounded-3xl border border-border bg-surface p-6 sm:p-8"><h2 className="font-display text-2xl font-bold tracking-tight">Package details</h2><form action={updateStudyPlanAction} className="mt-6 grid gap-4 sm:grid-cols-2"><input type="hidden" name="planId" value={plan.id}/><Label label="Package name" className="sm:col-span-2"><input required name="name" defaultValue={plan.name} className="field"/></Label><Label label="Status"><select name="status" defaultValue={plan.status} className="field"><option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option></select></Label><div className="hidden sm:block"/><Label label="Start date"><input type="date" name="startsOn" defaultValue={plan.starts_on ?? ''} className="field"/></Label><Label label="End date"><input type="date" name="endsOn" defaultValue={plan.ends_on ?? ''} className="field"/></Label><div className="sm:col-span-2"><button type="submit" className="eb-press rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-transform hover:-translate-y-0.5">Save package details</button></div></form></section>
 
     <section className="mt-5 overflow-hidden rounded-3xl border border-border bg-surface"><header className="flex flex-col gap-3 border-b border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl font-bold tracking-tight">Inclusions</h2><p className="mt-1 text-sm text-muted">Update the used amount after each tutoring session or event.</p></div><span className="rounded-full bg-brand-muted px-3 py-1 text-xs font-semibold text-brand">{items?.length ?? 0} included</span></header><div className="divide-y divide-border">{(items ?? []).length === 0 ? <p className="px-6 py-8 text-sm text-muted">No inclusions yet. Add the first one below.</p> : (items ?? []).map((item) => <ItemEditor key={item.id} planId={plan.id} item={item}/>)}</div></section>

@@ -9,6 +9,12 @@ export function Container({
   className?: string
 }) {
   return (
-    <div className={`mx-auto w-full max-w-6xl px-6 ${className}`}>{children}</div>
+    <div className={`page-frame ${className}`}>{children}</div>
   )
+}
+
+/** Standard page rhythm for dashboards, libraries, account and admin screens.
+ * Keep narrow reading/form measures inside this full-width page shell. */
+export function PageContainer({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <Container className={`page-shell ${className}`}>{children}</Container>
 }

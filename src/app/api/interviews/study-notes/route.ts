@@ -1,3 +1,5 @@
+import {requireInterviewPractice} from '@/lib/interviews/trial'
+import {apiError} from '@/lib/interviews/api'
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
   const user = await getUser()
   if (!user) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
 
+  try { await requireInterviewPractice(user) } catch(error) { return apiError(error) }
   const payload: unknown = await request.json().catch(() => null)
   const body = typeof payload === 'object' && payload && 'body' in payload && typeof payload.body === 'string' ? payload.body.trim() : ''
   if (!body || body.length > 280) return NextResponse.json({ error: 'Write a note between 1 and 280 characters.' }, { status: 400 })

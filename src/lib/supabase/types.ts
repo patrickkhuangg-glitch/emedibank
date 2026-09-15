@@ -1,3 +1,4 @@
+import type { InterviewStory } from '@/lib/interviews/stories'
 // Database types for the exam-prep platform.
 //
 // Hand-maintained to mirror `supabase/migrations`. Once the Supabase project has
@@ -8,7 +9,7 @@ export type ExamKind = 'mcq' | 'interview'
 export type UserRole = 'student' | 'tutor' | 'admin'
 export type ProductKind = 'exam' | 'bundle'
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled'
-export type EntitlementSource = 'subscription' | 'bundle' | 'comp'
+export type EntitlementSource = 'subscription' | 'bundle' | 'comp' | 'purchase'
 export type QuestionKind = 'single_best_answer'
 export type VideoStatus = 'none' | 'processing' | 'ready'
 export type Difficulty = 'easy' | 'medium' | 'hard'
@@ -18,9 +19,32 @@ export type StudyPlanStatus = 'active' | 'paused' | 'completed'
 export type StudyPlanItemKind = 'tutoring' | 'masterclass' | 'workshop' | 'other'
 export type TutoringSessionStatus = 'scheduled' | 'completed' | 'needs_review' | 'cancelled'
 
+type InterviewBackupHealth={singleton:boolean;enabled:boolean;checked_at:string|null;last_success_at:string|null;last_error:string|null;sweep_cursor:string|null}
+
 export type Database = {
   public: {
     Tables: {
+      mock_error_classifications: {
+        Row: { report_id: string; question_id: string; category: string; updated_at: string }
+        Insert: { report_id: string; question_id: string; category: string; updated_at?: string }
+        Update: { category?: string; updated_at?: string }
+        Relationships: []
+      }
+
+      mock_reports: {
+        Row: { id: string; user_id: string; exam_id: string; form_key: string; label: string; completed_at: string; version: number; facts: unknown }
+        Insert: { id: string; user_id: string; exam_id: string; form_key: string; label: string; completed_at?: string; version?: number; facts: unknown }
+        Update: { label?: string; facts?: unknown }
+        Relationships: []
+      }
+
+      interview_backup_health: {
+        Row: InterviewBackupHealth
+        Insert: Partial<InterviewBackupHealth>
+        Update: Partial<InterviewBackupHealth>
+        Relationships: []
+      }
+
       exams: {
         Row: {
           id: string
@@ -410,12 +434,51 @@ export type Database = {
           },
         ]
       }
+      interview_purchase_grants: {
+        Row: {
+          id: string
+          user_id: string
+          checkout_session_id: string
+          price_id: string
+          offer_id: string
+          offer_kind: 'plan' | 'credits'
+          credits: number
+          amount_minor: number
+          currency: string
+          access_expires_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          checkout_session_id: string
+          price_id: string
+          offer_id: string
+          offer_kind: 'plan' | 'credits'
+          credits: number
+          amount_minor: number
+          currency: string
+          access_expires_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          price_id?: string
+          offer_id?: string
+          offer_kind?: 'plan' | 'credits'
+          credits?: number
+          amount_minor?: number
+          currency?: string
+          access_expires_at?: string | null
+        }
+        Relationships: []
+      }
       entitlements: {
         Row: {
           id: string
           user_id: string
           exam_id: string
           source: EntitlementSource
+          interview_trial_only?: boolean
           expires_at: string | null
           created_at: string
         }
@@ -424,6 +487,7 @@ export type Database = {
           user_id: string
           exam_id: string
           source: EntitlementSource
+          interview_trial_only?: boolean
           expires_at?: string | null
           created_at?: string
         }
@@ -432,6 +496,7 @@ export type Database = {
           user_id?: string
           exam_id?: string
           source?: EntitlementSource
+          interview_trial_only?: boolean
           expires_at?: string | null
           created_at?: string
         }
@@ -662,45 +727,33 @@ export type Database = {
           },
         ]
       }
-      interview_attempts: {
-        Row: {
-          id: string
-          user_id: string
-          format: 'mmi' | 'panel'
-          station_id: string
-          station_title: string
-          questions: unknown
-          duration_seconds: number
-          recording_path: string
-          recording_mime_type: string
-          transcript: string | null
-          transcription_status: TranscriptionStatus
-          transcription_model: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          format: 'mmi' | 'panel'
-          station_id: string
-          station_title: string
-          questions?: unknown
-          duration_seconds?: number
-          recording_path: string
-          recording_mime_type: string
-          transcript?: string | null
-          transcription_status?: TranscriptionStatus
-          transcription_model?: string | null
-          created_at?: string
-        }
-        Update: {
-          duration_seconds?: number
-          transcript?: string | null
-          transcription_status?: TranscriptionStatus
-          transcription_model?: string | null
-        }
-        Relationships: []
-      }
+      interview_practice_logs: TableShape<InterviewPracticeLog, 'id' | 'user_id' | 'station_id' | 'format' | 'source'>
+      interview_progression_settings: TableShape<InterviewProgressionSettings, 'id'>
+      interview_progression_profiles: TableShape<InterviewProgressionProfile, 'user_id'>
+      interview_feedback_quests: TableShape<InterviewFeedbackQuestRow, 'user_id' | 'behaviour' | 'competencies'>
+      interview_daily_stations: TableShape<InterviewDailyStationRow, 'user_id' | 'local_day' | 'station_id' | 'format' | 'competencies' | 'reason'>
+      interview_progression_events: TableShape<InterviewProgressionEventRow, 'user_id' | 'event_key' | 'event_type'>
+      interview_focus_token_events: TableShape<InterviewFocusTokenEventRow, 'user_id' | 'event_key' | 'reason'>
+      interview_badges: TableShape<InterviewBadgeRow, 'user_id' | 'badge_key'>
+      interview_consistency_days: TableShape<InterviewConsistencyDayRow, 'user_id' | 'local_day'>
+      interview_competency_evidence: TableShape<InterviewCompetencyEvidenceRow, 'user_id' | 'competency' | 'source' | 'evidence_score'>
+      interview_spaced_reviews: TableShape<InterviewSpacedReviewRow, 'user_id' | 'competency' | 'source_station_id' | 'review_station_id' | 'reason' | 'due_day'>
+      interview_live_rooms: TableShape<InterviewLiveRoomRow, 'invite_code_hash' | 'host_id' | 'candidate_id' | 'station_id' | 'format'>
+      interview_live_participants: TableShape<InterviewLiveParticipantRow, 'room_id' | 'user_id' | 'role' | 'display_name'>
+      interview_live_feedback: TableShape<InterviewLiveFeedbackRow, 'room_id' | 'participant_id' | 'role'>
+      interview_live_signals: TableShape<InterviewLiveSignalRow, 'room_id' | 'sender_id' | 'recipient_id' | 'kind' | 'payload'>
+      interview_live_events: TableShape<InterviewLiveEventRow, 'room_id' | 'event_type'>
+      interview_live_join_attempts: TableShape<InterviewLiveJoinAttemptRow, 'user_id'>
+      interview_attempts: TableShape<InterviewAttemptRow, 'user_id' | 'format' | 'station_id' | 'station_title' | 'recording_path' | 'recording_mime_type'>
+      interview_mock_markings: TableShape<PanelMarkingRow,'mock_session_id'|'user_id'|'credits_spent'>
+      interview_mock_marking_members: TableShape<{marking_id:string;attempt_id:string;sequence_index:number},'marking_id'|'attempt_id'|'sequence_index'>
+      interview_mock_processing_jobs: TableShape<PanelJobRow,'marking_id'|'job_type'>
+      interview_mock_marking_events: TableShape<{id:string;marking_id:string;actor_id:string|null;event_type:string;metadata:unknown;created_at:string},'marking_id'|'event_type'>
+      interview_markings: TableShape<InterviewMarkingRow, 'attempt_id'>
+      interview_transcript_layouts: TableShape<{attempt_id:string;source_hash:string;questions_hash:string;status:'processing'|'ready'|'failed';attempt_count:number;request_id:string;started_at:string;layout:unknown;model:string|null},'attempt_id'|'source_hash'|'questions_hash'|'status'|'request_id'>
+      interview_processing_jobs: TableShape<InterviewJobRow, 'attempt_id' | 'job_type'>
+      interview_marking_events: TableShape<InterviewEventRow, 'attempt_id' | 'event_type'>
+      interview_stories: TableShape<InterviewStory, 'id' | 'user_id' | 'title' | 'theme' | 'context' | 'actions' | 'reflection' | 'prompt_id'>
       interview_study_notes: {
         Row: {
           id: string
@@ -980,6 +1033,67 @@ export type Database = {
     }
     Views: Record<never, never>
     Functions: {
+      claim_single_device_session: { Args: Record<string, never>; Returns: boolean }
+      is_current_device_session: { Args: Record<string, never>; Returns: boolean }
+      defer_interview_trial_job: { Args: { p_job:string; p_worker:string; p_panel?:boolean }; Returns:boolean }
+      interview_full_access: { Args: { p_user: string }; Returns: boolean }
+      interview_trial_access: {Args:{p_user:string};Returns:unknown}
+      start_interview_trial: {Args:{p_user:string;p_identity:string};Returns:boolean}
+      claim_interview_trial_mock: {Args:{p_user:string;p_session:string;p_format:string};Returns:unknown}
+      reserve_interview_trial_seconds: {Args:{p_user:string;p_attempt:string;p_seconds:number};Returns:boolean}
+      admit_interview_trial_provider: {Args:{p_user:string;p_attempt:string;p_stage:string;p_seconds?:number;p_fingerprint?:string};Returns:string}
+
+      claim_interview_backup:{Args:{p_worker:string};Returns:unknown}
+      finish_interview_backup:{Args:{p_id:string;p_worker:string;p_error?:string;p_bytes?:number;p_sha256?:string};Returns:boolean}
+      reconcile_interview_backup:{Args:{p_attempt:string};Returns:undefined}
+      interview_backup_eligible:{Args:{p_attempt:string};Returns:boolean}
+
+      claim_interview_alert:{Args:{p_worker:string};Returns:unknown}
+      finish_interview_alert:{Args:{p_id:string;p_worker:string;p_error?:string};Returns:boolean}
+      interview_upload_slot:{Args:{p_id:string;p_user:string;p_attempt:string;p_action?:string};Returns:boolean}
+      record_interview_operation:{Args:{p_id:string;p_operation:string;p_outcome?:string;p_processed?:number};Returns:undefined}
+      check_interview_operations:{Args:Record<string,never>;Returns:unknown}
+      read_interview_operations:{Args:Record<string,never>;Returns:unknown}
+      claim_fair_interview_job: {Args:{p_worker:string;p_cleanup?:boolean;p_queue?:string};Returns:unknown}
+      submit_whole_panel_for_marking: {Args:{p_session_id:string;p_user_id:string;p_expected_credits:number};Returns:{status:string;charged?:number}}
+      get_my_panel_report: {Args:{p_session_id:string};Returns:unknown}
+      panel_source_fingerprint: {Args:{p_id:string};Returns:string}
+      get_my_panel_report_index: {Args:Record<string,never>;Returns:unknown}
+      interview_assessment_counts: {Args:{p_format?:string;p_status?:string};Returns:unknown}
+      claim_next_panel_job: {Args:{p_worker:string};Returns:PanelJobRow[]}
+      complete_panel_job: {Args:{p_job_id:string;p_worker:string;p_payload:unknown};Returns:boolean}
+      fail_panel_job: {Args:{p_job_id:string;p_worker:string;p_code:string;p_delay:number};Returns:boolean}
+      review_whole_panel: {Args:{p_id:string;p_actor_id:string;p_version:number;p_action:string;p_feedback:unknown;p_notes:string;p_corrections:string;p_watched:boolean;p_mapping_checked:boolean;p_evidence_checked:boolean;p_audit_checked:boolean};Returns:string}
+      refund_whole_panel: {Args:{p_id:string;p_actor_id:string;p_reason:string};Returns:string}
+      retry_panel_job: {Args:{p_id:string;p_actor_id:string;p_stage:string};Returns:string}
+      classify_panel_response: {Args:{p_id:string;p_attempt_id:string;p_actor_id:string;p_disposition:InterviewResponseDisposition};Returns:string}
+      classify_mmi_response: {Args:{p_attempt_id:string;p_actor_id:string;p_disposition:InterviewResponseDisposition};Returns:string}
+      start_mmi_assessment: {Args:{p_attempt_id:string;p_actor_id:string};Returns:string}
+
+      claim_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string }; Returns: unknown }
+      complete_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string; p_layout: unknown; p_model: string }; Returns: boolean }
+      authorize_signup: { Args: { p_email: string; p_token_hash: string }; Returns: undefined }
+      consume_interview_transcription: { Args: { p_user_id: string }; Returns: boolean }
+      defer_interview_transcription: { Args: { p_job_id: string; p_worker: string }; Returns: boolean }
+      list_interview_review_queue: { Args: { p_format: string; p_status: string; p_offset: number }; Returns: InterviewAttemptRow[] }
+
+      enqueue_interview_retention: { Args: { p_days: number }; Returns: number }
+      reserve_interview_deletion: { Args: { p_attempt_id: string; p_user_id: string }; Returns: boolean }
+
+      reserve_account_trial: { Args: { p_user_id: string }; Returns: string }
+      request_essay_marking: { Args: { p_response_id: string }; Returns: string }
+      submit_essay_response: { Args: { p_response_id: string; p_body: string; p_time_spent_seconds: number; p_plan: string | null }; Returns: string }
+      submit_mock_interview_for_marking: { Args: { p_session_id: string; p_expected_credits: number }; Returns: { status: string; charged?: number } }
+      submit_interview_for_marking: { Args: { p_attempt_id: string; p_expected_credits: number }; Returns: string }
+      refund_interview_marking: { Args: { p_attempt_id: string; p_actor_id: string; p_reason: string }; Returns: string }
+      claim_next_interview_job: { Args: { p_worker: string }; Returns: InterviewJobRow[] }
+      complete_interview_job: { Args: { p_job_id: string; p_worker: string; p_payload: unknown }; Returns: boolean }
+      fail_interview_job: { Args: { p_job_id: string; p_worker: string; p_code: string; p_delay: number }; Returns: boolean }
+      finalise_interview_upload: { Args: { p_attempt_id: string; p_user_id: string; p_duration: number; p_events: unknown; p_has_audio: boolean }; Returns: boolean }
+      review_interview_marking: { Args: { p_attempt_id: string; p_actor_id: string; p_version: number; p_action: string; p_feedback: unknown; p_notes: string; p_corrections: string; p_watched: boolean }; Returns: string }
+      retry_interview_job: { Args: { p_attempt_id: string; p_actor_id: string; p_job_type: string }; Returns: string }
+      record_interview_progression_action: { Args: { p_attempt_id: string; p_action: string; p_evidence?: string | null }; Returns: unknown }
+
       is_admin: {
         Args: { uid: string }
         Returns: boolean
@@ -988,6 +1102,10 @@ export type Database = {
         Args: { p_amount: number }
         Returns: boolean
       }
+      add_admin_marking_credits: {
+        Args: { p_request_id: string; p_actor_id: string; p_user_id: string; p_essay_amount: number; p_interview_amount: number; p_note: string }
+        Returns: { status: string; essay_credits?: number; mmi_credits?: number }
+      }
       grant_subscription_benefit: {
         Args: {
           p_user_id: string
@@ -995,6 +1113,20 @@ export type Database = {
           p_benefit: string
           p_period_end: string
           p_amount: number
+        }
+        Returns: boolean
+      }
+      grant_interview_purchase: {
+        Args: {
+          p_user_id: string
+          p_checkout_session_id: string
+          p_price_id: string
+          p_offer_id: string
+          p_offer_kind: string
+          p_credits: number
+          p_access_days: number
+          p_amount_minor: number
+          p_currency: string
         }
         Returns: boolean
       }
@@ -1047,3 +1179,69 @@ export type StudyPlanItem = Database['public']['Tables']['study_plan_items']['Ro
 export type StudyPlanExamDate = Database['public']['Tables']['study_plan_exam_dates']['Row']
 export type StudyPlanTask = Database['public']['Tables']['study_plan_tasks']['Row']
 export type TutoringSession = Database['public']['Tables']['tutoring_sessions']['Row']
+
+export type InterviewUploadStatus = 'awaiting_upload' | 'uploading' | 'ready' | 'failed' | 'discarded'
+export type InterviewMarkingStatus = 'queued' | 'processing' | 'awaiting_review' | 'in_review' | 'released' | 'needs_attention' | 'ungradable'
+export type InterviewResponseDisposition = 'insubstantial' | 'not_answered'
+type TableShape<R, K extends keyof R> = { Row: R; Insert: Partial<R> & Pick<R,K>; Update: Partial<R>; Relationships: [] }
+export type InterviewAttemptRow = {
+ id: string; user_id: string; format: 'mmi' | 'panel'; station_id: string; station_title: string;
+ questions: unknown; duration_seconds: number; recording_path: string; recording_mime_type: string;
+ transcript: string | null; transcription_status: TranscriptionStatus; transcription_model: string | null; created_at: string;
+ recording_expires_at?: string | null; media_kind: 'audio' | 'video'; transcription_audio_path: string | null; upload_status: InterviewUploadStatus;
+ station_snapshot: unknown; question_events: unknown; marking_status: InterviewMarkingStatus | null; credits_spent: number;
+ marking_preflight_at: string | null; submitted_for_marking_at: string | null; reviewed_at: string | null; released_at: string | null; approved_feedback: unknown; video_deleted_at: string | null;
+ response_disposition: InterviewResponseDisposition | null; response_disposition_at: string | null;
+}
+export type InterviewMarkingRow = {
+ id: string; attempt_id: string; status: 'pending' | 'awaiting_review' | 'in_review' | 'released' | 'ungradable';
+ ai_assessment: unknown; evidence_audit: unknown; draft_feedback: unknown; private_reviewer_notes: string | null; transcript_correction_notes: string | null;
+ primary_provider: string | null; primary_model: string | null; audit_provider: string | null; audit_model: string | null; rubric_version: string | null;
+ assigned_to: string | null; marked_by: string | null; ai_generated_at: string | null; approved_at: string | null;
+ created_at: string; updated_at: string; lock_version: number;
+}
+export type InterviewJobRow = {
+ id: string; attempt_id: string; job_type: 'transcribe' | 'assess' | 'audit' | 'cleanup';
+ status: 'queued' | 'running' | 'succeeded' | 'failed' | 'dead'; attempt_count: number; max_attempts: number;
+ available_at: string; locked_at: string | null; locked_by: string | null; last_error_code: string | null; last_error_message: string | null;
+ created_at: string; updated_at: string;
+}
+export type InterviewEventRow = { id: string; attempt_id: string; actor_id: string | null; event_type: string; metadata: unknown; created_at: string }
+
+export type InterviewPracticeLog = {
+ id: string; user_id: string; station_id: string; format: 'mmi' | 'panel'; source: 'rehearsal' | 'recording'; attempt_id: string | null;
+ started_at: string; completed_at: string | null; duration_seconds: number; self_rating: number | null;
+}
+
+export type InterviewProgressionSettings = {
+  id:boolean; daily_xp:number; first_attempt_xp:number; review_xp:number; retry_xp:number; demonstrated_xp:number;
+ spaced_review_xp:number; retention_bonus_xp:number; circuit_xp:number; consistency_week_xp:number; total_daily_xp_cap:number;
+ minimum_mmi_seconds:number; minimum_panel_seconds:number; review_intervals_days:number[]; weekly_day_goal:number; maximum_active_quests:number; updated_at:string;
+}
+export type InterviewProgressionProfile = { user_id:string; total_xp:number; focus_tokens:number; current_consistency_weeks:number; best_consistency_weeks:number; grace_month:string|null; grace_used:boolean; updated_at:string }
+export type InterviewFeedbackQuestRow = { id:string; user_id:string; behaviour:string; competencies:string[]; status:'assigned'|'practised'|'demonstrated_once'|'consolidated'|'replaced'; source:'automated'|'tutor'|'legacy'; source_attempt_id:string|null; created_by:string|null; tutor_override:boolean; demonstration_count:number; evidence_excerpt:string|null; accepted_at:string|null; practised_at:string|null; demonstrated_at:string|null; consolidated_at:string|null; created_at:string; updated_at:string }
+export type InterviewDailyStationRow = { id:string; user_id:string; local_day:string; station_id:string; format:'mmi'|'panel'; competencies:string[]; reason:string; quest_id:string|null; status:'answer'|'review'|'retry'|'complete'; first_attempt_log_id:string|null; review_acknowledged_at:string|null; retry_log_id:string|null; improvement_evidence:string|null; improvement_demonstrated:boolean; xp_awarded:number; created_at:string; updated_at:string }
+export type InterviewProgressionEventRow = { id:string; user_id:string; event_key:string; event_type:'first_attempt'|'review'|'retry'|'improvement'|'spaced_review'|'retention_bonus'|'circuit'|'consistency_week'|'grace_week'; daily_station_id:string|null; practice_log_id:string|null; xp:number; metadata:unknown; explanation:string; created_at:string }
+export type InterviewFocusTokenEventRow = { id:string; user_id:string; event_key:string; amount:number; reason:string; metadata:unknown; created_at:string }
+export type InterviewBadgeRow = { id:string; user_id:string; badge_key:'balanced_thinker'|'specific_storyteller'|'feedback_in_action'|'retention_proven'|'reflective_practitioner'|'circuit_composure'|'adaptable_communicator'; evidence:unknown; earned_at:string }
+export type InterviewConsistencyDayRow = { user_id:string; local_day:string; activity_types:string[]; first_completed_at:string; updated_at:string }
+export type InterviewCompetencyEvidenceRow = { id:string; user_id:string; competency:string; practice_log_id:string|null; quest_id:string|null; source:'self_rating'|'automated'|'tutor'|'legacy'; evidence_score:number; behaviour:string|null; evidence_excerpt:string|null; observed_at:string }
+export type InterviewSpacedReviewRow = { id:string; user_id:string; competency:string; source_station_id:string; review_station_id:string; reason:string; interval_stage:number; due_day:string; status:'scheduled'|'due'|'completed'|'superseded'; completed_log_id:string|null; completed_at:string|null; created_at:string; updated_at:string }
+
+export type InterviewLiveRoomRow = {
+ id:string; invite_code_hash:string; host_id:string; candidate_id:string; station_id:string; format:'mmi'|'panel'; question_index:number;
+ phase:'lobby'|'briefing'|'preparation'|'live_station'|'marking'|'debrief'|'complete'; phase_revision:number;
+ phase_started_at:string|null; phase_ends_at:string|null; recording_enabled:boolean; recording_attempt_id:string|null;
+ created_at:string; updated_at:string; expires_at:string; completed_at:string|null;
+}
+export type InterviewLiveParticipantRow = {
+ id:string; room_id:string; user_id:string; role:'candidate'|'examiner'; display_name:string; ready:boolean; media_ready:boolean;
+ recording_consent:boolean|null; joined_at:string; last_seen_at:string; left_at:string|null;
+}
+export type InterviewLiveFeedbackRow = { id:string; room_id:string; participant_id:string; role:'candidate'|'examiner'; answers:unknown; submitted_at:string|null; updated_at:string }
+export type InterviewLiveSignalRow = { id:number; room_id:string; sender_id:string; recipient_id:string; kind:'offer'|'answer'|'ice'|'renegotiate'; payload:unknown; created_at:string }
+export type InterviewLiveEventRow = { id:number; room_id:string; actor_id:string|null; event_type:string; metadata:unknown; created_at:string }
+export type InterviewLiveJoinAttemptRow = { id:number; user_id:string; attempted_at:string }
+
+export type PanelMarkingRow={id:string;mock_session_id:string;user_id:string;format:'panel';status:'waiting_transcripts'|'queued'|'processing'|'awaiting_review'|'in_review'|'released'|'needs_attention'|'ungradable';assessment:unknown;evidence_audit:unknown;draft_feedback:unknown;approved_feedback:unknown;source_fingerprint:string|null;rubric_version:string;credits_spent:number;refunded_at:string|null;primary_provider:string|null;primary_model:string|null;audit_provider:string|null;audit_model:string|null;private_reviewer_notes:string|null;transcript_correction_notes:string|null;marked_by:string|null;lock_version:number;created_at:string;updated_at:string;approved_at:string|null}
+export type PanelJobRow={id:string;marking_id:string;job_type:'assess'|'audit';status:'queued'|'running'|'succeeded'|'failed'|'dead';attempt_count:number;max_attempts:number;available_at:string;locked_at:string|null;locked_by:string|null;last_error_code:string|null;created_at:string;updated_at:string}

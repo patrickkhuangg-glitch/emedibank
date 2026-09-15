@@ -1,0 +1,95 @@
+{
+  "checked_at": "2026-09-05T22:58:12.354164+00:00",
+  "source_commit": "2647cc7",
+  "cloudflare_version": "1f42af50-3540-491d-bd71-7fdba6b1b4cf",
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-MTQxOTU3M2ItMWNjNS00NGZkLTk3NDMtY2Y0OTRiNTcxYTlm' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-MjgxMmE5ZjYtMmQwOS00MWIwLTk4ZjUtMDEzYjBlODMzMWMz' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-ZjFhMjgzYjEtZWE3OS00YTg0LWE1MjYtODJlODJjMDNlMDQ4' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/refunds",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-MzRiYzA0ZWUtNmEwNS00OGU2LWJjMjktOWIwNTg4NjEzZjNj' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/acceptable-use",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-ZmVkNmVmMGItZDg1Ny00MTNmLWFkYzMtOTEwYTJjZWMxZmFm' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/studocyte/terms",
+      "status": 200,
+      "headers": {
+        "strict-transport-security": "max-age=31536000",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-YjQyNjkwZmMtNzUxOC00ODNjLWE2ZjEtZmIwMzA5MDc2ZTZj' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com; connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(self), geolocation=()"
+      },
+      "business_details_present": true
+    },
+    {
+      "path": "/api/interview-marking",
+      "status": 410,
+      "expected": 410
+    },
+    {
+      "path": "/api/enquiry",
+      "status": 403,
+      "expected": 403
+    }
+  ]
+}

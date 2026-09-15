@@ -1,3 +1,4 @@
+import { PRACTICE_QUESTION_FILTER } from '@/lib/questions/availability'
 // Practice-dashboard stats. Powers the "Practice questions" landing (per-section
 // progress + a performance chart) and the "Select category" drill-down.
 //
@@ -6,6 +7,7 @@
 // leaks another user's identity — only aggregate counts.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { readAllRows } from '@/lib/supabase/read-all-rows'
 import { canonicalCategories, hidesExtraCategories } from './categories'
 
 export type SectionStat = {
@@ -29,21 +31,23 @@ export async function getSectionStats(examId: string, userId: string): Promise<S
     .order('sort_order')
   const subs = subtests ?? []
   if (subs.length === 0) return []
-  const subIds = subs.map((s) => s.id)
-
-  // Available questions per section.
-  const { data: qs } = await supabase
-    .from('questions')
-    .select('subtest_id')
-    .eq('published', true)
-    .in('subtest_id', subIds)
-  const totalBySub = new Map<string, number>()
-  for (const q of qs ?? []) totalBySub.set(q.subtest_id, (totalBySub.get(q.subtest_id) ?? 0) + 1)
+  // Exact counts are not truncated by the API's row limit across the exam bank.
+  const totals = await Promise.all(subs.map(async (subtest) => {
+    const { count, error } = await supabase
+      .from('questions')
+      .select('id', { count: 'exact', head: true })
+      .eq('published', true).or(PRACTICE_QUESTION_FILTER)
+      .eq('subtest_id', subtest.id)
+    if (error) throw error
+    return [subtest.id, count ?? 0] as const
+  }))
+  const totalBySub = new Map(totals)
 
   // This user's attempts — keep the latest verdict per distinct question.
   const { data: mine } = await supabase
     .from('question_attempts')
-    .select('subtest_id, question_id, is_correct, answered_at')
+    .select('subtest_id, question_id, is_correct, answered_at, questions!inner(id)')
+    .or(PRACTICE_QUESTION_FILTER, { referencedTable: 'questions' })
     .eq('user_id', userId)
     .eq('exam_id', examId)
     .order('answered_at', { ascending: true })
@@ -59,7 +63,8 @@ export async function getSectionStats(examId: string, userId: string): Promise<S
   // Pooled platform accuracy per section (all users, all attempts).
   const { data: all } = await supabase
     .from('question_attempts')
-    .select('subtest_id, is_correct')
+    .select('subtest_id, is_correct, questions!inner(id)')
+    .or(PRACTICE_QUESTION_FILTER, { referencedTable: 'questions' })
     .eq('exam_id', examId)
   const poolTotal = new Map<string, number>()
   const poolCorrect = new Map<string, number>()
@@ -110,12 +115,13 @@ export async function getCategoryStats(
     .maybeSingle()
   if (!subtest || subtest.exam_id !== examId) return null
 
-  const { data: qs } = await supabase
+  const questions = await readAllRows((from, to) => supabase
     .from('questions')
     .select('id, tags')
-    .eq('published', true)
+    .eq('published', true).or(PRACTICE_QUESTION_FILTER)
     .eq('subtest_id', subtestId)
-  const questions = qs ?? []
+    .order('id')
+    .range(from, to))
 
   const { data: mine } = await supabase
     .from('question_attempts')

@@ -49,7 +49,7 @@ export default async function EssaySimulationPage({
 
     return (
       <EssaySimulationRunner
-        label="Section II Simulation"
+        label={`Studocyte ${exam.name} Section II Simulation`}
         examSlug={exam.slug}
         minutes={SIMULATION_MINUTES}
         taskA={paired[0].p}
@@ -74,7 +74,7 @@ export default async function EssaySimulationPage({
 
   return (
     <EssaySimulationRunner
-      label="Section II Simulation"
+      label={`Studocyte ${exam.name} Section II Simulation`}
       examSlug={exam.slug}
       minutes={SIMULATION_MINUTES}
       taskA={taskA}

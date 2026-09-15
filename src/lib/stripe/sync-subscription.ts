@@ -36,19 +36,19 @@ function idOf(ref: string | { id: string } | null | undefined): string | null {
 export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Promise<void> {
   const supabase = createAdminClient()
 
-  // Resolve the owning user: prefer subscription metadata, fall back to the
-  // customer -> profile mapping.
-  let userId: string | null = sub.metadata?.supabase_user_id ?? null
+  // Customer ownership is server-maintained; subscription metadata must agree.
   const customerId = idOf(sub.customer as string | { id: string })
-  if (!userId && customerId) {
-    const { data } = await supabase
+  if (!customerId) throw new Error('Subscription customer missing')
+  const { data: owner, error: ownerError } = await supabase
       .from('profiles')
       .select('id')
       .eq('stripe_customer_id', customerId)
       .maybeSingle()
-    userId = data?.id ?? null
+  if (ownerError) throw ownerError
+  if (!owner || (sub.metadata?.supabase_user_id && sub.metadata.supabase_user_id !== owner.id)) {
+    throw new Error('Subscription owner mismatch')
   }
-  if (!userId) return // cannot map to a user — nothing to record
+  const userId = owner.id
 
   // Resolve our product from the subscription's price.
   const item = sub.items.data[0]
@@ -56,15 +56,16 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
   const stripeProductId = idOf(item?.price?.product as string | { id: string })
   let productId: string | null = null
   if (stripeProductId) {
-    const { data: product } = await supabase
+    const { data: product, error: productError } = await supabase
       .from('products')
       .select('id')
       .eq('stripe_product_id', stripeProductId)
       .maybeSingle()
+    if (productError) throw productError
     productId = product?.id ?? null
   }
 
-  await supabase.from('subscriptions').upsert(
+  const { error: subscriptionError } = await supabase.from('subscriptions').upsert(
     {
       user_id: userId,
       stripe_customer_id: customerId,
@@ -77,50 +78,10 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
     },
     { onConflict: 'stripe_subscription_id' },
   )
+  if (subscriptionError) throw subscriptionError
 
   await syncEntitlementsForUser(userId)
 
-  // Annual marking allowances are granted after the trial converts to active.
-  // The database function owns idempotency, so repeated webhook events are safe.
-  if (toStatus(sub.status) === 'active') {
-    const periodEnd = periodEndIso(sub)
-    const annualItems = sub.items.data.filter((item) => item.price.recurring?.interval === 'year')
-    const stripeProductIds = annualItems.flatMap((item) => {
-      const id = idOf(item.price.product as string | { id: string })
-      return id ? [id] : []
-    })
-    if (periodEnd && stripeProductIds.length > 0) {
-      const { data: purchased } = await supabase
-        .from('products')
-        .select('kind, exams(slug)')
-        .in('stripe_product_id', stripeProductIds)
-      const includesBundle = (purchased ?? []).some((p) => p.kind === 'bundle')
-      const slugs = new Set((purchased ?? []).flatMap((p) => {
-        const exam = p.exams as { slug: string } | null
-        return exam?.slug ? [exam.slug] : []
-      }))
-
-      // Two credits mark one essay, so 20 marked essays = 40 credits.
-      if (includesBundle || slugs.has('gamsat')) {
-        await supabase.rpc('grant_subscription_benefit', {
-          p_user_id: userId,
-          p_stripe_subscription_id: sub.id,
-          p_benefit: 'gamsat_essay_credits',
-          p_period_end: periodEnd,
-          p_amount: 40,
-        })
-      }
-      // The annual promotion includes Interviews with every annual package, so
-      // every active annual subscription receives the 25-station allowance.
-      if (annualItems.length > 0) {
-        await supabase.rpc('grant_subscription_benefit', {
-          p_user_id: userId,
-          p_stripe_subscription_id: sub.id,
-          p_benefit: 'interview_mmi_credits',
-          p_period_end: periodEnd,
-          p_amount: 25,
-        })
-      }
-    }
-  }
+  // Interview review credits now belong to explicit one-off Interview packages.
+  // Recurring academic subscriptions only update access here and never add marking credits.
 }

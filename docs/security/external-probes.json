@@ -1,0 +1,42 @@
+{
+  "scope": "Limited unauthenticated, non-destructive live probes; NOT an independent penetration test",
+  "results": [
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/admin",
+      "method": "GET",
+      "status": 307
+    },
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/api/interviews/attempts/00000000-0000-4000-8000-000000000000/media",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/api/internal/interviews/process",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/api/stripe/webhook",
+      "method": "POST",
+      "status": 400
+    },
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/api/zoom/webhook",
+      "method": "POST",
+      "status": 200,
+      "unsigned_challenge_returned_hmac": true
+    },
+    {
+      "origin": "https://studocyte.emeducate.com.au",
+      "path": "/api/mux/webhook",
+      "method": "POST",
+      "status": 400
+    }
+  ]
+}

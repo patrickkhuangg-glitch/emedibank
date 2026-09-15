@@ -8,17 +8,37 @@ export const INTERVIEW_TIMING = {
     responseLabel: '8 min response',
   },
   panel: {
-    preparationSeconds: 30,
-    responseSeconds: 3 * 60,
-    preparationLabel: '30 sec reading',
-    responseLabel: '3 min response',
+    preparationSeconds: 0,
+    responseSeconds: 2 * 60,
+    preparationLabel: 'No preparation',
+    responseLabel: '2 min response',
   },
 } as const
 
-export function getInterviewTiming(format: InterviewFormat) {
+export const DAILY_PANEL_TIMING = {
+  preparationSeconds: 0,
+  responseSeconds: 5 * 60,
+  preparationLabel: 'No preparation',
+  responseLabel: '5 min response',
+} as const
+
+export function getInterviewTiming(format: InterviewFormat, context: 'standard' | 'daily' = 'standard') {
+  if (format === 'panel' && context === 'daily') return DAILY_PANEL_TIMING
   return INTERVIEW_TIMING[format]
 }
 
-export function getInterviewQuestions(station: InterviewStation) {
-  return station.format === 'panel' ? station.questions.slice(0, 1) : station.questions
+export function getInterviewTimingLabel(format: InterviewFormat) {
+  const timing = getInterviewTiming(format)
+  return timing.preparationSeconds > 0 ? `${timing.preparationLabel} · ${timing.responseLabel}` : timing.responseLabel
+}
+
+export function getInterviewQuestions(station: InterviewStation, questionIndex = 0) {
+  return station.format === 'panel' ? station.questions.slice(questionIndex, questionIndex + 1) : [...new Set(station.questions)]
+}
+
+/** Missing selection preserves existing links; invalid panel indexes are rejected. */
+export function getPracticeQuestionIndex(station: InterviewStation, value: unknown): number | null {
+  if (station.format !== 'panel' || value === undefined) return 0
+  const index = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value
+  return typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < station.questions.length ? index : null
 }

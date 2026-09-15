@@ -1,44 +1,95 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import styles from '@/components/workspace/interview-dashboard.module.css'
+import { ExamHeaderBrand } from '@/components/exam-header-brand'
+import { InterviewContinueCard, useInterviewContinue } from '@/components/interviews/continue-practice'
+import type { ContinueAction, FeedbackToRead } from '@/lib/interviews/continue-practice'
+import { Container } from '@/components/container'
+import { practiceProgressPreview } from '@/lib/interviews/practice-progress-preview'
+import { InterviewPracticeProgress } from '@/components/interviews/practice-progress'
+import { InterviewLibraryRefresh } from '@/components/interviews/library-refresh'
+import { practiceDay, suggestPractice, type PracticeProgressData } from '@/lib/interviews/practice-progress'
 import { InterviewStudyNotes } from '@/components/interview-study-notes'
+import { InterviewCytoCoach, type CytoNudge } from '@/components/interviews/cyto-coach'
+import { InterviewProgressionDashboard } from '@/components/interviews/progression-dashboard'
+import { progressionPreview, type InterviewProgressionData } from '@/lib/interviews/progression'
 
-export function InterviewsDashboard({ embedded = false, preview = false }: { embedded?: boolean; preview?: boolean }) {
-  const [noteCount, setNoteCount] = useState(0)
+const noFeedback: FeedbackToRead[] = []
+const previewContinue: ContinueAction = {
+  kind: 'practice',
+  title: 'Confidentiality and patient safety',
+  description: 'Return to your unfinished question. You can prepare again and start a fresh timer.',
+  label: 'Return to question',
+  href: '/interviews/practice',
+}
+export function InterviewsDashboard({ embedded = false, preview = false, progress, progression, userId, studentName, feedback = noFeedback, shopHref }: { embedded?: boolean; preview?: boolean; progress?: PracticeProgressData; progression?: InterviewProgressionData; userId?: string; studentName?: string; feedback?: FeedbackToRead[]; shopHref?: string }) {
+  const savedContinueAction = useInterviewContinue(userId, feedback)
+  const continueAction = preview ? previewContinue : savedContinueAction
+  const today = progress?.today ?? practiceDay(new Date())
+  const data: PracticeProgressData = progress ?? (preview ? practiceProgressPreview(today) : { today, month: today.slice(0, 7), logs: [], available: true, suggestions: suggestPractice([], today), thisWeek: { count: 0, average: null, activeDays: 0 } })
+  const progressionData = progression ?? progressionPreview(userId ?? 'preview-student', data.logs, today)
+  const firstName = studentName?.trim().split(/\s+/)[0] || (preview ? 'Maya' : '')
+  const greeting = timeAwareGreeting(new Date())
+  const cytoMessages: CytoNudge[] = progressionData.daily.phase === 'complete' ? [
+    { title: 'Tiny victory wiggle', body: 'Your retry is saved, including the improvement you worked on.' },
+    { title: 'Cyto updated the filing cabinet', body: 'Your mastery and next review now include today’s work.' },
+  ] : progressionData.daily.phase === 'retry' ? [
+    { title: 'Cyto has circled your retry', body: 'Use the same scenario and focus on your Feedback Quest.' },
+    { title: 'One brave little upgrade', body: 'One observable improvement is plenty for this retry.' },
+  ] : progressionData.consistency.activeDays >= progressionData.consistency.goal ? [
+    { title: 'Five days! Cyto can exhale', body: 'Your weekly goal is complete, and rest days keep your consistency intact.' },
+    { title: 'The clipboard is officially happy', body: 'You can continue with today’s station or take a well-earned rest day.' },
+  ] : data.thisWeek.count === 0 ? [
+    { title: 'Cyto picked a starting point', body: 'Complete one response, review it, then retry one improvement.' },
+    { title: 'Deep breath — your station is ready', body: 'Cyto has the prepared question waiting below.' },
+  ] : [
+    { title: `${data.thisWeek.count} ${data.thisWeek.count === 1 ? 'response' : 'responses'} this week — nice!`, body: `Cyto picked ${progressionData.daily.competencies.map(value => value.replaceAll('_', ' ')).join(' and ')} for today.` },
+    { title: 'Today’s plan is on the clipboard', body: 'Your Daily Station is ready below whenever you are.' },
+  ]
 
-  return <main className="relative z-[2] min-h-screen bg-background pb-16 text-foreground">
+
+  return <main className={`relative z-[2] min-h-screen bg-background text-foreground ${styles.dashboard}`}>
     {!embedded ? <PreviewHeader preview={preview} /> : null}
-    <div className="mx-auto max-w-[1440px] px-5 pt-9 sm:px-8 sm:pt-12">
-      <section className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_330px]">
-        <div>
-          <h1 className="text-balance font-display text-4xl font-semibold leading-[1.03] tracking-tight sm:text-6xl">Your interview dashboard.</h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">See your interview preparation at a glance, choose a focused next step and keep the reflection that will sharpen your next answer.</p>
-          {preview ? <span className="mt-5 inline-flex rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Illustrative preview</span> : null}
-          <section className="mt-8 grid overflow-hidden rounded-3xl bg-ink text-ink-foreground eb-soft lg:grid-cols-2">
-            <div className="flex min-h-[278px] flex-col px-6 py-7 sm:px-9 sm:py-8"><div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#d4cbea]"><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-mint" /> Your next focused session</span><span className="font-mono text-xs tabular-nums">5 min</span></div><div className="mt-7 max-w-2xl"><p className="text-sm font-medium text-[#d4cbea]">Start with a guide</p><p className="mt-3 text-pretty font-display text-2xl font-medium leading-snug sm:text-3xl">Choose an MMI or panel prompt, then practise your response out loud.</p><p className="mt-4 text-sm text-[#d4cbea]">One focused question is enough to begin building your preparation habit.</p></div><div className="mt-auto pt-7"><Link href="/interviews/practice" className="eb-press inline-flex items-center gap-2 rounded-full bg-surface px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5">Open practice <ArrowIcon /></Link></div></div>
-            <aside className="bg-white/[0.055] p-6 lg:border-l lg:border-white/10"><p className="text-sm font-medium text-[#d4cbea]">Your practice summary</p><dl className="mt-5 space-y-4"><SummaryRow value="0" label="responses recorded" /><SummaryRow value={String(noteCount)} label="reflection notes" /><SummaryRow value="4" label="focus areas to explore" /></dl><p className="mt-6 border-t border-white/10 pt-5 text-xs leading-5 text-[#b5acc9]">Your own completion and reflection trends will appear here as you practise.</p></aside>
-          </section>
+    <Container className="page-shell">
+      <section data-interview-tour="dashboard-start">
+        <div className={styles.introGrid}>
+          <header className={styles.intro}>
+            <h1 className="page-title">{greeting}{firstName ? `, ${firstName}` : ''}.</h1>
+            <p>Choose a focus or continue with today’s plan.</p>
+          </header>
+          <InterviewCytoCoach messages={cytoMessages} mood={data.thisWeek.count > 3 ? 'studying' : 'thinking'} />
         </div>
-        <ReadinessPanel />
+        <InterviewProgressionDashboard data={progressionData} shopHref={shopHref ?? (preview ? '/prototypes/workspace?exam=interviews&view=focus-shop' : undefined)} continueCard={continueAction ? <div className={styles.continueCard}><InterviewContinueCard action={continueAction} /></div> : undefined} />
       </section>
 
-      <section className="mt-7 grid gap-7 xl:grid-cols-2"><FocusMap preview={preview} /><InterviewStudyNotes preview={preview} onNoteCountChange={setNoteCount} /></section>
+      <InterviewPracticeProgress key={data.month} data={data} showWeeklySummary={!progressionData.available} notes={<InterviewStudyNotes preview={preview} />} />
+      {embedded && !preview && <InterviewLibraryRefresh message="Updating your practice history…" />}
 
-      <section className="mt-7 grid gap-3 md:grid-cols-3"><PathCard href="/interviews/practice" title="Practice" body="Rehearse MMI and panel prompts in a focused response loop." icon={<PracticeIcon />} /><PathCard href="/interviews/stories" title="Stories" body="Find real experiences that show reflection, not a script." icon={<StoryIcon />} /><PathCard href="/interviews/resources" title="Resources" body="Keep answer frameworks and interview-day preparation close." icon={<GuideIcon />} /></section>
-    </div>
+      <section className={styles.pathGrid}><PathCard href="/interviews/practice" title="Practice" body="Rehearse MMI and panel prompts in a focused response loop." icon={<PracticeIcon />} /><PathCard href="/interviews/mock-interviews" title="Mock Interviews" body="Record a timed interview, review your video, and request marking feedback." icon={<VideoIcon />} /><PathCard href="/interviews/stories" title="Stories" body="Reflect on your own experiences and review them over time" icon={<StoryIcon />} /><PathCard href="/interviews/resources" title="Resources" body="Keep answer frameworks and interview-day preparation close." icon={<GuideIcon />} /></section>
+    </Container>
   </main>
 }
 
 export default function InterviewPreviewPage() { return <InterviewsDashboard preview /> }
 
-function PreviewHeader({ preview }: { preview: boolean }) { return <header className="border-b border-border bg-surface/80 backdrop-blur"><div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-8"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-sm font-bold text-white">S</span><span className="font-display text-xl font-semibold tracking-tight">Studocyte</span><span className="hidden h-5 w-px bg-border sm:block" /><span className="hidden text-sm font-medium text-muted sm:block">Interviews</span></div><nav aria-label="Preview navigation" className="hidden items-center gap-1 rounded-full bg-surface-muted p-1 md:flex"><NavItem active href="/prototypes/interviews" label="Overview" /><NavItem href="/interviews/practice" label="Practice" /><NavItem href="/interviews/stories" label="Stories" /><NavItem href="/interviews/resources" label="Resources" /></nav>{preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}</div></header> }
-function ReadinessPanel() { const rows = [['Motivation', 'Choose one prompt'], ['Communication', 'Practise aloud'], ['Ethics', 'Use a scenario'], ['Clinical exposure', 'Gather an example']] as const; return <aside className="rounded-3xl border border-border bg-surface p-6 eb-soft"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-xl font-semibold tracking-tight">Readiness plan</h2><span className="rounded-full bg-mint-muted px-2.5 py-1 text-xs font-semibold text-mint-deep">Starter plan</span></div><p className="mt-2 text-sm leading-6 text-muted">A practical sequence for your first few interview sessions.</p><div className="mt-6 space-y-4">{rows.map(([name, status]) => <div key={name} className="flex items-center justify-between gap-3 text-sm"><span className="font-medium">{name}</span><span className="text-xs text-muted">{status}</span></div>)}</div><div className="mt-7 rounded-2xl bg-surface-muted p-4"><p className="text-sm font-semibold">One focused next step</p><p className="mt-1 text-sm leading-6 text-muted">Choose a question, practise it out loud, then write down one thing to improve.</p></div></aside> }
-function FocusMap({ preview }: { preview: boolean }) { const areas = ['Motivation', 'Teamwork', 'Ethics', 'Communication', 'Equity']; const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; return <section className="rounded-3xl border border-border bg-surface p-6 eb-soft sm:p-8"><div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="font-display text-2xl font-semibold tracking-tight">Practice focus map</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted">A simple view of the skills you decide to visit each week. Completed practice will build this into your own heatmap.</p></div><span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted">{preview ? 'Sample layout' : 'No sessions yet'}</span></div><div className="mt-7 overflow-x-auto"><div className="min-w-[590px]"><div className="grid grid-cols-[130px_repeat(7,minmax(0,1fr))] gap-2 text-xs text-muted"><span />{days.map((day) => <span key={day} className="text-center font-mono">{day}</span>)}</div><div className="mt-2 space-y-2">{areas.map((area, row) => <div key={area} className="grid grid-cols-[130px_repeat(7,minmax(0,1fr))] items-center gap-2"><span className="text-sm font-medium">{area}</span>{days.map((day, column) => <span key={day} className={`h-7 rounded-lg ${preview && ((row + column * 2) % 7 === 0 || (row === 2 && column === 3)) ? 'bg-mint' : 'bg-surface-muted'}`} aria-label={`${area}, ${day}`} />)}</div>)}</div></div></div><div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-muted"><span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-surface-muted" /> Not practised</span><span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-mint" /> Preview of a logged practice session</span></div></section> }
-function PathCard({ href, title, body, icon }: { href: string; title: string; body: string; icon: React.ReactNode }) { return <Link href={href} className="group rounded-3xl border border-border bg-surface p-5 transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-sm"><span className="text-brand">{icon}</span><h2 className="mt-6 font-display text-xl font-semibold tracking-tight">{title}</h2><p className="mt-2 text-sm leading-6 text-muted">{body}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand">Open {title.toLowerCase()} <ArrowIcon /></span></Link> }
-function SummaryRow({ value, label }: { value: string; label: string }) { return <div><dt className="font-mono text-2xl font-medium text-white tabular-nums">{value}</dt><dd className="mt-0.5 text-xs text-[#b5acc9]">{label}</dd></div> }
+function timeAwareGreeting(date: Date) {
+  const hour = Number(new Intl.DateTimeFormat('en-AU', {
+    hour: 'numeric',
+    hourCycle: 'h23',
+    timeZone: 'Australia/Sydney',
+  }).format(date))
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function PreviewHeader({ preview }: { preview: boolean }) { return <header className="border-b border-border bg-surface/80 backdrop-blur"><Container className="flex h-16 items-center justify-between gap-5"><ExamHeaderBrand label="Interviews" /><nav aria-label="Preview navigation" className="hidden items-center gap-1 rounded-full bg-surface-muted p-1 md:flex"><NavItem active href="/prototypes/interviews" label="Overview" /><NavItem href="/interviews/practice" label="Practice" /><NavItem href="/interviews/mock-interviews" label="Mock Interviews" /><NavItem href="/interviews/stories" label="Stories" /><NavItem href="/interviews/resources" label="Resources" /></nav>{preview ? <span className="rounded-full bg-brand-muted px-3 py-1.5 text-xs font-semibold text-brand">Preview</span> : null}</Container></header> }
+function PathCard({ href, title, body, icon }: { href: string; title: string; body: string; icon: React.ReactNode }) { return <Link href={href} className={styles.pathCard}><span className={styles.pathIcon}>{icon}</span><h2>{title}</h2><p>{body}</p><span>Open {title.toLowerCase()} <ArrowIcon /></span></Link> }
 function NavItem({ href, label, active = false }: { href: string; label: string; active?: boolean }) { return <Link href={href} className={`rounded-full px-3 py-2 text-sm font-medium ${active ? 'bg-surface text-foreground eb-soft' : 'text-muted hover:text-foreground'}`}>{label}</Link> }
 function ArrowIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h11M11 5l5 5-5 5" /></svg> }
 function PracticeIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="12" height="14" rx="2" /><path d="M8 8h4M8 11h4M8 14h2" /></svg> }
 function StoryIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5h12v11H7l-3 2.5v-13.5Z" /><path d="M7 8h6M7 11h4" /></svg> }
 function GuideIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3.5h10v13H5z" /><path d="M8 7h4M8 10h4M8 13h2" /></svg> }
+
+function VideoIcon() { return <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="10" height="12" rx="2" /><path d="m12 8 6-3v10l-6-3" /></svg> }

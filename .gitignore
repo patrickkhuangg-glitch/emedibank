@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files — ignore real secrets, but keep the committed template
 .env*
+!.env.*.example
 !.env.example
 
 # vercel

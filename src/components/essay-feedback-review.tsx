@@ -84,7 +84,7 @@ export function EssayFeedbackReview({
 
   return (
     <div className="fixed inset-0 z-[100] overflow-auto bg-background text-foreground">
-      <main className="mx-auto max-w-[1240px] px-4 py-5 sm:px-6 sm:py-7">
+      <main className="page-frame page-shell">
         <nav className="flex items-center justify-between">
           <button onClick={onBack} className="rounded-full px-3 py-2 text-sm font-semibold text-muted transition-colors hover:bg-surface hover:text-foreground">
             ← Back to essays
@@ -95,7 +95,7 @@ export function EssayFeedbackReview({
         <header className="mt-6 grid items-center gap-4 sm:grid-cols-[1fr_145px]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand">Your marked essay</p>
-            <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">You have plenty to build on.</h1>
+            <h1 className="page-title mt-2">You have plenty to build on.</h1>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
               Your tutor reviewed <span className="font-semibold text-foreground">{theme}</span>. Start with the summary, then compare each note with your submitted essay.
             </p>

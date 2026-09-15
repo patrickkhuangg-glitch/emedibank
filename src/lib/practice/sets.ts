@@ -1,6 +1,8 @@
+import { PRACTICE_QUESTION_FILTER } from '@/lib/questions/availability'
 import 'server-only'
 import { randomInt } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { readAllRows } from '@/lib/supabase/read-all-rows'
 import { canAccessExam } from '@/lib/access'
 import { questionMarkValue } from '@/lib/practice/marks'
 
@@ -19,12 +21,13 @@ type QuestionSet = { ids: string[]; marks: number }
 
 async function fetchSets(subtestId: string, tag: string, subtestSlug = ''): Promise<QuestionSet[]> {
   const supabase = createAdminClient()
-  const { data } = await supabase
+  let rows = await readAllRows((from, to) => supabase
     .from('questions')
     .select('id, stimulus_id, sort_order, tags')
-    .eq('published', true)
+    .eq('published', true).or(PRACTICE_QUESTION_FILTER)
     .eq('subtest_id', subtestId)
-  let rows = data ?? []
+    .order('id')
+    .range(from, to))
   if (tag) rows = rows.filter((r) => (r.tags ?? []).includes(tag))
 
   const groups = new Map<string, { id: string; sort: number; marks: number }[]>()

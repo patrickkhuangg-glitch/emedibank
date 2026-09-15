@@ -99,7 +99,7 @@ export function MarkingReview({ detail }: { detail: Detail }) {
   return (
     <div className="mt-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{detail.prompt.theme}</h1>
+        <h1 className="page-title">{detail.prompt.theme}</h1>
         <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[11px] font-semibold text-brand">Task {detail.prompt.task}</span>
         {status === 'approved' ? <span className="rounded-full bg-[#e6f5ee] px-2 py-0.5 text-[11px] font-semibold text-[#157d72]">Approved</span> : <span className="rounded-full bg-[#fdf3e0] px-2 py-0.5 text-[11px] font-semibold text-[#b45309]">Pending</span>}
       </div>
@@ -123,7 +123,7 @@ export function MarkingReview({ detail }: { detail: Detail }) {
               <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted">{detail.plan}</div>
             </details>
           ) : null}
-          <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="rounded-2xl border border-border bg-surface p-5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Student essay</p>
             <div className="whitespace-pre-wrap text-[15px] leading-[1.7]" style={{ fontFamily: 'Georgia, serif' }}>
               {detail.body.trim() ? detail.body : <span className="text-muted">Left blank.</span>}

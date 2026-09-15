@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState } from 'react'
 import { startCheckoutAction } from '@/lib/stripe/actions'
 import { Button } from '@/components/ui/button'
@@ -37,11 +38,11 @@ const featuresFor = (plan: Plan, interval: 'month' | 'year'): string[] => {
     'MMI and panel interview stations',
     'Structured response frameworks',
     'Ethical and personal scenarios',
-    interval === 'year' ? '25 marked MMI stations included' : 'Marked MMI stations available separately',
+    'Choose Core, Pro or Intensive on the Interview plans page',
     'Purchase additional marked stations anytime',
   ]
   const annualInterviews = interval === 'year'
-    ? ['Interviews included free · limited promotion', '25 marked MMI stations included']
+    ? ['Interview practice access included · review credits sold separately']
     : []
 
   if (plan.slug === 'ucat') return [
@@ -129,6 +130,7 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
           return (
             <div
               key={plan.productId}
+              id={plan.slug === 'interviews' ? 'interviews' : undefined}
               className={`relative flex flex-col rounded-2xl border p-5 ${
                 featured ? 'border-2 border-brand bg-brand-muted shadow-md' : 'border-border bg-surface'
               }`}
@@ -182,10 +184,17 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
                     <span><b className="font-semibold">Add Interviews</b><span className="mt-0.5 block text-xs text-muted">{interviewWeek != null ? `+${fmt(interviewWeek, 2, currency)}/week` : 'Local price at checkout'}</span></span>
                   </label>
                 ) : null}
-                <Button type="submit" variant={featured ? 'primary' : 'secondary'} className="w-full">
-                  Start 7-day free trial
+                <Button type="submit" name="checkoutMode" value={plan.slug === 'interviews' ? 'paid' : 'trial'} variant={featured ? 'primary' : 'secondary'} className="w-full">
+                  {plan.slug === 'interviews' ? 'Subscribe now' : 'Continue to checkout'}
                 </Button>
-                <p className="mt-2 text-center text-[11px] text-muted">Then {week != null ? fmt(week, 2, currency) : ''}/week. Cancel anytime.</p>
+                {plan.slug === 'interviews' ? <>
+                  <p className="mt-2 text-center text-xs text-muted">Full access from today. Billing starts when you subscribe.</p>
+                  <Link href="/interview-preparation" className="mt-3 block rounded-full border border-border px-4 py-2.5 text-center text-sm font-semibold text-brand transition-colors hover:bg-brand-muted">Or try Interviews free</Link>
+                </> : <>
+                  <p className="mt-2 text-center text-[11px] text-muted">Trial availability and billing dates confirmed at checkout. Cancel anytime.</p>
+                  <Button type="submit" name="checkoutMode" value="paid" variant="secondary" className="mt-3 w-full">Subscribe now</Button>
+                  <p className="mt-2 text-center text-xs text-muted">Skip the trial and start billing today.</p>
+                </>}
               </form>
             </div>
           )

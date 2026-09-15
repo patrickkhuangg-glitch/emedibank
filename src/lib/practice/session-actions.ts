@@ -1,6 +1,8 @@
 'use server'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
+import { canAccessExam } from '@/lib/access'
+import { loadMeta } from '@/lib/access/questions'
 
 export type StoredSessionResponse = {
   questionId: string
@@ -29,6 +31,10 @@ export async function recordPracticeSessionAction(input: {
     const supabase = await createClient()
     const { data: exam } = await supabase.from('exams').select('id').eq('slug', input.examSlug).maybeSingle()
     if (!exam) return
+    if (!(await canAccessExam(user.id, exam.id))) return
+    if (!Array.isArray(input.questionIds) || input.questionIds.length === 0 || input.questionIds.length > 500) return
+    const questions = await Promise.all([...new Set(input.questionIds)].map(loadMeta))
+    if (questions.some((q) => !q || !q.published || q.exam_id !== exam.id || (input.subtestId && q.subtest_id !== input.subtestId))) return
     const summary = {
       user_id: user.id,
       exam_id: exam.id,

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
+import { Cyto } from '@/components/ui/cyto'
 import styles from './progress-hero.module.css'
 
 const SECTIONS = [
@@ -12,29 +13,36 @@ const SECTIONS = [
 const SCREENS = [
   { id: 'progress', label: 'Progress', title: 'Your progress dashboard', Screen: ProgressScreen },
   { id: 'essay', label: 'Marked essay', title: 'A marked GAMSAT essay', Screen: MarkedEssayScreen },
-  { id: 'ucat', label: 'UCAT practice', title: 'A fit-to-size UCAT question', Screen: UcatScreen },
+  { id: 'ucat', label: 'UCAT practice', title: 'An example UCAT practice question', Screen: UcatScreen },
 ] as const
 
-/** A deliberate, user-controlled tour through the most valuable product moments. */
-export function ProgressHero() {
-  const [active, setActive] = useState(0)
-  const screen = SCREENS[active]
-  const Screen = screen.Screen
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    const interval = window.setInterval(() => {
-      setActive((current) => (current + 1) % SCREENS.length)
-    }, 5200)
-
-    return () => window.clearInterval(interval)
-  }, [])
+/** Scroll and button controlled; no timed rotation competes with reading. */
+export function ProgressHero({ active, onSelect }: { active: number; onSelect: (index: number) => void }) {
 
   return (
-    <section className={styles.carousel} aria-label="Studocyte product tour">
-      <div className={styles.screenViewport} aria-live="off">
-        <div className={styles.screen} key={screen.id} aria-label={screen.title}><Screen /></div>
+    <section className={styles.stage} aria-label="Studocyte product tour" aria-describedby="hero-preview-caption">
+      <div className={styles.carousel}>
+        <div className={styles.screenViewport} aria-live="off">
+          {SCREENS.map(({ id, title, Screen }, index) => (
+            <div key={id} id={`hero-preview-${id}`} className={styles.screen} data-active={index === active} aria-hidden={index !== active} inert={index !== active} aria-label={title}>
+              <Screen />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={styles.previewFooter}>
+      <div>
+      <p id="hero-preview-caption" className={styles.previewCaption}>Example screens · scores and feedback are illustrative.</p>
+      <div className={styles.controls} aria-label="Choose a product preview">
+        <div className={styles.screenChoices}>{SCREENS.map(({ id, label }, index) => <button key={id} type="button" aria-pressed={index === active} aria-controls={`hero-preview-${id}`} onClick={() => onSelect(index)}>{label}</button>)}</div>
+      </div>
+      </div>
+      <div className={styles.cytoPerch} aria-hidden="true">
+        <span className={styles.cytoGlow} />
+        <div className={styles.cytoMotion}>
+          <Cyto mood="happy" size={72} className={styles.cytoWatching} />
+        </div>
+      </div>
       </div>
     </section>
   )
@@ -84,10 +92,10 @@ function UcatScreen() {
     <div className={styles.ucat}>
       <header className={styles.ucatHeader}><b>UCAT · Practice</b><strong>▤&nbsp; 1 of 5</strong></header>
       <div className={styles.ucatTools}><span>▭&nbsp; Calculator</span><span>⚑ Flag for Review</span></div>
-      <main className={styles.ucatBody}>
+      <div className={styles.ucatBody}>
         <div className={styles.ucatMeta}><span>Situational Judgement</span></div>
-        <p className={styles.ucatScenario}>Aisha, a final-year medical student, is assisting in a busy emergency department. A registrar asks her to close a deep forearm wound while he reviews another patient. Aisha has practised simple suturing in simulation and has closed small superficial wounds under direct supervision, but she has never assessed or closed a wound of this depth. The registrar says he will be nearby and tells her to begin preparing the patient.</p>
-        <h2>How important is it for Aisha to take the following consideration into account when deciding how to respond?</h2>
+        <p className={styles.ucatScenario}>Aisha, a final-year medical student, is asked to close a deep wound. She has only sutured superficial wounds under supervision. The registrar will be nearby, but is seeing another patient.</p>
+        <h2>How important is this consideration when deciding how to respond?</h2>
         <p className={styles.ucatConsideration}>That she has not previously assessed or closed a wound of this depth</p>
         <div className={styles.ucatOptions}>
           <div><i /><b>A.</b><span>Very important</span></div>
@@ -95,7 +103,7 @@ function UcatScreen() {
           <div><i /><b>C.</b><span>Of minor importance</span></div>
           <div><i /><b>D.</b><span>Not important at all</span></div>
         </div>
-      </main>
+      </div>
       <footer className={styles.ucatFooter}><span>↪ End Exam</span><i>⌘ Navigator</i><strong>Finish →</strong></footer>
     </div>
   )

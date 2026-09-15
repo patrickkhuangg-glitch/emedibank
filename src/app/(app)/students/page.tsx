@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireStaff } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { TutoringSession } from '@/lib/supabase/types'
@@ -31,12 +31,12 @@ export default async function TutorStudentsPage() {
   })).sort((a, b) => a.name.localeCompare(b.name))
 
   return (
-    <Container className="py-10 sm:py-14">
-      <main className="mx-auto max-w-6xl">
+    <Container>
+      <main className="w-full">
         <header className="grid gap-6 border-b border-border pb-8 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-brand">Tutor workspace</p>
-            <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">My students</h1>
+            <h1 className="page-title mt-3">My students</h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted">Students assigned to your lessons, with their upcoming booking and tutoring history.</p>
           </div>
           <div className="flex items-baseline gap-2 rounded-2xl bg-brand-muted px-5 py-3 text-brand"><span className="font-mono text-2xl font-semibold tabular-nums">{students.length}</span><span className="text-xs font-semibold">assigned</span></div>

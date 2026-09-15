@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { PAGE_SIZE, type QFilter, type QuestionStatus } from '@/lib/admin/question-filter'
@@ -63,13 +63,13 @@ export default async function AdminQuestionsPage({
   }))
 
   return (
-    <Container className="py-12">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <Container>
+      <div className="w-full space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Questions</h1>
-          <p className="mt-1 text-muted">Filter, bulk-manage, author, and attach video explanations.</p>
-          <Link href="/admin/questions/import" className="mt-3 inline-block rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
+          <h1 className="page-title">Questions</h1>
+          <p className="mt-1 text-muted">Filter, bulk-manage and author questions with written explanations.</p>
+          <Link href="/admin/questions/import" className="mt-3 inline-block rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface-muted">
             Bulk import from CSV →
           </Link>
           </div>

@@ -1,0 +1,58 @@
+.report { margin-top: 40px; scroll-margin-top: 100px; background: var(--surface); color: var(--foreground); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
+.header { padding: 36px 40px 28px; }
+.eyebrow { color: var(--brand); font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+.header h3 { font-size: clamp(26px, 3vw, 36px); }
+.header > p:last-child { margin-top: 12px; font-size: 13px; color: var(--muted); }
+.context { margin: 0 40px; border: 1px solid var(--border); border-radius: 14px; background: var(--background); }
+.report summary { display: flex; align-items: center; gap: 16px; justify-content: space-between; cursor: pointer; list-style: none; padding: 20px; font-size: 14px; font-weight: 600; }
+.report summary::-webkit-details-marker { display: none; }
+.report summary:hover { color: var(--brand); }
+.report summary > span[aria-hidden] { color: var(--brand); flex-shrink: 0; font-size: 22px; font-weight: 400; transition: transform 160ms ease-out; }
+.report details[open] > summary > span[aria-hidden] { transform: rotate(45deg); }
+.contextBody { padding: 0 24px 24px; }
+.report h4 { font-size: 20px; font-weight: 600; line-height: 1.35; }
+.report h5 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.contextBody > p { margin-top: 12px; font-size: 15px; line-height: 1.75; color: var(--muted); }
+.question { border-top: 1px solid var(--border); margin-top: 20px; }
+.question summary { padding-inline: 0; line-height: 1.65; }
+.question small { display: block; color: var(--brand); font-size: 12px; margin-bottom: 6px; }
+.answer { border-left: 2px solid var(--border); padding: 0 0 0 20px; }
+.answer p { font-size: 14px; line-height: 1.8; color: var(--muted); margin-top: 12px; }
+.overall { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 40px; align-items: start; padding: 36px 40px; }
+.overall > div > p:last-child { margin-top: 16px; font-size: 16px; line-height: 1.8; }
+.coverage { background: var(--brand-muted); padding: 22px; border-radius: 16px; }
+.coverage > span { font-size: 12px; color: var(--muted); }
+.coverage strong { display: block; color: var(--brand); font-size: 25px; font-weight: 600; margin-top: 10px; }
+.coverage p { font-size: 13px; line-height: 1.65; color: var(--muted); margin-top: 12px; }
+.coverage small { display: block; font-size: 11px; margin-top: 16px; }
+.feedback { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 40px; padding: 32px 40px; border-block: 1px solid var(--border); }
+.feedback h4 { margin-bottom: 10px; }
+.feedback li { display: flex; align-items: baseline; gap: 14px; padding-block: 18px; }
+.feedback li + li { border-top: 1px solid var(--border); }
+.feedback li p { font-size: 15px; line-height: 1.75; }
+.number { color: var(--brand); font-size: 12px; font-variant-numeric: tabular-nums; }
+.references { display: inline-block; font-size: 11px; color: var(--muted); margin-top: 8px; }
+.domains { padding: 32px 40px; }
+.domains > p { font-size: 14px; color: var(--muted); line-height: 1.65; margin: 10px 0 24px; }
+.domain { border-top: 1px solid var(--border); }
+.domain:last-child { border-bottom: 1px solid var(--border); }
+.domain summary { padding: 20px 0; }
+.domainScore { margin-left: auto; white-space: nowrap; font-size: 12px; color: var(--brand); background: var(--brand-muted); border-radius: 99px; padding: 6px 12px; }
+.domainBody { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 32px; padding: 4px 0 28px; }
+.domainBody p { font-size: 14px; line-height: 1.75; color: var(--muted); }
+.domainBody h5:not(:first-child) { margin-top: 20px; }
+.domainBody blockquote { padding-left: 18px; border-left: 2px solid var(--border); margin-bottom: 18px; }
+.footer { border-top: 1px solid var(--border); padding: 22px 40px; color: var(--muted); font-size: 12px; line-height: 1.65; background: var(--background); }
+@media (max-width: 700px) {
+  .header, .overall, .feedback, .domains { padding: 24px; }
+  .context { margin-inline: 24px; }
+  .contextBody { padding-inline: 18px; }
+  .overall, .feedback, .domainBody { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .report summary { gap: 10px; }
+  .domain summary { flex-wrap: wrap; }
+  .domain summary > span:first-child { flex-basis: 100%; }
+  .domainScore { margin-left: 0; }
+  .toggle { margin-left: auto; }
+  .footer { padding: 20px 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .report summary > span[aria-hidden] { transition: none; } }

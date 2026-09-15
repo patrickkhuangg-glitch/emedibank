@@ -1,8 +1,10 @@
 'use server'
 
+import { removeInterviewObjects } from '@/lib/interviews/storage-cleanup'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth/dal'
 import { normalisePhone } from '@/lib/auth/signup-protection'
+import { authorizeSignup } from '@/lib/auth/signup-authorization'
 import { getOrigin } from '@/lib/site'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -32,8 +34,10 @@ export async function inviteStudentAction(_previous: InviteStudentState, formDat
   if (existingPhone) return { error: 'That mobile number is already linked to another account.' }
 
   const origin = await getOrigin()
+  const authorization = await authorizeSignup(email)
+  if (!authorization) return { error: 'Account creation is unavailable. Please try again shortly.' }
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName, phone_number: phoneNumber },
+    data: { full_name: fullName, phone_number: phoneNumber, signup_authorization: authorization },
     redirectTo: `${origin}/auth/confirm?next=/update-password`,
   })
   if (error) {
@@ -177,7 +181,7 @@ export async function deleteManagedAccountAction(_previous: ManageAccountState, 
   if (futureLesson) return { error: 'Cancel or reassign this account’s future lessons from Bookings before deleting it.' }
 
   const [{ data: recordings, error: recordingsReadError }, { data: markings, error: markingsReadError }] = await Promise.all([
-    admin.from('interview_attempts').select('recording_path').eq('user_id', userId),
+    admin.from('interview_attempts').select('*').eq('user_id', userId),
     admin.from('essay_markings').select('id').eq('marked_by', userId),
   ])
   if (recordingsReadError) return { error: 'Saved recordings could not be prepared for deletion. Try again.' }
@@ -188,6 +192,18 @@ export async function deleteManagedAccountAction(_previous: ManageAccountState, 
     if (releaseError) return { error: 'Tutor marking history could not be preserved. Try again.' }
   }
 
+  // Keep attempt pointers until storage cleanup succeeds, so failures are recoverable.
+  try {
+    for (const attempt of recordings ?? []) {
+      const { data: reserved, error } = await admin.rpc('reserve_interview_deletion', { p_attempt_id: attempt.id, p_user_id: userId })
+      if (error || !reserved) throw new Error('cleanup_reservation_failed')
+      await removeInterviewObjects(attempt)
+    }
+  } catch {
+    console.error(JSON.stringify({ event: 'interview', stage: 'account_cleanup', outcome: 'failed' }))
+    return { error: 'Recording cleanup could not be completed. The account remains available; retry deletion.' }
+  }
+
   const { error: deleteError } = await admin.auth.admin.deleteUser(userId)
   if (deleteError) {
     if (markingIds.length) {
@@ -195,13 +211,7 @@ export async function deleteManagedAccountAction(_previous: ManageAccountState, 
       if (restoreError) console.error('Tutor marking attribution rollback failed.', restoreError)
     }
     console.error('Could not delete managed account.', deleteError)
-    return { error: 'The account could not be deleted. No account data was removed.' }
-  }
-
-  const recordingPaths = (recordings ?? []).map((recording) => recording.recording_path).filter(Boolean)
-  for (let index = 0; index < recordingPaths.length; index += 100) {
-    const { error: storageError } = await admin.storage.from('interview-recordings').remove(recordingPaths.slice(index, index + 100))
-    if (storageError) console.error('Deleted account left interview recording files to clean up.', storageError)
+    return { error: 'The account could not be deleted. Recording cleanup may already have completed; retry account deletion.' }
   }
 
   revalidateManagedAccountPaths()

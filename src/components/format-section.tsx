@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Container } from './container'
+import styles from './format-section.module.css'
 
 // "Timed like the real exam" — a checklist of what a mock delivers, beside a
 // tabbed breakdown of each exam's format. Client for the tab state only.
@@ -26,27 +27,27 @@ const EXAMS: Record<string, Exam> = {
     ['Full Mocks', '100 questions in 3 hours'],
   ] },
   interviews: { label: 'Interviews', rows: [
-    ['MMI stations', 'Timed scenario-based rotations'],
-    ['Panel interview', 'Structured behavioural questions'],
-    ['Situational prompts', 'Ethical and clinical judgement calls'],
-    ['Guided rehearsal', 'Prepare, answer and reflect on your response'],
+    ['Timed mocks', 'MMI circuits and 20-minute full panels'],
+    ['Record and review', 'Replay your answer and read its private transcript'],
+    ['Your story bank', 'Save personal experiences and reflections'],
+    ['Tutor marking', 'Scores, strengths and specific advice to improve'],
   ] },
 }
 const CHECKS = [
   'Full-screen kiosk mode',
   'Section-by-section score breakdown',
   'Per-section timers',
-  'Written and video explanations',
+  'Written explanations',
   'Expert-written exam questions',
   'Percentile benchmarking',
 ]
 const INTERVIEW_CHECKS = [
-  'MMI and panel practice modes',
-  'Structured response frameworks',
-  'Ethical and personal prompts',
-  'Practice timing guidance',
-  'Story prompts',
-  'Structured reflection guidance',
+  'MMI and panel question practice',
+  'Audio practice and video mocks',
+  'Private transcripts and study notes',
+  'Timed mock interviews',
+  'Saved stories and reflections',
+  'Tutor-reviewed marking reports',
 ]
 
 export function FormatSection() {
@@ -54,45 +55,54 @@ export function FormatSection() {
   const interviews = tab === 'interviews'
   const checks = interviews ? INTERVIEW_CHECKS : CHECKS
   return (
-    <section id="interface" className="border-t border-border bg-surface/50">
-      <Container className="grid items-start gap-12 py-16 sm:py-20 lg:grid-cols-2">
-        <div>
-          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{interviews ? 'Practise answers with a clear structure.' : 'Timed like the real exam, explained like a tutor.'}</h2>
-          <p className="mt-4 max-w-md text-muted">{interviews ? 'Move between MMI and panel prompts, prepare under realistic timing, then reflect on the experience and response you want to improve next.' : 'Every mock exam matches the real exam platform, and every question is written by exam experts. Finish a mock and get an instant results breakdown, with written and video explanations for every question.'}</p>
-          <div className="mt-8 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+    <section id="interface" className={styles.section}>
+      <Container className={styles.layout}>
+        <div data-home-reveal>
+          <h2 >{interviews ? 'Practise out loud. Hear what to improve.' : 'Timed like the real exam, explained like a tutor.'}</h2>
+          <p className={styles.body}>{interviews ? 'Choose an MMI or panel question, prepare, then record your answer. Listen back, review your transcript and keep notes for next time. Use marking credits when you want a tutor’s feedback.' : 'Every mock exam matches the real exam platform, and every question is written by exam experts. Finish a mock and get an instant results breakdown, with written explanations for every question.'}</p>
+          <div className={styles.checks}>
             {checks.map((c) => (
-              <div key={c} className="flex items-center gap-2.5 text-sm"><Tick /> {c}</div>
+              <div key={c} ><Tick /> {c}</div>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Exam formats">
+          <div className={styles.tabs} role="tablist" aria-label="Exam formats">
             {(Object.keys(EXAMS) as (keyof typeof EXAMS)[]).map((k) => {
               const on = tab === k
               return (
                 <button
-                  key={k} type="button" role="tab" aria-selected={on}
+                  key={k} type="button" role="tab" aria-selected={on} id={`format-tab-${k}`} aria-controls="format-panel" tabIndex={on ? 0 : -1}
+                  onKeyDown={event => {
+                    const keys = Object.keys(EXAMS)
+                    const index = keys.indexOf(k)
+                    const next = event.key === 'ArrowRight' ? (index + 1) % keys.length : event.key === 'ArrowLeft' ? (index - 1 + keys.length) % keys.length : event.key === 'Home' ? 0 : event.key === 'End' ? keys.length - 1 : -1
+                    if (next < 0) return
+                    event.preventDefault()
+                    setTab(keys[next])
+                    document.getElementById(`format-tab-${keys[next]}`)?.focus()
+                  }}
                   onClick={() => setTab(k)}
-                  className={`eb-press rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                    on ? 'border-brand bg-brand text-brand-foreground' : 'border-border bg-surface text-muted hover:text-foreground'
-                  }`}
+
                 >
                   {EXAMS[k].label}
                 </button>
               )
             })}
           </div>
-          <p className="mt-3 text-sm text-muted">{interviews ? 'Build confident answers through realistic prompts, structured reflection and repeat practice.' : 'Exact timing and format, plus feedback the moment you finish.'}</p>
-          <div className="eb-soft mt-3 rounded-2xl border border-border bg-surface px-6">
+          <div role="tabpanel" id="format-panel" aria-labelledby={`format-tab-${tab}`} tabIndex={0}>
+          <p className={styles.note}>{interviews ? 'Practise individual questions or put your preparation to the test in a timed mock.' : 'Exact timing and format, plus feedback the moment you finish.'}</p>
+          <div className={styles.rows}>
             {EXAMS[tab].rows.map(([name, detail]) => (
-              <div key={name} className="flex flex-col justify-between gap-1 border-b border-border py-5 last:border-b-0 sm:flex-row sm:items-baseline sm:gap-6">
-                <span className="font-semibold sm:whitespace-nowrap">{name}</span>
-                <span className="text-sm text-muted sm:text-right">{detail}</span>
+              <div key={name} className={styles.row}>
+                <strong>{name}</strong>
+                <span>{detail}</span>
               </div>
             ))}
           </div>
-          {interviews ? <Link href="/interviews" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand">Open Interviews <Arrow /></Link> : null}
+          {interviews ? <Link href="/interview-preparation" className={styles.link}>Explore Interviews <Arrow /></Link> : <Link href={`/${tab}-preparation`} className={styles.link}>{tab.toUpperCase()} · Coming soon <Arrow /></Link>}
+          </div>
         </div>
       </Container>
     </section>

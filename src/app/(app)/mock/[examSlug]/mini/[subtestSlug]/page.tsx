@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { canAccessExam } from '@/lib/access'
-import { MINI_MOCKS_PER_SECTION, findMiniMock, miniSection } from '@/lib/mock/config'
+import { miniMocksPerSection, findMiniMock, miniSection } from '@/lib/mock/config'
 import { mockAssignmentCounts } from '@/lib/mock/resolve'
 import { createClient } from '@/lib/supabase/server'
 
@@ -18,12 +18,12 @@ export default async function MiniMockListPage({ params }: { params: Promise<{ e
   const { data: exam } = await supabase.from('exams').select('id, name, slug').eq('slug', examSlug).maybeSingle()
   if (!exam) notFound()
   const entitled = await canAccessExam(user.id, exam.id)
-  const mocks = Array.from({ length: MINI_MOCKS_PER_SECTION }, (_, index) => findMiniMock(examSlug, subtestSlug, `mini-${index + 1}`)!)
+  const mocks = Array.from({ length: miniMocksPerSection(subtestSlug) }, (_, index) => findMiniMock(examSlug, subtestSlug, `mini-${index + 1}`)!)
   const counts = await mockAssignmentCounts(exam.id, mocks.map((mock) => mock.assignmentKey))
 
-  return <Container className="py-10 sm:py-14"><div className="mx-auto max-w-3xl">
+  return <Container><div className="w-full">
     <p className="text-sm text-muted"><Link href={`/mock/${examSlug}`} className="hover:text-foreground">Practice exams</Link> / Mini Mocks</p>
-    <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">{section.name}</h1>
+    <h1 className="page-title mt-2">{section.name}</h1>
     <p className="mt-3 text-muted">Choose a standardised mini mock. Each form contains {section.count} questions and runs for {section.minutes} minutes.</p>
     <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface">{mocks.map((mock, index) => {
       const ready = (counts[mock.assignmentKey] ?? 0) >= section.count

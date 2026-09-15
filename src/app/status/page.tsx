@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { createClient } from '@/lib/supabase/server'
 import type { Exam } from '@/lib/supabase/types'
 
@@ -37,9 +37,9 @@ export default async function StatusPage() {
   const result = await checkDatabase()
 
   return (
-    <Container className="py-16">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight">System status</h1>
+    <Container>
+      <div className="w-full">
+        <h1 className="page-title">System status</h1>
         <p className="mt-2 text-muted">
           End-to-end health check: the app reads the <code>exams</code> table
           directly from Supabase.
@@ -92,7 +92,7 @@ function ExamsTable({ exams }: { exams: Exam[] }) {
   }
 
   return (
-    <div className="mt-6 overflow-hidden rounded-lg border border-border bg-surface">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-border bg-surface-muted text-muted">
           <tr>
@@ -119,7 +119,7 @@ function ExamsTable({ exams }: { exams: Exam[] }) {
 
 function ErrorPanel({ error }: { error: string }) {
   return (
-    <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+    <div className="mt-6 rounded-2xl border border-border bg-surface p-6">
       <p className="text-sm text-muted">
         Could not read from Supabase. Check that <code>.env.local</code> has your
         project URL and keys, and that the migration in{' '}

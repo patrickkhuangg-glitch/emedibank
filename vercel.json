@@ -1,5 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["syd1"]
+  "regions": [
+    "syd1"
+  ],
+  "crons": [
+    {
+      "path": "/api/internal/interviews/cleanup",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/internal/interviews/monitor",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/internal/interviews/backups",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlan, StudyPlanItem } from '@/lib/supabase/types'
@@ -26,9 +26,9 @@ export default async function AdminStudyPlansPage({ searchParams }: { searchPara
   const itemsByPlan = new Map<string, StudyPlanItem[]>()
   for (const item of items ?? []) itemsByPlan.set(item.plan_id, [...(itemsByPlan.get(item.plan_id) ?? []), item])
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl">
+  return <Container><main className="w-full">
     <Link href="/admin" className="text-sm font-medium text-muted transition-colors hover:text-foreground">← Admin dashboard</Link>
-    <header className="mt-5 grid gap-6 border-b border-border pb-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Student study plans</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create tutoring packages, set their inclusions and keep remaining time accurate after every session.</p></div><span className="rounded-2xl bg-brand-muted px-5 py-3 font-mono text-2xl font-semibold tabular-nums text-brand">{planList.length}</span></header>
+    <header className="mt-5 grid gap-6 border-b border-border pb-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><h1 className="page-title">Student study plans</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create tutoring packages, set their inclusions and keep remaining time accurate after every session.</p></div><span className="rounded-2xl bg-brand-muted px-5 py-3 font-mono text-2xl font-semibold tabular-nums text-brand">{planList.length}</span></header>
 
     <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border px-6 py-5"><h2 className="font-display text-2xl font-bold tracking-tight">Packages</h2></div>{planList.length === 0 ? <div className="px-6 py-12 text-center"><p className="font-semibold">No student packages yet.</p><p className="mt-2 text-sm text-muted">Create the first one with the form alongside.</p></div> : <div className="divide-y divide-border">{planList.map((plan) => <PlanRow key={plan.id} plan={plan} studentName={nameById.get(plan.user_id)} email={emailById.get(plan.user_id) ?? 'No email'} items={itemsByPlan.get(plan.id) ?? []} />)}</div>}</div>

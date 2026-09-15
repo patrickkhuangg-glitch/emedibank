@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { getProfile, requireUser } from '@/lib/auth/dal'
 import { SITE_URL } from '@/lib/site'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -81,9 +81,9 @@ export default async function BookingsPage() {
     status: session.status,
   }))
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl">
+  return <Container><main className="w-full">
     <header className="flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
-      <div><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Bookings</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">{adminView ? 'Schedule tutoring, assign the right tutor and keep every follow-up together.' : tutorView ? 'Your assigned lessons, student details and follow-up notes in one place.' : 'Your upcoming tutoring, Zoom links and the follow-up from each lesson.'}</p></div>
+      <div><h1 className="page-title">Bookings</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">{adminView ? 'Schedule tutoring, assign the right tutor and keep every follow-up together.' : tutorView ? 'Your assigned lessons, student details and follow-up notes in one place.' : 'Your upcoming tutoring, Zoom links and the follow-up from each lesson.'}</p></div>
       <Link href={adminView ? '/admin' : tutorView ? '/students' : '/study-plan'} className="eb-press inline-flex h-10 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold transition-colors hover:border-brand/30 hover:bg-brand-muted">{adminView ? 'Admin home' : tutorView ? 'My students' : 'Study Plan'}</Link>
     </header>
 

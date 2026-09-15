@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
@@ -47,14 +47,14 @@ export default async function EssaySectionPage({
     .sort((a, b) => b.at - a.at)[0] ?? null
 
   return (
-    <Container className="py-10">
-      <div className="mx-auto max-w-3xl">
+    <Container>
+      <div className="w-full">
         <p className="text-sm text-muted">
           <Link href="/practice" className="hover:text-foreground">Practice</Link> /{' '}
           <Link href={`/practice/${exam.slug}`} className="hover:text-foreground">{exam.name}</Link> / Written Communication
         </p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight">Written Communication</h1>
+          <h1 className="page-title">Written Communication</h1>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium" title="Credits for tutor marking">
             <CoinIcon /> {credits} credit{credits === 1 ? '' : 's'}
           </span>

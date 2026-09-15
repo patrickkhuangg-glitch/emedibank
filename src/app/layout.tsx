@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
-import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono } from 'next/font/google'
+import { headers } from 'next/headers'
+import { Bricolage_Grotesque, Hanken_Grotesk } from 'next/font/google'
 import { SITE_URL } from '@/lib/site'
 import { Analytics } from '@/components/analytics'
+import { StagingBanner } from '@/components/staging-banner'
+import { getAppEnvironment, isPublicProduction } from '@/lib/deployment-environment'
 import './globals.css'
 
 // Display — confident, slightly unconventional headlines. Variable font: the full
@@ -17,13 +20,6 @@ const hanken = Hanken_Grotesk({
   subsets: ['latin'],
 })
 
-// Specimen-label voice — data, timers, XP.
-const plexMono = IBM_Plex_Mono({
-  variable: '--font-plex',
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-})
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: 'Studocyte',
@@ -32,24 +28,43 @@ export const metadata: Metadata = {
     template: '%s · Studocyte',
   },
   description:
-    'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written and video explanations for every answer. Part of EMeducate.',
+    'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written explanations for every answer. Part of EMeducate.',
   openGraph: {
     title: 'Studocyte — Build your exam immunity',
     description:
-      'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written and video explanations for every answer. Part of EMeducate.',
+      'Practise UCAT, GAMSAT and ISAT in the real exam interface, with written explanations for every answer. Part of EMeducate.',
     siteName: 'Studocyte',
     type: 'website',
     url: '/',
   },
+  robots: isPublicProduction()
+    ? undefined
+    : {
+        index: false,
+        follow: false,
+        nocache: true,
+        googleBot: {
+          index: false,
+          follow: false,
+          noimageindex: true,
+        },
+      },
 }
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  // Reading request headers also prevents static HTML from reusing CSP nonces.
+  await headers()
+  const staging = getAppEnvironment() === 'staging'
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${hanken.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${hanken.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}<Analytics /></body>
+      <body className="min-h-full flex flex-col">
+        {staging && <StagingBanner />}
+        {children}
+        <Analytics />
+      </body>
     </html>
   )
 }

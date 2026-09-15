@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { UserRole } from '@/lib/supabase/types'
+import { StudentMarkingCredits } from './student-marking-credits'
 import { AccountAccessActions } from './account-access-actions'
 import { AccountManagement } from './account-management'
 import { InviteStudentForm } from './invite-student-form'
@@ -13,7 +14,7 @@ import { StudentExamAccess, type StudentExamAccessOption } from './student-exam-
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Admin · Accounts' }
 
-type AccountProfile = { id: string; full_name: string | null; phone_number: string | null; role: UserRole }
+type AccountProfile = { id: string; full_name: string | null; phone_number: string | null; role: UserRole; essay_credits: number; mmi_credits: number }
 type Account = { user: User; profile?: AccountProfile }
 type AccountExam = { id: string; name: string }
 type AccountEntitlement = { user_id: string; exam_id: string; source: 'subscription' | 'bundle' | 'comp'; expires_at: string | null }
@@ -24,7 +25,7 @@ export default async function AdminStudentsPage() {
   const { data: userData, error: userError } = await admin.auth.admin.listUsers({ perPage: 1000 })
   const users = (userData?.users ?? []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   const ids = users.map((user) => user.id)
-  const { data: profiles, error: profileError } = ids.length ? await admin.from('profiles').select('id,full_name,phone_number,role').in('id', ids) : { data: [] as AccountProfile[], error: null }
+  const { data: profiles, error: profileError } = ids.length ? await admin.from('profiles').select('id,full_name,phone_number,role,essay_credits,mmi_credits').in('id', ids) : { data: [] as AccountProfile[], error: null }
   if (userError || profileError) return <AccountsLoadError />
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile as AccountProfile]))
   const accounts = users.map((user) => ({ user, profile: profileById.get(user.id) }))
@@ -41,13 +42,13 @@ export default async function AdminStudentsPage() {
   const examList = (exams ?? []) as AccountExam[]
   const entitlementsByUser = groupEntitlements((entitlementResult.data ?? []) as AccountEntitlement[])
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl">
+  return <Container><main className="w-full">
     <Link href="/admin" className="inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-foreground"><BackIcon /> Admin dashboard</Link>
-    <header className="mt-5 flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Accounts</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create student and tutor accounts, restore access, and keep each group easy to scan.</p></div><dl className="grid w-fit grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border"><AccountCount value={students.length} label="Students" /><AccountCount value={staff.length} label="Tutors & admins" /></dl></header>
+    <header className="mt-5 flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="page-title">Accounts</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create student and tutor accounts, restore access, and keep each group easy to scan.</p></div><dl className="grid w-fit grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border"><AccountCount value={students.length} label="Students" /><AccountCount value={staff.length} label="Tutors & admins" /></dl></header>
 
     <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
       <div className="space-y-5">
-        <AccountPanel title="Students" description="Student profiles, exam access, packages and account emails." count={students.length} empty="No student accounts yet.">
+        <AccountPanel title="Students" description="Student profiles, marking credits, exam access, packages and account emails." count={students.length} empty="No student accounts yet.">
           {students.map((account) => <AccountRow key={account.user.id} account={account} studentAccess={buildStudentAccess(examList, entitlementsByUser.get(account.user.id) ?? [])} />)}
         </AccountPanel>
         <AccountPanel title="Tutors & admins" description="Staff accounts are kept separate from the student list." count={staff.length} empty="No tutor or admin accounts yet.">
@@ -60,7 +61,7 @@ export default async function AdminStudentsPage() {
 }
 
 function AccountsLoadError() {
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl"><Link href="/admin" className="inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-foreground"><BackIcon /> Admin dashboard</Link><header className="mt-5 border-b border-border pb-8"><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Accounts</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create student and tutor accounts, restore access, and keep each group easy to scan.</p></header><section className="mt-8 rounded-3xl border border-border bg-surface p-8 eb-soft"><h2 className="font-display text-2xl font-bold tracking-tight">Accounts could not load</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted">No account information has been changed. Refresh the page to try the secure connection again.</p><a href="/admin/students" className="eb-press mt-6 inline-flex min-h-10 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground">Try again</a></section></main></Container>
+  return <Container><main className="w-full"><Link href="/admin" className="inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-foreground"><BackIcon /> Admin dashboard</Link><header className="mt-5 border-b border-border pb-8"><h1 className="page-title">Accounts</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Create student and tutor accounts, restore access, and keep each group easy to scan.</p></header><section className="mt-8 rounded-3xl border border-border bg-surface p-8 eb-soft"><h2 className="font-display text-2xl font-bold tracking-tight">Accounts could not load</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted">No account information has been changed. Refresh the page to try the secure connection again.</p><a href="/admin/students" className="eb-press mt-6 inline-flex min-h-10 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground">Try again</a></section></main></Container>
 }
 
 function AccountPanel({ title, description, count, empty, children }: { title: string; description: string; count: number; empty: string; children: React.ReactNode }) {
@@ -71,7 +72,7 @@ function AccountRow({ account, studentAccess }: { account: Account; studentAcces
   const { user, profile } = account
   const email = user.email ?? ''
   const role = profile?.role ?? 'student'
-  return <article className="px-6 py-5"><div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{profile?.full_name || email || 'Unnamed account'}</h3><RolePill role={role} /><AccountStatus user={user} /></div><p className="mt-1 break-all text-sm text-muted">{email}</p>{profile?.phone_number ? <p className="mt-1 text-sm text-muted">{profile.phone_number}</p> : null}<p className="mt-2 font-mono text-[11px] tabular-nums text-muted">Added {formatDate(user.created_at)}</p></div><div className="flex flex-col items-start gap-3 xl:items-end">{role !== 'admin' && email ? <div className="flex flex-wrap gap-2 xl:justify-end"><AccountAccessActions userId={user.id} email={email} /><AccountManagement userId={user.id} email={email} fullName={profile?.full_name ?? ''} phoneNumber={profile?.phone_number ?? ''} role={role} /></div> : <p className="max-w-xs text-xs leading-5 text-muted">Admin login security is managed from that administrator&rsquo;s Account page.</p>}{studentAccess && email ? <Link href={`/admin/study-plans?student=${encodeURIComponent(email)}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-foreground">Add package <ArrowRight /></Link> : null}</div></div>{studentAccess && email ? <StudentExamAccess userId={user.id} email={email} exams={studentAccess} /> : null}</article>
+  return <article className="px-6 py-5"><div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{profile?.full_name || email || 'Unnamed account'}</h3><RolePill role={role} /><AccountStatus user={user} /></div><p className="mt-1 break-all text-sm text-muted">{email}</p>{profile?.phone_number ? <p className="mt-1 text-sm text-muted">{profile.phone_number}</p> : null}<p className="mt-2 font-mono text-[11px] tabular-nums text-muted">Added {formatDate(user.created_at)}</p></div><div className="flex flex-col items-start gap-3 xl:items-end">{role !== 'admin' && email ? <div className="flex flex-wrap gap-2 xl:justify-end"><AccountAccessActions userId={user.id} email={email} /><AccountManagement userId={user.id} email={email} fullName={profile?.full_name ?? ''} phoneNumber={profile?.phone_number ?? ''} role={role} /></div> : <p className="max-w-xs text-xs leading-5 text-muted">Admin login security is managed from that administrator&rsquo;s Account page.</p>}{studentAccess && email ? <Link href={`/admin/study-plans?student=${encodeURIComponent(email)}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-foreground">Add package <ArrowRight /></Link> : null}</div></div>{studentAccess && email ? <StudentExamAccess userId={user.id} email={email} exams={studentAccess} /> : null}{role === 'student' && profile ? <StudentMarkingCredits userId={user.id} name={profile.full_name || email || 'this student'} essayCredits={profile.essay_credits} interviewCredits={profile.mmi_credits} /> : null}</article>
 }
 
 function AccountStatus({ user }: { user: User }) {

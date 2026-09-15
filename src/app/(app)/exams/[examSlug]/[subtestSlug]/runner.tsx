@@ -1,13 +1,11 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import MuxPlayer from '@mux/mux-player-react'
-import Link from 'next/link'
+import { useQuestionViews } from '@/lib/practice/use-question-views'
 import { TI108Calculator } from '@/components/ui/ti108-calculator'
 import {
   fetchQuestionAction,
   answerQuestionAction,
-  loadExplanationVideoAction,
 } from '@/lib/questions/actions'
 
 type SafeQuestion = { id: string; topic: string | null; stem: string; options: { id: string; label: string; body: string }[] }
@@ -43,28 +41,25 @@ export function Runner({
 
   const id = questionIds[i]
   const q = cache[id]
+  const { allViewed, unviewedCount } = useQuestionViews(questionIds, id, !!q)
   const answered = answers[id]
 
-  const ensure = useCallback(async (qid: string) => {
-    if (qid in cache) return
-    const r = await fetchQuestionAction(qid)
-    setCache((c) => ({ ...c, [qid]: r.locked ? null : r.question }))
-  }, [cache])
+  useEffect(() => {
+    if (!id || id in cache) return
+    let active = true
+    fetchQuestionAction(id).then((r) => {
+      if (active) setCache((c) => ({ ...c, [id]: r.locked ? null : r.question }))
+    })
+    return () => { active = false }
+  }, [id, cache])
 
-  useEffect(() => { ensure(id) }, [id, ensure])
-
-  async function explain() {
-    if (answered) return
+  async function markAnswer() {
+    if (answered || !allViewed) return
     const sel = pending[id]
     if (!sel) { setHint(true); setTimeout(() => setHint(false), 2000); return }
     const r = await answerQuestionAction(id, sel)
     if ('denied' in r) return
-    let video: Answered['video'] = null
-    if (r.can_watch_video && r.video_ready) {
-      const v = await loadExplanationVideoAction(id)
-      if (!('denied' in v)) video = v
-    }
-    setAnswers((a) => ({ ...a, [id]: { selectedId: sel, result: r, video } }))
+    setAnswers((a) => ({ ...a, [id]: { selectedId: sel, result: r, video: null } }))
   }
 
   const blue = '#0e6cb0'
@@ -72,13 +67,12 @@ export function Runner({
     <div className="overflow-hidden rounded-lg border border-[#0a5286] shadow-sm" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
       {/* top bar */}
       <div className="flex items-center justify-between px-5 py-3 text-white" style={{ background: 'linear-gradient(#1a78bf,#0e6cb0)' }}>
-        <span className="text-lg font-semibold">{subtestName} Question Bank</span>
+        <span className="text-lg font-semibold">Studocyte {examSlug === 'ucat' ? '' : `${examSlug.toUpperCase()} `}{subtestName} Question Bank</span>
         <span className="text-sm tabular-nums">{i + 1} of {total}</span>
       </div>
       {/* sub bar */}
       <div className="flex items-center justify-between px-5 py-1.5 text-sm text-white" style={{ background: '#5486c4' }}>
         <div className="flex items-center gap-5">
-          <button onClick={explain} className="underline-offset-2 hover:underline">Explain Answer</button>
           <button onClick={() => setCalcOpen((v) => !v)} className={calcOpen ? 'text-[#ffd21e] underline' : 'hover:underline'}>Calculator</button>
         </div>
         <button
@@ -123,7 +117,9 @@ export function Runner({
               })}
             </div>
 
-            {hint ? <p className="mt-3 text-sm text-[#dc2626]">Select an answer, then choose “Explain Answer”.</p> : null}
+            {!answered ? <button onClick={markAnswer} disabled={!allViewed} className="mt-5 rounded bg-[#0e6cb0] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">Mark answer</button> : null}
+            {!allViewed ? <p className="mt-2 text-sm text-gray-600">View all questions before marking. {unviewedCount} still to view.</p> : null}
+            {hint ? <p className="mt-3 text-sm text-[#dc2626]">Select an answer, then choose “Mark answer”.</p> : null}
 
             {answered ? (
               <div className="mt-6 space-y-4 border-t border-gray-200 pt-5">
@@ -133,22 +129,10 @@ export function Runner({
                 {answered.result.explanation_text ? (
                   <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed">
                     <p className="mb-1 font-semibold">Explanation</p>
-                    {answered.result.explanation_text}
+                    <div className="whitespace-pre-line">{answered.result.explanation_text}</div>
                   </div>
                 ) : null}
-                {answered.video ? (
-                  <div className="overflow-hidden rounded border border-gray-200">
-                    <MuxPlayer playbackId={answered.video.playbackId} tokens={{ playback: answered.video.token }} streamType="on-demand" accentColor="#157d72" />
-                  </div>
-                ) : !answered.result.has_video ? null : answered.result.can_watch_video ? (
-                  answered.result.video_ready ? null : <p className="text-sm text-gray-500">Video explanation is processing.</p>
-                ) : (
-                  <div className="rounded border-2 border-[#157d72] bg-[#e2efec] p-5 text-center">
-                    <p className="font-semibold text-[#1b2a46]">Video explanation</p>
-                    <p className="mt-1 text-sm text-gray-600">Watch this worked through on video with a subscription.</p>
-                    <Link href="/pricing" className="mt-3 inline-block rounded-md bg-[#157d72] px-4 py-2 text-sm font-medium text-white">See plans</Link>
-                  </div>
-                )}
+
               </div>
             ) : null}
           </>

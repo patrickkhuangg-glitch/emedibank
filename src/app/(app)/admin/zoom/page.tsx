@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Container } from '@/components/container'
+import { PageContainer as Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { isGoogleCalendarConfigured } from '@/lib/google-calendar'
 import { SITE_URL } from '@/lib/site'
@@ -21,10 +21,10 @@ export default async function ZoomSettingsPage() {
   const endpoint = `${SITE_URL}/api/zoom/webhook`
   const calendarCallback = `${SITE_URL}/api/google-calendar/callback`
 
-  return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-3xl">
+  return <Container><main className="w-full">
     <p className="mb-5 rounded-2xl border border-border bg-surface px-4 py-3 text-sm leading-6 text-muted">Lesson cancellation requires the Zoom scope <code className="font-mono text-xs text-foreground">meeting:delete:meeting:admin</code>.</p>
     <Link href="/admin" className="text-sm font-medium text-muted transition-colors hover:text-foreground">← Admin dashboard</Link>
-    <header className="mt-5 border-b border-border pb-8"><h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Zoom tutoring</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Use your one Zoom Pro host to schedule sessions from a student package and track booked tutoring time.</p></header>
+    <header className="mt-5 border-b border-border pb-8"><h1 className="page-title">Zoom tutoring</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted">Use your one Zoom Pro host to schedule sessions from a student package and track booked tutoring time.</p></header>
 
     <section className={`mt-8 rounded-3xl p-6 sm:p-8 ${connected && webhookReady ? 'bg-ink text-white' : 'border border-border bg-surface'}`}><div className="flex flex-wrap items-center justify-between gap-4"><div><h2 className="font-display text-2xl font-bold tracking-tight">Connection status</h2><p className={`mt-2 text-sm ${connected && webhookReady ? 'text-white/70' : 'text-muted'}`}>{connected && webhookReady ? 'Zoom is ready to create sessions and receive attendance updates.' : 'Finish the one-time Server-to-Server OAuth setup to connect your Zoom Pro host.'}</p></div><span className={`rounded-full px-3 py-1 text-xs font-semibold ${connected && webhookReady ? 'bg-mint-muted text-mint-deep' : 'bg-brand-muted text-brand'}`}>{connected && webhookReady ? 'Connected' : 'Setup needed'}</span></div></section>
 

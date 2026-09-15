@@ -4,9 +4,10 @@ import { notFound, redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { canAccessExam } from '@/lib/access'
-import { findMock } from '@/lib/mock/config'
+import { findMock, ucatMockTitle } from '@/lib/mock/config'
 import { resolveMockSections } from '@/lib/mock/resolve'
 import { signManifest } from '@/lib/mock/token'
+import { DiagnosticRunner } from '@/components/diagnostic/runner'
 import { MockRunner } from '@/components/mock-runner'
 
 export const dynamic = 'force-dynamic'
@@ -52,15 +53,16 @@ export default async function MockRunPage({
   }
 
   const allIds = resolved.flatMap((s) => s.questionIds)
-  const token = signManifest({ u: user.id, e: exam.id, q: allIds })
+  const token = signManifest({ u: user.id, e: exam.id, k: mock.assignmentKey, q: allIds })
 
+  const Runner = mock.id === 'diagnostic' ? DiagnosticRunner : MockRunner
   return (
-    <MockRunner
+    <Runner
       kind={mock.kind}
-      label={`${exam.name} ${mock.name}`}
+      label={exam.slug === 'ucat' ? ucatMockTitle(mock) : `Studocyte ${exam.name} ${mock.name}`}
       examSlug={exam.slug}
       token={token}
-      sections={resolved.map((s) => ({ name: s.name, minutes: s.minutes, questionIds: s.questionIds }))}
+      sections={resolved.map((s) => ({ name: s.name, subtestSlug: s.subtestSlug, qrTopScoreRaw: s.qrTopScoreRaw, minutes: s.minutes, questionIds: s.questionIds }))}
     />
   )
 }

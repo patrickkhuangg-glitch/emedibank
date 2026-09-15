@@ -1,5 +1,6 @@
 'use client'
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
+import styles from '@/components/workspace/practice-library.module.css'
 import { haptic } from '@/lib/haptics'
 
 /** Two-tab switcher on the practice page: start a new session vs. review history.
@@ -14,21 +15,18 @@ export function PracticeTabs({
   historyCount: number
 }) {
   const [tab, setTab] = useState<'new' | 'history'>('new')
-  const tabCls = (active: boolean) =>
-    `eb-press relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-      active ? 'bg-brand text-brand-foreground shadow-sm' : 'text-muted hover:text-foreground'
-    }`
+  const panelId = useId()
   return (
-    <div className="mt-8">
-      <div className="inline-flex items-center gap-1 rounded-full border border-border bg-surface p-1">
-        <button onClick={() => { haptic(8); setTab('new') }} className={tabCls(tab === 'new')}>
+    <div className={styles.tabs}>
+      <div className={styles.tabBar} role="group" aria-label="Practice view">
+        <button onClick={() => { haptic(8); setTab('new') }} aria-pressed={tab === 'new'} aria-controls={panelId}>
           New session
         </button>
-        <button onClick={() => { haptic(8); setTab('history') }} className={tabCls(tab === 'history')}>
+        <button onClick={() => { haptic(8); setTab('history') }} aria-pressed={tab === 'history'} aria-controls={panelId}>
           History{historyCount > 0 ? ` (${historyCount})` : ''}
         </button>
       </div>
-      <div className="mt-4">{tab === 'new' ? newSession : history}</div>
+      <div id={panelId} className={styles.tabContent}>{tab === 'new' ? newSession : history}</div>
     </div>
   )
 }
