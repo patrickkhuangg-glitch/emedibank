@@ -23,6 +23,7 @@ const paths = [
   'src/components/marketing/interviews/interactions.tsx',
   'src/components/marketing/interviews/landing.module.css',
   'src/lib/interviews/marketing.ts',
+  'src/lib/stripe/subscription-label.ts',
   'src/lib/stripe/interview-actions.ts',
   'src/lib/stripe/interview-purchase.ts',
   'src/lib/stripe/sync-subscription.ts',

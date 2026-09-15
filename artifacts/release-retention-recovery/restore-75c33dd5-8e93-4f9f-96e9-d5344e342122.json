@@ -1,0 +1,82 @@
+{
+  "run": "75c33dd5-8e93-4f9f-96e9-d5344e342122",
+  "source": "gwlplbtxmhgttsgywvky",
+  "sourceEnvironment": "staging",
+  "name": "studocyte-staging-recovery-drill-2026-09-15",
+  "startedAt": "2026-09-15T02:53:29.238Z",
+  "maxCostUsd": 1,
+  "archiveEncryption": "AES-256-GCM; key in memory only",
+  "excluded": [
+    "cron",
+    "net",
+    "vault",
+    "public.google_calendar_connections data",
+    "public.signup_authorizations data",
+    "Auth sessions/MFA/OAuth state"
+  ],
+  "checks": [
+    "Production-only support-card assertion skipped for staging restore.",
+    "Consistent hosted logical backup captured, encrypted, with all current storage file bytes; integration credentials excluded.",
+    "Hosted restore matched counts and content digests for every included public/Auth table; no copied cron, network extension or integration credentials.",
+    "All backed-up storage bytes restored with identical hashes; restored accounts sign in and A/B/anonymous/admin ownership checks pass."
+  ],
+  "supportProbe": {
+    "skipped": true,
+    "reason": "Production retention assertion is outside the staging restore drill"
+  },
+  "backupAt": "2026-09-15T02:53:50.488Z",
+  "backupArchives": [
+    {
+      "name": "schema.enc",
+      "bytes": 503175,
+      "sha256": "8b546f69888410f58d4dc669722bf8a52f90c579cc4c8627540f2c51e50a689d"
+    },
+    {
+      "name": "public-data.enc",
+      "bytes": 33309,
+      "sha256": "a40f7bc51a626274f62e86e3a5c014a654af1eef75a143acff6e94b3ff54e9ff"
+    },
+    {
+      "name": "auth-data.enc",
+      "bytes": 3636,
+      "sha256": "b67088c91ad03af383ad734c972c9c47235f9658045c516d06bf63a55984e709"
+    }
+  ],
+  "backupTableCount": 75,
+  "mediaBackup": {
+    "objects": 2,
+    "bytes": 122
+  },
+  "targetCreatedAt": "2026-09-15T02:54:59.396Z",
+  "targetAuthIsolation": {
+    "disableSignup": true,
+    "smtpHost": "smtp.invalid",
+    "smtpPort": "587"
+  },
+  "computeConfiguration": {
+    "requestedInstance": "micro",
+    "highAvailability": false
+  },
+  "dataApiClosedDuringRestore": true,
+  "omittedPlatformDefaults": 3,
+  "isolation": {
+    "no_outbound_extensions": true,
+    "integration_credentials": 0,
+    "signup_tickets": 0
+  },
+  "restoredStorageFileSizeLimit": 157286400,
+  "recoveryUsableAt": "2026-09-15T02:59:30.777Z",
+  "elapsedToUsableSeconds": 362,
+  "storageRestored": {
+    "objects": 2,
+    "bytes": 122,
+    "allHashesMatch": true
+  },
+  "targetDeletedAt": "2026-09-15T02:59:33.887Z",
+  "estimatedComputeUsd": 0.01344,
+  "targetDeleted": true,
+  "sourceFixturesCleaned": true,
+  "privateArchivesDeleted": true,
+  "target": "knknrodxbpxtpjkvsgzx",
+  "phase": "complete"
+}

@@ -9,6 +9,7 @@ import { BillingButton } from './billing-button'
 import { InterfaceModeToggle } from './interface-mode-toggle'
 import { ProfileForm } from './profile-form'
 import { interviewOfferById } from '@/lib/interviews/marketing'
+import { subscriptionPeriodLabel } from '@/lib/stripe/subscription-label'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Account · Studocyte' }
@@ -115,9 +116,7 @@ export default async function AccountPage({
                 >
                   <span className="capitalize">{sub.status}</span>
                   <span className="text-muted">
-                    {sub.current_period_end
-                      ? `Renews ${new Date(sub.current_period_end).toLocaleDateString()}`
-                      : '—'}
+                    {subscriptionPeriodLabel(sub.status, sub.current_period_end)}
                   </span>
                 </div>
               ))}
