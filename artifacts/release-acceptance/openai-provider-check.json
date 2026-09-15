@@ -1,0 +1,18 @@
+{
+  "run": "7e725bd0-ca0f-4be5-bc88-f9ee0cdd7c51",
+  "staging": "https://staging.studocyte.emeducate.com.au",
+  "passed": true,
+  "synthetic": true,
+  "studentDataUsed": false,
+  "checks": [
+    "Provider check rejects an admin session without MFA.",
+    "Disposable staging admin reached AAL2 with TOTP.",
+    "Synthetic transcription passed with gpt-4o-mini-transcribe.",
+    "Synthetic assessment and audit passed with gpt-5-mini."
+  ],
+  "providerRequestIds": {
+    "transcription": "req_a736eda3379c43208e447128310e0fe8",
+    "assessment": "req_6d22d586fe584145b7d033a086f8cee8",
+    "audit": "req_0e6d028dc04e430595b0d0f857e52b4b"
+  }
+}
