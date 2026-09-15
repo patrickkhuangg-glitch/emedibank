@@ -4,7 +4,7 @@
 
 - Release branch: `codex/staging-release-2026-09-15`
 - Reproducible source commit: `4aaae5c`
-- Staging deployment after worker-secret refresh: `dpl_CJLjFE7AoRJuDfE4ASfgCj572u5f`
+- Staging deployment from the clean acceptance branch: `dpl_DTEihoQ8CaB9noznPF87VHMGR5p3`
 - Staging origin: `https://staging.studocyte.emeducate.com.au`
 - Production was not changed during this acceptance pass.
 
