@@ -1,12 +1,17 @@
-// Disposable two-account production smoke test. No email, payment, recording or AI request is made.
+// Disposable two-account hosted privacy test. No email, payment, recording or AI request is made.
 import assert from 'node:assert/strict'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import { createServerClient } from '@supabase/ssr'
-import { APP, SUPABASE_URL, clients } from './lib/interview-operator.mjs'
+import { APP as PRODUCTION_APP, SUPABASE_URL as PRODUCTION_SUPABASE_URL, clients as productionClients } from './lib/interview-operator.mjs'
+import { STAGING_APP, STAGING_SUPABASE_URL, stagingClients } from './lib/staging-operator.mjs'
 
-if (!process.argv.includes('--authorised-public-beta-test')) throw new Error('Explicit public beta verification required')
-const artifactDir = 'artifacts/live-practice-release'
+const staging = process.argv.includes('--authorised-staging-privacy-test')
+if (!staging && !process.argv.includes('--authorised-public-beta-test')) throw new Error('Explicit hosted verification flag required')
+const APP = staging ? STAGING_APP : PRODUCTION_APP
+const SUPABASE_URL = staging ? STAGING_SUPABASE_URL : PRODUCTION_SUPABASE_URL
+const clients = staging ? stagingClients : productionClients
+const artifactDir = staging ? 'artifacts/release-acceptance' : 'artifacts/live-practice-release'
 const run = randomUUID(), users = [], checks = []
 const { admin, publicKey } = await clients()
 let roomId, failure
@@ -94,5 +99,5 @@ try {
   }
   if (cleanupErrors.length) { failure = `${failure ?? ''}; cleanup required`; process.exitCode = 1 }
   else pass('Disposable accounts, entitlements, room, signals and feedback were removed')
-  writeFileSync(`${artifactDir}/authenticated-verification.json`, `${JSON.stringify({ run, passed: !failure, checks, fixtureUserIds: users.map(user => user.id), roomId, failure: failure ?? null, verifiedAt: new Date().toISOString() }, null, 2)}\n`)
+  writeFileSync(`${artifactDir}/${staging ? 'two-student-privacy-staging' : 'authenticated-verification'}.json`, `${JSON.stringify({ run, staging, passed: !failure, checks, fixtureUserIds: users.map(user => user.id), roomId, failure: failure ?? null, verifiedAt: new Date().toISOString() }, null, 2)}\n`)
 }

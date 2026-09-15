@@ -32,7 +32,11 @@ def scan(data,location):
                 findings.append({'location':location,'line':text.count('\n',0,match.start())+1,'rule':'supabase_service_role_jwt'})
         except (ValueError,UnicodeError): pass
 
-for repo in [ROOT,ROOT.parent]:
+repos=[repo for repo in [ROOT,ROOT.parent] if subprocess.run(
+    ['git','rev-parse','--is-inside-work-tree'],cwd=repo,
+    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+).returncode==0]
+for repo in repos:
     # Git's exclusion rules keep local credentials/artifacts out of this tracked-source report.
     paths=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=repo).decode().split('\0')
     for path in set(paths):

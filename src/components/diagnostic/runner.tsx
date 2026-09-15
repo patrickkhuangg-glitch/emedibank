@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExamIntroduction } from './exam-introduction'
 import { ExamShell, ExamLoading } from './exam-shell'
@@ -85,7 +85,7 @@ export function DiagnosticRunner({
   const sectionDeadline = useRef<{index:number;at:number}|null>(null)
 
   const section = sections[sIdx]
-  const ids = section?.questionIds ?? []
+  const ids = useMemo(() => section?.questionIds ?? [], [section])
   const id = ids[i]
   const q = cache[id]
   const confidence=useQuestionConfidence(id,q,mcqPending,gridPending,mlPending)
@@ -144,7 +144,7 @@ export function DiagnosticRunner({
       if(updates[qid]){completedGrades.current[qid]=updates[qid];setGraded(g=>({...g,[qid]:updates[qid]}))}
     }
     setGraded((g) => ({ ...g, ...updates }))
-  }, [cache, gridPending, mlPending, mcqPending, sections, token, questionClock])
+  }, [cache, gridPending, mlPending, mcqPending, sections, token])
 
   const endSection = useCallback(async (cause: 'manual' | 'timer' = 'manual') => {
     if (phase !== 'running' || endedSections.current.has(sIdx) || !sectionReady || grading || !canMarkQuestions(allViewed, cause)) return
@@ -181,12 +181,11 @@ export function DiagnosticRunner({
   },[phase,sIdx,sectionReady,grading,gradingError]);
   useEffect(()=>{
     if(phase!=='instructions'||!sectionReady)return;
-    const seconds=[90,90,120,90][sIdx];setInstructionRemaining(seconds);
+    const seconds=[90,90,120,90][sIdx];
     const deadline=Date.now()+seconds*1000;
     let active=true;const t=setInterval(()=>{if(!active)return;const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));setInstructionRemaining(left);if(left===0){active=false;setPhase('running')}},250);
     return()=>{active=false;clearInterval(t)};
   },[phase,sIdx,sectionReady]);
-  useEffect(()=>{if(phase==='transition')nextSection()},[phase]);
   const calculatorAllowed=['decision-making','quantitative-reasoning'].includes(section?.subtestSlug??'');
   useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.altKey&&e.key.toLowerCase()==='c'&&calculatorAllowed&&phase==='running'){e.preventDefault();setCalcOpen(v=>!v)}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[calculatorAllowed,phase]);
 
@@ -196,6 +195,7 @@ export function DiagnosticRunner({
   function begin() {
     haptic(15)
     // The diagnostic uses the same signed server actions as the live mock platform.
+    setInstructionRemaining([90,90,120,90][sIdx])
     setPhase('instructions')
   }
   function nextSection() {
@@ -206,6 +206,7 @@ export function DiagnosticRunner({
     setI(0)
     setMlSelected(null)
     setRemaining(sections[next].minutes * 60)
+    setInstructionRemaining([90,90,120,90][next])
     setNavOpen(false)
     setPhase('instructions')
   }

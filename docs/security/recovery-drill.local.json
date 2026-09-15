@@ -1,9 +1,9 @@
 {
   "scope": "Isolated local PGlite, synthetic data only; NOT a hosted production backup restore",
-  "startedAt": "2026-09-15T01:41:06.712Z",
-  "completedAt": "2026-09-15T01:41:07.647Z",
-  "elapsedSeconds": 0.94,
-  "backupBytes": 5753048,
+  "startedAt": "2026-09-15T02:01:29.274Z",
+  "completedAt": "2026-09-15T02:01:29.756Z",
+  "elapsedSeconds": 0.48,
+  "backupBytes": 5752480,
   "result": "passed",
   "verified": [
     "75 application tables restored",

@@ -10,7 +10,11 @@ export function useQuestionConfidence(id:string,question:SafeQuestion|null|undef
  if(question?.statements){answer=grids[id]??null;complete=question.statements.every(s=>grids[id]?.[s.index]!=null)}
  if(question?.mostLeast){answer=ml[id]??null;complete=ml[id]?.most!=null&&ml[id]?.least!=null}
  const key=responseKey(answer),record=records[id],value=complete?confidenceForAnswer(record,answer):null
- useEffect(()=>{if(record&&record.answerKey!==key)setRecords(prev=>{const next={...prev};delete next[id];return next})},[id,key,record])
+ useEffect(()=>{
+  if(!record||record.answerKey===key)return
+  const timer=setTimeout(()=>setRecords(prev=>{const next={...prev};delete next[id];return next}),0)
+  return()=>clearTimeout(timer)
+ },[id,key,record])
  const setValue=(value:Confidence|null)=>{if(!complete&&value!==null)return;setRecords(prev=>{const next={...prev};if(value)next[id]={value,answerKey:key};else delete next[id];return next})}
  return {records,value,setValue,complete}
 }

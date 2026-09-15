@@ -1,0 +1,52 @@
+# Studocyte staging release acceptance — 15 September 2026
+
+## Release identity
+
+- Release branch: `codex/staging-release-2026-09-15`
+- Reproducible source commit: `4aaae5c`
+- Staging deployment after worker-secret refresh: `dpl_CJLjFE7AoRJuDfE4ASfgCj572u5f`
+- Staging origin: `https://staging.studocyte.emeducate.com.au`
+- Production was not changed during this acceptance pass.
+
+## Completed checks
+
+| Area | Result | Evidence |
+| --- | --- | --- |
+| Staging isolation | Pass | Health reports staging and its dedicated database; crawler blocking and staging banner verified. |
+| Single-device sign-in | Pass | A disposable account signed in from two independent sessions. The second session became current; the first was immediately redirected to `login?error=session_replaced`. The account and session fixture were removed. |
+| Two-student privacy | Pass | Candidate, examiner and outsider fixtures verified hashed invite codes, owner-only room access, hidden prompts before preparation, and direct-table isolation. All fixtures were removed. |
+| Bounded public-page load | Pass | 120 requests at concurrency 8: 0 failures, 9.75 requests/second, p50 748 ms, p95 1,272 ms, p99 2,021 ms, maximum 2,184 ms. This is a smoke/load check, not a capacity forecast. |
+| Billing portal | Pass | A signed-in staging user opened Stripe's sandbox customer portal from **Manage billing** and the active plan, invoice and payment method rendered. No cancellation or charge was made. |
+| Billing lifecycle logic | Pass | Tests cover active, trialling, past-due, cancelled, unpaid, incomplete, expired-incomplete and paused status mapping. Created, updated, deleted and failed-payment webhooks all fetch current Stripe state before recomputing entitlements. Resubscription after a cancelled subscription remains allowed. |
+| Interview regressions | Pass | 216 interview tests passed, including the new lifecycle tests. |
+| Security regressions | Pass | 6 P0 tests and 4 security tests passed. Cross-account RLS, webhook signatures, origin checks, single-device functions, worker authentication and backup restore are covered. |
+| Dependencies | Pass | `npm audit --omit=dev` reported zero known vulnerabilities. |
+| Secret scan | Pass | No credential pattern was found in the isolated checkout or its reachable Git history. |
+| Local backup restoration | Pass | The synthetic PGlite recovery drill restored 75 application tables, accounts, private data and access controls. |
+| Worker and cron authentication | Configured | Matching 48-byte random secrets were installed as sensitive variables only in Vercel's staging environment. The release was rebuilt and the staging alias now points to the refreshed deployment. |
+
+## Provider-dependent checks still open
+
+These remain fail-closed in staging; no fake credential was installed.
+
+1. **OpenAI transcription and marking:** staging has no restricted transcription or marking key. Add staging-only keys, then enable video marking and run one synthetic audio transcription plus one human-approved marking draft.
+2. **TURN relay:** staging currently returns public STUN only. Add a staging TURN URL, username and credential from a relay provider, then test Chrome/Safari and Wi-Fi/mobile-data combinations.
+3. **Recording backups:** the staging backup queue is disabled and has never completed a copy. Add bucket-scoped R2 credentials, run the hosted audio/video copy-and-restore check, then enable `interview_backup_health`.
+4. **Operational alerts:** staging has no Resend key or private alert webhook. Configure one isolated destination and send the built-in `setup_test` alert before enabling notifications.
+5. **Physical media matrix:** the desktop Live Practice UI and server-side ICE/privacy flow were exercised, but real camera/microphone capture still needs Safari on iPhone, Chrome on Android and at least one desktop browser with two actual people/devices.
+6. **Hosted disaster recovery:** the local restore passed. The hosted drill creates a disposable Supabase Micro project (bounded to US$1) and requires separate cost approval before it runs.
+7. **MFA:** provider-owner MFA and Studocyte admin MFA remain incomplete. Enrollment needs the owner to scan and retain authenticator/recovery material privately; those secrets must not be handled in this repository or chat.
+8. **Independent security review:** local dependency, secret and regression checks passed. The Strix review is not started because it sends the release checkout to an external security service; explicit source-code transmission approval is required first.
+
+## Re-run commands
+
+```sh
+npm run test:p0
+npm run test:security
+npm run test:interviews
+npm audit --omit=dev
+npm run scan:secrets
+node scripts/verify-single-device-staging.mjs --authorised-staging-session-test
+node scripts/verify-live-practice-hosted.mjs --authorised-staging-privacy-test
+node scripts/verify-staging-load.mjs --authorised-bounded-staging-load
+```
