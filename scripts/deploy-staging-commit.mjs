@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { team, vercel, vercelProject } from './lib/interview-operator.mjs'
 
 const stagingAlias = 'staging.studocyte.emeducate.com.au'
-const artifactDir = 'artifacts/staging-commit-release'
+const artifactDir = '.vercel/staging-commit-release'
 const baseArg = process.argv.indexOf('--base')
 const baseCommit = baseArg >= 0 ? process.argv[baseArg + 1] : ''
 
