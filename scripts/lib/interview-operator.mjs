@@ -21,5 +21,5 @@ export async function clients(){
 export async function vercel(path,options={}){
  const token=JSON.parse(readFileSync('/Users/patrick/Library/Application Support/com.vercel.cli/auth.json','utf8')).token;
  const r=await fetch('https://api.vercel.com'+path,{...options,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(30000)});
- if(!r.ok)throw Error(`Vercel HTTP ${r.status}`);return r.json();
+ if(!r.ok){const body=await r.text();let detail='';try{const parsed=JSON.parse(body);detail=parsed?.error?.message||parsed?.error?.code||''}catch{}throw Error(`Vercel HTTP ${r.status}${detail?`: ${detail}`:''}`)}return r.json();
 }
