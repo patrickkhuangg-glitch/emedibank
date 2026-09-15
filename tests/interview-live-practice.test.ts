@@ -41,13 +41,29 @@ test('station content and examiner guidance stay hidden until their phases', () 
   assert.equal(visibleStationForRole(station, 'candidate', 'debrief').examinerGuide, null)
 })
 
-test('live ICE configuration keeps TURN credentials server-delivered and validates incomplete configuration', () => {
-  assert.equal(liveIceServers({}).length, 1)
-  const servers = liveIceServers({ INTERVIEW_TURN_URLS: 'turn:relay.example.com:3478,turns:relay.example.com:5349', INTERVIEW_TURN_USERNAME: 'temporary-user', INTERVIEW_TURN_CREDENTIAL: 'temporary-secret' })
+test('live ICE configuration keeps TURN credentials server-delivered and validates incomplete configuration', async () => {
+  assert.equal((await liveIceServers({})).length, 1)
+  const servers = await liveIceServers({ INTERVIEW_TURN_URLS: 'turn:relay.example.com:3478,turns:relay.example.com:5349', INTERVIEW_TURN_USERNAME: 'temporary-user', INTERVIEW_TURN_CREDENTIAL: 'temporary-secret' })
   assert.equal(servers.length, 2)
   assert.deepEqual(servers[1], { urls: ['turn:relay.example.com:3478', 'turns:relay.example.com:5349'], username: 'temporary-user', credential: 'temporary-secret' })
-  assert.throws(() => liveIceServers({ INTERVIEW_TURN_URLS: 'turn:relay.example.com:3478' }), /invalid_interview_turn_credentials/)
-  assert.throws(() => liveIceServers({ INTERVIEW_TURN_URLS: 'https:\/\/not-turn.example.com', INTERVIEW_TURN_USERNAME: 'u', INTERVIEW_TURN_CREDENTIAL: 'p' }), /invalid_interview_turn_urls/)
+  await assert.rejects(liveIceServers({ INTERVIEW_TURN_URLS: 'turn:relay.example.com:3478' }), /invalid_interview_turn_credentials/)
+  await assert.rejects(liveIceServers({ INTERVIEW_TURN_URLS: 'https:\/\/not-turn.example.com', INTERVIEW_TURN_USERNAME: 'u', INTERVIEW_TURN_CREDENTIAL: 'p' }), /invalid_interview_turn_urls/)
+})
+
+test('Cloudflare TURN credentials are generated per room request and never expose the long-lived token', async () => {
+  const calls: Array<{ url: string; init?: RequestInit }> = []
+  const iceServers = [{ urls: ['stun:stun.cloudflare.com:3478'] }, { urls: ['turn:turn.cloudflare.com:3478?transport=udp', 'turns:turn.cloudflare.com:443?transport=tcp'], username: 'short-lived-user', credential: 'short-lived-secret' }]
+  const servers = await liveIceServers(
+    { INTERVIEW_TURN_KEY_ID: '0123456789abcdef0123456789abcdef', INTERVIEW_TURN_API_TOKEN: 'server-only-token' },
+    async (url, init) => { calls.push({ url: String(url), init }); return Response.json({ iceServers }, { status: 201 }) },
+  )
+  assert.deepEqual(servers, iceServers)
+  assert.equal(calls.length, 1)
+  assert.match(calls[0].url, /0123456789abcdef0123456789abcdef\/credentials\/generate-ice-servers$/)
+  assert.equal((calls[0].init?.headers as Record<string, string>).Authorization, 'Bearer server-only-token')
+  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), { ttl: 7200 })
+  assert.ok(!JSON.stringify(servers).includes('server-only-token'))
+  await assert.rejects(liveIceServers({ INTERVIEW_TURN_KEY_ID: '0123456789abcdef0123456789abcdef' }), /invalid_interview_turn_provider_configuration/)
 })
 
 test('live transcripts preserve neutral, timed speaker turns without inventing roles', () => {

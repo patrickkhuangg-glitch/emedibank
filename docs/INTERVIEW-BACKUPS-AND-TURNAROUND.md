@@ -42,6 +42,10 @@ Students contact `support@emeducate.com.au`. Patrick (`p.huang@emeducate.com.au`
 
 Alert overrides: `INTERVIEW_SUPPORT_EMAIL` and `INTERVIEW_BACKUP_OPERATOR_EMAIL`. Existing delivery uses durable claims, stable provider idempotency keys, reminders and recovery notifications. No transcript or recording is included in alert emails.
 
+## Live Practice relay
+
+Cloudflare Realtime TURN uses a server-only long-lived key to mint short-lived credentials for each authorised live-room request. Configure `INTERVIEW_TURN_KEY_ID` and `INTERVIEW_TURN_API_TOKEN`; do not place the long-lived token in browser-visible variables. The application requests two-hour credentials, validates the returned ICE server list and sends only the temporary username and credential to the signed-in room owner. Static `INTERVIEW_TURN_URLS`, `INTERVIEW_TURN_USERNAME` and `INTERVIEW_TURN_CREDENTIAL` remain as a legacy fallback for another provider.
+
 ## Costs and release gates
 
 At 200 students × five saved hours/month, estimated R2 storage is $0 audio-only, ~$0.33 for four hours audio plus one video per student, or ~$1.85 video-only, using current bitrate targets and evenly spread seven-day retention. Supabase transfer adds up to ~$2.59 / $12.31 / $51.19 respectively if its existing allowance is exhausted. These exclude worker compute, subscriptions and tax; pending marking can extend retention.

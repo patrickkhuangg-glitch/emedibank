@@ -10,7 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
     const { roomId } = await params
     await ownedLiveRoom(roomId, user)
     return Response.json(
-      { iceServers: liveIceServers() },
+      { iceServers: await liveIceServers() },
       { headers: { 'Cache-Control': 'private, no-store', Pragma: 'no-cache' } },
     )
   } catch (error) {
