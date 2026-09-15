@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { createHmac, randomBytes, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createServerClient } from '@supabase/ssr'
 
-import { requireStagingApproval, STAGING_APP, STAGING_SUPABASE_URL, stagingClients } from './lib/staging-operator.mjs'
+import { quoteSql, requireStagingApproval, STAGING_APP, STAGING_SUPABASE_URL, stagingClients, stagingSql } from './lib/staging-operator.mjs'
 
 requireStagingApproval('--authorised-synthetic-provider-test')
 const audioArg = process.argv.indexOf('--audio')
@@ -13,6 +13,7 @@ assert(audioPath, 'Supply --audio <synthetic-wav>')
 const run = randomUUID()
 const email = `openai-provider-check-${run}@example.invalid`
 const password = `${randomBytes(24).toString('base64url')}!Aa9`
+const signupTicket = randomBytes(32).toString('hex')
 const checks = []
 let userId = ''
 
@@ -58,15 +59,24 @@ async function request(path, jar, body, contentType) {
 
 const { admin, publicKey } = await stagingClients()
 try {
+  assert.ifError((await admin.rpc('authorize_signup', {
+    p_email: email,
+    p_token_hash: createHash('sha256').update(signupTicket).digest('hex'),
+  })).error)
   const created = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: 'Synthetic provider check' },
+    user_metadata: {
+      full_name: 'Synthetic provider check',
+      hosted_test_run: run,
+      interview_intro_v1: 'skipped',
+      signup_authorization: signupTicket,
+    },
   })
   assert.ifError(created.error)
   userId = created.data.user.id
-  assert.ifError((await admin.from('profiles').update({ role: 'admin' }).eq('id', userId)).error)
+  await stagingSql(`update public.profiles set role = 'admin' where id = ${quoteSql(userId)}::uuid`, false)
 
   const jar = new Map()
   const client = createServerClient(STAGING_SUPABASE_URL, publicKey, {
