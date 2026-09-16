@@ -52,7 +52,7 @@ test('repairs a stored test-mode customer id when live Stripe cannot find it', a
   let idempotencyKey = ''
   const customer = loadCustomer({
     storedId: 'cus_test_missing',
-    retrieve: async () => { throw { code: 'resource_missing', param: 'customer' } },
+    retrieve: async () => { throw { code: 'resource_missing', param: 'id' } },
     create: async (_input, options) => {
       idempotencyKey = options.idempotencyKey
       return { id: 'cus_live_repaired' }

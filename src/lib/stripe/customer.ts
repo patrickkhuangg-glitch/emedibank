@@ -4,8 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 function isMissingCustomer(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const stripeError = error as { code?: unknown; param?: unknown }
-  return stripeError.code === 'resource_missing' && stripeError.param === 'customer'
+  const stripeError = error as { code?: unknown }
+  return stripeError.code === 'resource_missing'
 }
 
 /** Return the user's Stripe customer id, creating (and storing) it on first use. */
