@@ -1,0 +1,11 @@
+{
+  "deploymentId": "dpl_D3c2J9XoyYYYFQbHPDrsMR4A3iJZ",
+  "commit": "38745ff6ec29c2de038fade9d3859323dd782930",
+  "alertId": "c7b214ef-5019-472d-85b3-fa198c6a943f",
+  "status": "sent",
+  "attempts": 2,
+  "sentAt": "2026-09-16 00:34:48.304597+00",
+  "recipient": "p.huang@emeducate.com.au",
+  "subject": "Studocyte interviews · Alert delivery test",
+  "verifiedAt": "2026-09-16T00:34:51.363Z"
+}
