@@ -1,0 +1,20 @@
+{
+  "run": "0a5e86ac-c6d5-4392-bdc1-03a1467e5e93",
+  "staging": true,
+  "passed": true,
+  "checks": [
+    "Room creation is authenticated, same-origin and stores only a hashed invite code",
+    "Only the invited two accounts can enter; direct browser table access stays closed",
+    "Both roles ready independently, ICE configuration is private, and the prompt stays hidden until preparation",
+    "The published Live Practice page loads without the removed four-step explainer",
+    "Disposable accounts, entitlements, room, signals and feedback were removed"
+  ],
+  "fixtureUserIds": [
+    "c919280f-2dcb-4575-ab14-a6b686a78362",
+    "946fd346-6dc5-436d-9b48-8244d0239854",
+    "7f3d2f29-5f5f-42ea-939e-ae8a86bceb47"
+  ],
+  "roomId": "0d1c883c-c0d2-4619-9e79-5ddc84b15d67",
+  "failure": null,
+  "verifiedAt": "2026-09-15T23:58:41.209Z"
+}

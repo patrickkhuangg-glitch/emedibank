@@ -1,0 +1,30 @@
+{
+  "run": "59950a41-acab-4205-9ca6-43396337723b",
+  "staging": true,
+  "synthetic": true,
+  "checks": [
+    "Hosted worker copied audio and video fixtures to private R2",
+    "audio: complete backup digest verified",
+    "audio: missing source restored",
+    "audio: restored bytes exactly match original",
+    "video: complete backup digest verified",
+    "video: missing source restored",
+    "video: restored bytes exactly match original",
+    "Expired ordinary backup deleted",
+    "Expired pending-marking backup protected",
+    "audio: expired backup physically absent",
+    "video: expired backup physically absent",
+    "All transcripts preserved after backup deletion"
+  ],
+  "cleaned": true,
+  "fixtures": [
+    {
+      "id": "67c79c9f-b504-48b5-85d4-915cc4434041",
+      "kind": "audio"
+    },
+    {
+      "id": "6b31b264-d59b-42d5-84fa-29cb7e9a1b46",
+      "kind": "video"
+    }
+  ]
+}
