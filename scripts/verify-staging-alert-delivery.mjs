@@ -58,11 +58,19 @@ const alias = aliases.aliases?.find((entry) => entry.alias === stagingAlias)
 assert.equal(alias?.deploymentId ?? alias?.deployment?.id, deployment.deploymentId, 'Staging alias is not attached to the new deployment')
 
 await stagingSql('select public.check_interview_operations()', false)
-const pendingBefore = await stagingSql("select count(*)::integer as count from public.interview_alert_deliveries where status in ('pending','sending')")
-assert.equal(pendingBefore[0]?.count, 0, 'Existing operational alerts must be reviewed before the one-message delivery test')
-
-const inserted = await stagingSql("insert into public.interview_alert_deliveries(code,episode_at,kind) values('setup_test',now(),'opened') returning id", false)
-const alertId = inserted[0]?.id
+const pendingBefore = await stagingSql("select id,code,status,attempts from public.interview_alert_deliveries where status in ('pending','sending') order by created_at")
+assert(
+  pendingBefore.length === 0 || (
+    pendingBefore.length === 1 &&
+    pendingBefore[0].code === 'setup_test' &&
+    pendingBefore[0].status === 'pending'
+  ),
+  'Existing operational alerts must be reviewed before the one-message delivery test',
+)
+const alertId = pendingBefore[0]?.id ?? (await stagingSql(
+  "insert into public.interview_alert_deliveries(code,episode_at,kind) values('setup_test',now(),'opened') returning id",
+  false,
+))[0]?.id
 assert.match(alertId ?? '', /^[a-f0-9-]{36}$/)
 
 const response = await fetch(`${STAGING_APP}/api/internal/interviews/monitor`, {
