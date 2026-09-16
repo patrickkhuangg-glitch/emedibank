@@ -1,0 +1,13 @@
+{
+  "run": "940baa3f-631a-42e2-8124-3b1fe2c3437d",
+  "staging": true,
+  "passed": true,
+  "checks": [
+    "First signed-in device can use the protected Interviews workspace",
+    "A second sign-in becomes the current device",
+    "The previous device is rejected immediately and receives the session-replaced login route",
+    "Disposable account, entitlement and active-device record were removed"
+  ],
+  "failure": null,
+  "verifiedAt": "2026-09-16T00:39:51.434Z"
+}
