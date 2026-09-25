@@ -6,6 +6,7 @@
 -- policy let a student insert/edit/delete their own rows through the public API,
 -- forging accuracy, dashboard XP and the pooled platform average.
 drop policy if exists "Users manage their own attempts" on public.question_attempts;
+drop policy if exists "Users read their own attempts" on public.question_attempts;
 create policy "Users read their own attempts"
   on public.question_attempts for select
   using (auth.uid() = user_id);
