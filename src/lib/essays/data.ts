@@ -177,13 +177,16 @@ export type MarkingQueueItem = {
   studentName: string | null
 }
 
-/** Essays awaiting tutor marking, oldest first. Admin-only (service-role read). */
+/** Essays awaiting tutor marking, oldest first. Admin-only (service-role read).
+ *  Anchored in essay_markings (admin-only, written only after credits are spent)
+ *  so a student cannot enqueue an essay by writing marking fields directly. */
 export async function getPendingMarkings(): Promise<MarkingQueueItem[]> {
   const admin = createAdminClient()
   const { data } = await admin
     .from('essay_responses')
-    .select('id, word_count, timed, submitted_for_marking_at, user_id, essay_prompts(theme, task), essay_markings(ai_feedback)')
+    .select('id, word_count, timed, submitted_for_marking_at, user_id, essay_prompts(theme, task), essay_markings!inner(ai_feedback, status)')
     .eq('marking_status', 'pending')
+    .eq('essay_markings.status', 'pending')
     .order('submitted_for_marking_at', { ascending: true })
   const rows = (data ?? []) as Array<{
     id: string; word_count: number; timed: boolean; submitted_for_marking_at: string | null; user_id: string
