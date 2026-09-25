@@ -2,11 +2,17 @@
 import { requireUser, requireAdmin } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { findUserIdByEmail } from '@/lib/supabase/users'
 import { canAccessSubtest } from '@/lib/access'
 import { countWords, parseQuotes, MARK_COST } from './config'
 import { MARKING_SYSTEM, SECONDARY_MARKING_SYSTEM, RUBRIC_VERSION, buildMarkingUserMessage } from './marking-rubric'
 
 type Denied = { denied: true }
+
+// Timer lengths come from the client; keep them to a sane whole-minute range.
+function validMinutes(minutes: number | null | undefined): minutes is number {
+  return typeof minutes === 'number' && Number.isInteger(minutes) && minutes >= 1 && minutes <= 180
+}
 
 /** Begin a writing session: verify access, create a fresh draft row, return its id.
  *  Each session is its own row, so a student can keep both a timed and an untimed
@@ -25,6 +31,7 @@ export async function startEssayAction(
     .eq('id', promptId)
     .maybeSingle()
   if (!prompt || !prompt.published) return { denied: true }
+  if (opts.timed && !validMinutes(opts.minutes)) return { denied: true }
   if (!(await canAccessSubtest(user.id, prompt.subtest_id))) return { denied: true }
 
   const supabase = await createClient()
@@ -89,10 +96,16 @@ export async function startSittingAction(
   const admin = createAdminClient()
   const { data: prompts } = await admin
     .from('essay_prompts')
-    .select('id, subtest_id, published')
+    .select('id, subtest_id, published, task')
     .in('id', [taskAPromptId, taskBPromptId])
+  if (!validMinutes(minutes)) return { denied: true }
   if (!prompts || prompts.length !== 2 || prompts.some((p) => !p.published)) return { denied: true }
-  if (!(await canAccessSubtest(user.id, prompts[0].subtest_id))) return { denied: true }
+  // One Task A and one Task B, and the student must have access to both.
+  const taskA = prompts.find((p) => p.id === taskAPromptId)
+  const taskB = prompts.find((p) => p.id === taskBPromptId)
+  if (taskA?.task !== 'A' || taskB?.task !== 'B') return { denied: true }
+  const access = await Promise.all(prompts.map((p) => canAccessSubtest(user.id, p.subtest_id)))
+  if (access.some((allowed) => !allowed)) return { denied: true }
 
   const sittingId = crypto.randomUUID()
   const supabase = await createClient()
@@ -172,35 +185,24 @@ export async function requestMarkingAction(
   }
 }
 
-/** Spend credits and enter the marking queue. Anchored in essay_markings (admin-
- *  only), so a request cannot be forged, and credits are debited atomically. */
+/** Spend credits and enter the marking queue. enqueue_essay_marking does the
+ *  ownership/state checks, the debit and the queue write in one transaction, so
+ *  concurrent requests cannot double-charge and a failed write cannot leave
+ *  credits spent with nothing queued. Submitting for marking also FINALISES the
+ *  essay (status 'submitted', no more editing). */
 async function requestMarkingFor(
   userId: string,
   responseId: string,
 ): Promise<{ marked: boolean; reason?: 'no_credits' | 'already' | 'empty' }> {
-  const admin = createAdminClient()
-  const { data: resp } = await admin
-    .from('essay_responses').select('user_id, marking_status, body').eq('id', responseId).maybeSingle()
-  if (!resp || resp.user_id !== userId) return { marked: false, reason: 'already' }
-  if (resp.marking_status === 'pending' || resp.marking_status === 'approved') return { marked: false, reason: 'already' }
-  if (!resp.body.trim()) return { marked: false, reason: 'empty' }
-
-  // Atomic debit as the calling user (auth.uid() inside the function).
-  const supabase = await createClient()
-  const { data: ok } = await supabase.rpc('spend_essay_credits', { p_amount: MARK_COST })
-  if (!ok) return { marked: false, reason: 'no_credits' }
-
-  const now = new Date().toISOString()
-  // Submitting for marking FINALISES the essay: it becomes submitted (locked, no
-  // more editing) at the same time it enters the queue.
-  await admin.from('essay_responses').update({
-    status: 'submitted', marking_status: 'pending', submitted_for_marking_at: now, credits_spent: MARK_COST, updated_at: now,
-  }).eq('id', responseId)
-  await admin.from('essay_markings').upsert(
-    { response_id: responseId, status: 'pending', updated_at: now },
-    { onConflict: 'response_id' },
-  )
-  return { marked: true }
+  const { data: outcome, error } = await createAdminClient().rpc('enqueue_essay_marking', {
+    p_user_id: userId,
+    p_response_id: responseId,
+    p_cost: MARK_COST,
+  })
+  if (error) throw error
+  if (outcome === 'ok') return { marked: true }
+  if (outcome === 'no_credits' || outcome === 'empty') return { marked: false, reason: outcome }
+  return { marked: false, reason: 'already' }
 }
 
 // ── Admin marking pipeline ───────────────────────────────────────────────────
@@ -395,12 +397,12 @@ export async function topUpCreditsAction(email: string, amount: number): Promise
     const n = Math.round(amount)
     if (!Number.isFinite(n) || n <= 0) return { ok: false, error: 'Enter a positive number of credits.' }
     const admin = createAdminClient()
-    const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
-    const target = (list?.users ?? []).find((u) => u.email?.toLowerCase() === email.trim().toLowerCase())
-    if (!target) return { ok: false, error: `No user found with email ${email}.` }
-    const { data: prof } = await admin.from('profiles').select('essay_credits').eq('id', target.id).maybeSingle()
+    const targetId = await findUserIdByEmail(email)
+    if (!targetId) return { ok: false, error: `No user found with email ${email}.` }
+    const { data: prof } = await admin.from('profiles').select('essay_credits').eq('id', targetId).maybeSingle()
     const balance = (prof?.essay_credits ?? 0) + n
-    await admin.from('profiles').update({ essay_credits: balance }).eq('id', target.id)
+    const { error: updateError } = await admin.from('profiles').update({ essay_credits: balance }).eq('id', targetId)
+    if (updateError) throw updateError
     return { ok: true, balance }
   } catch {
     return { ok: false, error: 'Something went wrong.' }

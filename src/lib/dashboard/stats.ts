@@ -4,6 +4,8 @@
 // score band all fall out of the attempt log.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/supabase/paginate'
+import { chunk } from '@/lib/supabase/users'
 import { canonicalCategories } from '@/lib/practice/categories'
 
 const DAY = 86_400_000
@@ -73,20 +75,19 @@ async function loadAttempts(userId: string, examId: string) {
     .select('id, name, slug, sort_order')
     .eq('exam_id', examId)
     .order('sort_order')
-  const { data: attempts } = await supabase
+  const rows: Attempt[] = await fetchAllRows((from, to) => supabase
     .from('question_attempts')
     .select('question_id, subtest_id, is_correct, time_spent_seconds, answered_at')
     .eq('user_id', userId)
     .eq('exam_id', examId)
     .order('answered_at', { ascending: true })
-  const rows = (attempts ?? []) as Attempt[]
+    .order('id')
+    .range(from, to))
 
   const qids = [...new Set(rows.map((a) => a.question_id))]
   const tagByQ = new Map<string, string[]>()
-  if (qids.length) {
-    const { data: qs } = await supabase.from('questions').select('id, tags').in('id', qids)
-    for (const q of qs ?? []) tagByQ.set(q.id, q.tags ?? [])
-  }
+  const tagPages = await Promise.all(chunk(qids).map((batch) => supabase.from('questions').select('id, tags').in('id', batch)))
+  for (const { data: qs } of tagPages) for (const q of qs ?? []) tagByQ.set(q.id, q.tags ?? [])
   return { subs: subs ?? [], rows, tagByQ }
 }
 
@@ -232,15 +233,17 @@ export async function mostRecentExamId(userId: string): Promise<string | null> {
 /** Ordered question ids for a spaced-review session (latest-wrong, oldest first). */
 export async function resolveReviewQuestionIds(userId: string, examId: string): Promise<string[]> {
   const supabase = createAdminClient()
-  const { data } = await supabase
+  const data = await fetchAllRows((from, to) => supabase
     .from('question_attempts')
     .select('question_id, is_correct, answered_at')
     .eq('user_id', userId)
     .eq('exam_id', examId)
     .order('answered_at', { ascending: true })
+    .order('id')
+    .range(from, to))
   const latest = new Map<string, boolean>()
   const at = new Map<string, string>()
-  for (const a of data ?? []) { latest.set(a.question_id, a.is_correct); at.set(a.question_id, a.answered_at) }
+  for (const a of data) { latest.set(a.question_id, a.is_correct); at.set(a.question_id, a.answered_at) }
   const now = Date.now()
   return [...latest.entries()]
     .filter(([, ok]) => !ok)

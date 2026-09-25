@@ -6,6 +6,8 @@ import { randomUUID, randomBytes, createHash } from 'node:crypto'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
+// Test accounts need a signup ticket once require_signup_authorization is active.
+async function signupTicket(email){const token=randomBytes(32).toString('hex');const {error}=await admin.rpc('authorize_signup',{p_email:email,p_token_hash:createHash('sha256').update(token).digest('hex')});if(error)throw error;return token}
 
 if (!process.argv.includes('--authorised-public-beta-test')) throw new Error('Explicit operator authorisation required')
 const PROJECT='ghxwyfiemvyhijpmrhgf', SUPABASE_URL=`https://${PROJECT}.supabase.co`
@@ -28,7 +30,7 @@ async function http(path,user,method='GET',body){
 async function makeUser(label,role='student'){
  const password=randomBytes(32).toString('base64url')+'!aA9'
  const email=`mock-test-${run}-${label}@example.invalid`
- const created=data(await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable Mock Interview Test',hosted_test_run:run}}),'create disposable account').user
+ const created=data(await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable Mock Interview Test',hosted_test_run:run,signup_authorization:await signupTicket(email)}}),'create disposable account').user
  const user={id:created.id,role};users.push(user);receipt()
  data(await admin.from('profiles').update({role,mmi_credits:3}).eq('id',user.id),'set fixture role and credits')
  const jar=new Map()

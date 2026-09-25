@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { getProfile, requireAdmin, requireUser } from '@/lib/auth/dal'
 import { hasActiveEntitlement } from '@/lib/access'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { findUserIdByEmail } from '@/lib/supabase/users'
 import type { StudyPlanItemKind, StudyPlanStatus } from '@/lib/supabase/types'
 
 const statuses = new Set<StudyPlanStatus>(['active', 'paused', 'completed'])
@@ -21,17 +22,18 @@ export async function createStudyPlanAction(_previous: CreateStudyPlanState, for
   if (!email || !name) return { error: 'Enter the student email and package name.' }
 
   const admin = createAdminClient()
-  const { data: users, error: usersError } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  if (usersError) {
-    console.error('Could not list Studocyte users for a study plan.', usersError)
+  let studentId: string | null
+  try {
+    studentId = await findUserIdByEmail(email)
+  } catch (usersError) {
+    console.error('Could not look up a Studocyte user for a study plan.', usersError)
     return { error: 'Unable to check student accounts right now. Please refresh and try again.' }
   }
-  const student = users.users.find((user) => user.email?.toLowerCase() === email)
-  if (!student) return { error: 'No Studocyte account matches that email. Create the student account first, then return here to add their package.' }
+  if (!studentId) return { error: 'No Studocyte account matches that email. Create the student account first, then return here to add their package.' }
 
   const { data: plan, error } = await admin
     .from('study_plans')
-    .insert({ user_id: student.id, name, created_by: adminProfile.id })
+    .insert({ user_id: studentId, name, created_by: adminProfile.id })
     .select('id')
     .single()
   if (error || !plan) {

@@ -3,6 +3,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth/dal'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/supabase/paginate'
+import { chunk } from '@/lib/supabase/users'
 import { createVideoUpload } from '@/lib/mux/upload'
 import { getOrigin } from '@/lib/site'
 import type { QFilter } from './question-filter'
@@ -82,47 +85,67 @@ export async function createQuestion(input: QuestionInput) {
 /** Resolve every question id matching a filter (used for "select all matching"). */
 async function matchingIds(f: QFilter): Promise<string[]> {
   const supabase = await createClient()
-  let sel = supabase.from('questions').select('id')
-  if (f.subtestId) sel = sel.eq('subtest_id', f.subtestId)
-  else if (f.examId) {
+  let examSubtestIds: string[] | null = null
+  if (!f.subtestId && f.examId) {
     const { data: subs } = await supabase.from('subtests').select('id').eq('exam_id', f.examId)
-    sel = sel.in('subtest_id', (subs ?? []).map((s) => s.id))
+    examSubtestIds = (subs ?? []).map((s) => s.id)
   }
-  if (f.status === 'published') sel = sel.eq('published', true)
-  else if (f.status === 'draft') sel = sel.eq('published', false)
-  if (f.search.trim()) sel = sel.ilike('stem', `%${f.search.trim()}%`)
-  const { data } = await sel
-  return (data ?? []).map((r) => r.id)
+  // Paged: a plain select silently stops at 1,000 rows.
+  const rows = await fetchAllRows((from, to) => {
+    let sel = supabase.from('questions').select('id')
+    if (f.subtestId) sel = sel.eq('subtest_id', f.subtestId)
+    else if (examSubtestIds) sel = sel.in('subtest_id', examSubtestIds)
+    if (f.status === 'published') sel = sel.eq('published', true)
+    else if (f.status === 'draft') sel = sel.eq('published', false)
+    if (f.search.trim()) sel = sel.ilike('stem', `%${f.search.trim()}%`)
+    return sel.order('id').range(from, to)
+  })
+  return rows.map((r) => r.id)
 }
 
-export async function bulkDeleteIds(ids: string[]) {
-  await requireAdmin()
-  if (!ids.length) return
+export type DeleteResult = { deleted: number; unpublished: number }
+
+/** Delete questions, except those students have answered or that sit in a mock
+ *  form: deleting those would cascade away attempt history and break the mock,
+ *  so they are unpublished instead. */
+async function deleteQuestions(ids: string[]): Promise<DeleteResult> {
+  if (!ids.length) return { deleted: 0, unpublished: 0 }
+  const { data: withHistory, error: historyError } = await createAdminClient().rpc('questions_with_history', { p_ids: ids })
+  if (historyError) throw historyError
+  const keep = new Set(withHistory ?? [])
+  const removable = ids.filter((id) => !keep.has(id))
   const supabase = await createClient()
-  const { error } = await supabase.from('questions').delete().in('id', ids)
-  if (error) throw error
+  for (const batch of chunk(removable)) {
+    const { error } = await supabase.from('questions').delete().in('id', batch)
+    if (error) throw error
+  }
+  for (const batch of chunk([...keep])) {
+    const { error } = await supabase.from('questions').update({ published: false }).in('id', batch)
+    if (error) throw error
+  }
   revalidatePath('/admin/questions')
+  return { deleted: removable.length, unpublished: keep.size }
+}
+
+export async function bulkDeleteIds(ids: string[]): Promise<DeleteResult> {
+  await requireAdmin()
+  return deleteQuestions(ids)
 }
 
 export async function bulkSetPublishedIds(ids: string[], published: boolean) {
   await requireAdmin()
   if (!ids.length) return
   const supabase = await createClient()
-  const { error } = await supabase.from('questions').update({ published }).in('id', ids)
-  if (error) throw error
+  for (const batch of chunk(ids)) {
+    const { error } = await supabase.from('questions').update({ published }).in('id', batch)
+    if (error) throw error
+  }
   revalidatePath('/admin/questions')
 }
 
-export async function bulkDeleteMatching(f: QFilter): Promise<number> {
+export async function bulkDeleteMatching(f: QFilter): Promise<DeleteResult> {
   await requireAdmin()
-  const ids = await matchingIds(f)
-  if (ids.length) {
-    const supabase = await createClient()
-    const { error } = await supabase.from('questions').delete().in('id', ids)
-    if (error) throw error
-    revalidatePath('/admin/questions')
-  }
-  return ids.length
+  return deleteQuestions(await matchingIds(f))
 }
 
 export async function bulkSetPublishedMatching(f: QFilter, published: boolean): Promise<number> {
@@ -130,8 +153,10 @@ export async function bulkSetPublishedMatching(f: QFilter, published: boolean): 
   const ids = await matchingIds(f)
   if (ids.length) {
     const supabase = await createClient()
-    const { error } = await supabase.from('questions').update({ published }).in('id', ids)
-    if (error) throw error
+    for (const batch of chunk(ids)) {
+      const { error } = await supabase.from('questions').update({ published }).in('id', batch)
+      if (error) throw error
+    }
     revalidatePath('/admin/questions')
   }
   return ids.length

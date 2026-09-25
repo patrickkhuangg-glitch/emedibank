@@ -40,7 +40,11 @@ export async function POST(request: Request) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        await upsertSubscriptionFromStripe(event.data.object as Stripe.Subscription)
+        // Stripe does not guarantee delivery order, and retries can arrive late.
+        // Sync from the subscription's current state, never the event snapshot,
+        // so a stale 'updated (active)' cannot re-grant access after cancellation.
+        const sub = await stripe.subscriptions.retrieve((event.data.object as Stripe.Subscription).id)
+        await upsertSubscriptionFromStripe(sub)
         break
       }
       case 'invoice.payment_failed': {

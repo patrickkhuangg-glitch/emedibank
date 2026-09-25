@@ -26,7 +26,17 @@ export async function POST(request: Request) {
   if (!secret) return NextResponse.json({ error: 'Zoom webhook is not configured.' }, { status: 503 })
 
   const body = await request.text()
-  const payload = JSON.parse(body) as ZoomWebhook
+  // Verify before anything else, including the URL-validation handshake: that
+  // handshake returns HMAC(secret, plainToken), so answering it unsigned would
+  // let anyone mint valid signatures for forged events.
+  if (!validSignature(request, body, secret)) return NextResponse.json({ error: 'Invalid Zoom signature.' }, { status: 401 })
+
+  let payload: ZoomWebhook
+  try {
+    payload = JSON.parse(body) as ZoomWebhook
+  } catch {
+    return NextResponse.json({ error: 'Invalid Zoom payload.' }, { status: 400 })
+  }
 
   if (payload.event === 'endpoint.url_validation') {
     const plainToken = payload.payload?.plainToken
@@ -37,7 +47,6 @@ export async function POST(request: Request) {
     })
   }
 
-  if (!validSignature(request, body, secret)) return NextResponse.json({ error: 'Invalid Zoom signature.' }, { status: 401 })
   if (payload.event !== 'meeting.ended') return NextResponse.json({ received: true })
 
   const meetingId = String(payload.payload?.object?.id ?? '')
@@ -80,11 +89,20 @@ export async function POST(request: Request) {
 function validSignature(request: Request, body: string, secret: string) {
   const timestamp = request.headers.get('x-zm-request-timestamp')
   const signature = request.headers.get('x-zm-signature')
-  if (!timestamp || !signature) return false
+  if (!timestamp || !signature || !freshTimestamp(timestamp)) return false
   const expected = `v0=${createHmac('sha256', secret).update(`v0:${timestamp}:${body}`).digest('hex')}`
   const expectedBytes = Buffer.from(expected)
   const actualBytes = Buffer.from(signature)
   return expectedBytes.length === actualBytes.length && timingSafeEqual(expectedBytes, actualBytes)
+}
+
+// Reject replays: Zoom sends the request time in epoch seconds.
+const MAX_SIGNATURE_AGE_MS = 5 * 60_000
+function freshTimestamp(timestamp: string) {
+  const value = Number(timestamp)
+  if (!Number.isFinite(value)) return false
+  const ms = value < 1e12 ? value * 1000 : value
+  return Math.abs(Date.now() - ms) <= MAX_SIGNATURE_AGE_MS
 }
 
 function meetingMinutes(meeting: ZoomMeetingObject | undefined) {

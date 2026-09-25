@@ -41,11 +41,12 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
   let userId: string | null = sub.metadata?.supabase_user_id ?? null
   const customerId = idOf(sub.customer as string | { id: string })
   if (!userId && customerId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('stripe_customer_id', customerId)
       .maybeSingle()
+    if (error) throw error
     userId = data?.id ?? null
   }
   if (!userId) return // cannot map to a user — nothing to record
@@ -64,7 +65,9 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
     productId = product?.id ?? null
   }
 
-  await supabase.from('subscriptions').upsert(
+  // Errors propagate so the webhook returns 500 and Stripe retries; swallowing
+  // them would acknowledge the event with access left out of sync.
+  const { error: upsertError } = await supabase.from('subscriptions').upsert(
     {
       user_id: userId,
       stripe_customer_id: customerId,
@@ -77,6 +80,7 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
     },
     { onConflict: 'stripe_subscription_id' },
   )
+  if (upsertError) throw upsertError
 
   await syncEntitlementsForUser(userId)
 
@@ -90,10 +94,11 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
       return id ? [id] : []
     })
     if (periodEnd && stripeProductIds.length > 0) {
-      const { data: purchased } = await supabase
+      const { data: purchased, error: productsError } = await supabase
         .from('products')
         .select('kind, exams(slug)')
         .in('stripe_product_id', stripeProductIds)
+      if (productsError) throw productsError
       const includesBundle = (purchased ?? []).some((p) => p.kind === 'bundle')
       const slugs = new Set((purchased ?? []).flatMap((p) => {
         const exam = p.exams as { slug: string } | null
@@ -102,24 +107,26 @@ export async function upsertSubscriptionFromStripe(sub: Stripe.Subscription): Pr
 
       // Two credits mark one essay, so 20 marked essays = 40 credits.
       if (includesBundle || slugs.has('gamsat')) {
-        await supabase.rpc('grant_subscription_benefit', {
+        const { error } = await supabase.rpc('grant_subscription_benefit', {
           p_user_id: userId,
           p_stripe_subscription_id: sub.id,
           p_benefit: 'gamsat_essay_credits',
           p_period_end: periodEnd,
           p_amount: 40,
         })
+        if (error) throw error
       }
       // The annual promotion includes Interviews with every annual package, so
       // every active annual subscription receives the 25-station allowance.
       if (annualItems.length > 0) {
-        await supabase.rpc('grant_subscription_benefit', {
+        const { error } = await supabase.rpc('grant_subscription_benefit', {
           p_user_id: userId,
           p_stripe_subscription_id: sub.id,
           p_benefit: 'interview_mmi_credits',
           p_period_end: periodEnd,
           p_amount: 25,
         })
+        if (error) throw error
       }
     }
   }

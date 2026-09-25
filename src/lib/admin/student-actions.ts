@@ -5,6 +5,7 @@ import { getProfile } from '@/lib/auth/dal'
 import { normalisePhone } from '@/lib/auth/signup-protection'
 import { getOrigin } from '@/lib/site'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { issueSignupTicket, SIGNUP_TICKET_KEY } from '@/lib/auth/signup-ticket'
 
 export type InviteStudentState = { error?: string; message?: string }
 export type SendAccountAccessState = { error?: string; message?: string }
@@ -31,9 +32,16 @@ export async function inviteStudentAction(_previous: InviteStudentState, formDat
     .maybeSingle()
   if (existingPhone) return { error: 'That mobile number is already linked to another account.' }
 
+  let signupTicket: string
+  try {
+    signupTicket = await issueSignupTicket(email)
+  } catch (ticketError) {
+    console.error('Signup ticket could not be issued for an invite.', ticketError)
+    return { error: 'The invite could not be prepared. Please try again.' }
+  }
   const origin = await getOrigin()
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName, phone_number: phoneNumber },
+    data: { full_name: fullName, phone_number: phoneNumber, [SIGNUP_TICKET_KEY]: signupTicket },
     redirectTo: `${origin}/auth/confirm?next=/update-password`,
   })
   if (error) {

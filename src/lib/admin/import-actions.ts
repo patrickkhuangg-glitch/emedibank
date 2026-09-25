@@ -130,7 +130,15 @@ export async function importQuestions(text: string): Promise<ImportResult> {
           .map((L) => ({ label: L.toUpperCase(), body: cell(row, `option_${L}`) }))
           .filter((o) => o.body)
           .map((o, i) => ({ question_id: q.id, label: o.label, body: o.body, is_correct: o.label === correct, sort_order: i + 1 }))
-        if (opts.length) { const { error: oe } = await supabase.from('question_options').insert(opts); if (oe) throw oe }
+        if (opts.length) {
+          const { error: oe } = await supabase.from('question_options').insert(opts)
+          if (oe) {
+            // No transaction across the two inserts: remove the question so a
+            // failed row never leaves an answerless (possibly published) question.
+            await supabase.from('questions').delete().eq('id', q.id)
+            throw oe
+          }
+        }
       }
       created++
     } catch (e) {

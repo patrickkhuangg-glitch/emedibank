@@ -8,7 +8,13 @@
 import 'server-only'
 import crypto from 'node:crypto'
 
-const SECRET = process.env.SUPABASE_SECRET_KEY ?? 'insecure-dev-mock-secret'
+// Fail closed: a missing key must never fall back to a guessable default, which
+// would let anyone forge a manifest for any question set.
+function secret(): string {
+  const key = process.env.SUPABASE_SECRET_KEY
+  if (!key) throw new Error('SUPABASE_SECRET_KEY is required to sign mock manifests.')
+  return key
+}
 
 export type MockManifest = {
   u: string // user id
@@ -27,7 +33,7 @@ function b64url(buf: Buffer): string {
 export function signManifest(m: Omit<MockManifest, 'x'>, ttlMs: number = DEFAULT_TTL_MS): string {
   const full: MockManifest = { ...m, x: Date.now() + ttlMs }
   const payload = b64url(Buffer.from(JSON.stringify(full)))
-  const sig = b64url(crypto.createHmac('sha256', SECRET).update(payload).digest())
+  const sig = b64url(crypto.createHmac('sha256', secret()).update(payload).digest())
   return `${payload}.${sig}`
 }
 
@@ -37,7 +43,7 @@ export function verifyManifest(token: string, userId: string): MockManifest | nu
   if (dot < 1) return null
   const payload = token.slice(0, dot)
   const sig = token.slice(dot + 1)
-  const expected = b64url(crypto.createHmac('sha256', SECRET).update(payload).digest())
+  const expected = b64url(crypto.createHmac('sha256', secret()).update(payload).digest())
   const a = Buffer.from(sig)
   const b = Buffer.from(expected)
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null

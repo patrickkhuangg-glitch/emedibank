@@ -2,6 +2,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSafeQuestion, loadMeta, type SafeQuestion } from '@/lib/access/questions'
+import { hasActiveEntitlement } from '@/lib/access'
 import type { StoredSessionResponse } from '@/lib/practice/session-actions'
 
 export type PracticeSession = {
@@ -87,8 +88,14 @@ export type HistoricalPracticeReview = {
   items: HistoricalReviewItem[]
 }
 
+// A real session never holds more than a full section; anything longer is forged.
+const MAX_REVIEW_QUESTIONS = 300
+
 /** Load one immutable completed session for its owner, including answer keys.
- * Ownership is verified before any secure question data is assembled. */
+ * Ownership is verified before any secure question data is assembled.
+ * question_ids is written from the client, so answer keys are only revealed for
+ * questions the student actually answered (server-recorded attempts) or that
+ * are published and currently unlocked for them. */
 export async function getPracticeSessionReview(userId: string, sessionId: string): Promise<HistoricalPracticeReview | null> {
   const db = createAdminClient()
   const { data: session } = await db.from('practice_sessions')
@@ -103,12 +110,19 @@ export async function getPracticeSessionReview(userId: string, sessionId: string
     session.subtest_id ? db.from('subtests').select('name').eq('id', session.subtest_id).maybeSingle() : Promise.resolve({ data: null }),
   ])
   if (!exam) return null
+  const questionIds = [...new Set(session.question_ids)].slice(0, MAX_REVIEW_QUESTIONS)
+  const [{ data: attempted }, entitled] = await Promise.all([
+    db.from('question_attempts').select('question_id').eq('user_id', userId).in('question_id', questionIds),
+    hasActiveEntitlement(userId, session.exam_id),
+  ])
+  const attemptedIds = new Set((attempted ?? []).map((row) => row.question_id))
   const stored = Array.isArray(session.responses) ? session.responses as StoredSessionResponse[] : []
   const responseById = new Map(stored.map((item) => [item.questionId, item]))
 
-  const items = (await Promise.all(session.question_ids.map(async (questionId): Promise<HistoricalReviewItem | null> => {
+  const items = (await Promise.all(questionIds.map(async (questionId): Promise<HistoricalReviewItem | null> => {
     const meta = await loadMeta(questionId)
     if (!meta || meta.exam_id !== session.exam_id) return null
+    if (!attemptedIds.has(questionId) && !(meta.published && entitled)) return null
     const question = await buildSafeQuestion(meta)
     const saved = responseById.get(questionId)
     let correctOptionId: string | null = null

@@ -6,16 +6,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getSupabaseSecretKey } from '@/lib/supabase/env'
 
 const HOUR = 60 * 60
-const MONTH = 30 * 24 * HOUR
+const DAY = 24 * HOUR
 
 export async function verifySignupProtection(email: string, turnstileToken: string) {
   const requestHeaders = await headers()
   const ip = clientIp(requestHeaders)
-  const [ipAllowed, emailAllowed] = await Promise.all([
-    consume('ip', ip, 4, MONTH),
-    consume('email', email.toLowerCase(), 3, HOUR),
-  ])
-  if (!ipAllowed || !emailAllowed) return { error: 'Too many signup attempts. Please try again later.' }
 
   const secret = process.env.TURNSTILE_SECRET_KEY
   if (!secret) {
@@ -37,6 +32,14 @@ export async function verifySignupProtection(email: string, turnstileToken: stri
   } catch {
     return { error: 'The security check is unavailable. Please try again shortly.' }
   }
+
+  // Count only attempts that passed the security check, so bots and failed
+  // checks cannot use up the allowance of a shared school or campus network.
+  const [ipAllowed, emailAllowed] = await Promise.all([
+    consume('ip', ip, 10, DAY),
+    consume('email', email.toLowerCase(), 3, HOUR),
+  ])
+  if (!ipAllowed || !emailAllowed) return { error: 'Too many signup attempts. Please try again later.' }
 
   return { error: null }
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOrigin } from '@/lib/site'
 import { normalisePhone, verifySignupProtection } from '@/lib/auth/signup-protection'
+import { issueSignupTicket, SIGNUP_TICKET_KEY } from '@/lib/auth/signup-ticket'
 import { homeForRole, safeInternalPath } from '@/lib/auth/roles'
 
 export type AuthState = { error?: string; message?: string }
@@ -43,6 +44,13 @@ export async function signUpAction(
   }
   const protection = await verifySignupProtection(email, turnstileToken)
   if (protection.error) return { error: protection.error }
+  let signupTicket: string
+  try {
+    signupTicket = await issueSignupTicket(email)
+  } catch (ticketError) {
+    console.error('Signup ticket could not be issued.', ticketError)
+    return { error: 'We could not start your signup. Please try again shortly.' }
+  }
 
   const origin = await getOrigin()
   const supabase = await createClient()
@@ -50,7 +58,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      data: { full_name: fullName, phone_number: phoneNumber },
+      data: { full_name: fullName, phone_number: phoneNumber, [SIGNUP_TICKET_KEY]: signupTicket },
       emailRedirectTo: `${origin}/auth/confirm?next=/app`,
     },
   })

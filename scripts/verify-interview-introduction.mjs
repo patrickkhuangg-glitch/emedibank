@@ -1,10 +1,12 @@
 // Disposable-account hosted checks. Never print or persist admin keys or session tokens.
 import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
-import {randomUUID,randomBytes} from 'node:crypto'
+import {randomUUID,randomBytes,createHash} from 'node:crypto'
 import {writeFileSync} from 'node:fs'
 import {createClient} from '@supabase/supabase-js'
 import {createServerClient} from '@supabase/ssr'
+// Test accounts need a signup ticket once require_signup_authorization is active.
+async function signupTicket(email){const token=randomBytes(32).toString('hex');const {error}=await admin.rpc('authorize_signup',{p_email:email,p_token_hash:createHash('sha256').update(token).digest('hex')});if(error)throw error;return token}
 if(!process.argv.includes('--authorised-public-beta-test'))throw new Error('Operator authorisation required')
 const app=process.argv.find(a=>a.startsWith('https://'))
 if(!app||!new URL(app).hostname.endsWith('.vercel.app'))throw new Error('Expected verified beta deployment URL')
@@ -15,7 +17,7 @@ function pass(label){checks.push(label);console.log('PASS '+label)}
 async function request(path,user,method='GET',body){const r=await fetch(app+path,{method,headers:{'Content-Type':'application/json',...(user?{Cookie:user.cookie}:{})},body:body===undefined?undefined:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(45000)});const text=await r.text();let data;try{data=JSON.parse(text)}catch{}return {status:r.status,data,text}}
 async function fixture(){
  const email=`interview-intro-${randomUUID()}@example.invalid`,password=randomBytes(24).toString('base64url')+'!Aa9'
- const result=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable introduction test',unrelated_preference:'preserved'}});ok(!result.error)
+ const result=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable introduction test',unrelated_preference:'preserved',signup_authorization:await signupTicket(email)}});ok(!result.error)
  const user={id:result.data.user.id};users.push(user)
  ok(!(await admin.from('profiles').update({role:'student'}).eq('id',user.id)).error)
  const jar=new Map(),client=createServerClient(url,publicKey,{cookies:{getAll:()=>[...jar].map(([name,value])=>({name,value})),setAll:items=>items.forEach(i=>jar.set(i.name,i.value))},auth:{autoRefreshToken:false}})

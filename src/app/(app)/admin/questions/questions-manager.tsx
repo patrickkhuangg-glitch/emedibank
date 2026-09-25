@@ -99,6 +99,9 @@ export function QuestionsManager({
     setAllMatching(false)
   }
 
+  function reportDelete({ deleted, unpublished }: { deleted: number; unpublished: number }) {
+    if (unpublished > 0) alert(`${deleted} deleted. ${unpublished} ${unpublished === 1 ? 'question has' : 'questions have'} student answers or ${unpublished === 1 ? 'is' : 'are'} in a mock, so ${unpublished === 1 ? 'it was' : 'they were'} unpublished instead of deleted.`)
+  }
   function run(fn: () => Promise<unknown>) {
     startTransition(async () => {
       await fn()
@@ -107,8 +110,8 @@ export function QuestionsManager({
     })
   }
   const doDelete = () => {
-    if (!confirm(`Delete ${selectedCount} question${selectedCount === 1 ? '' : 's'}? This cannot be undone.`)) return
-    run(() => (allMatching ? bulkDeleteMatching(filter) : bulkDeleteIds([...selected])))
+    if (!confirm(`Delete ${selectedCount} question${selectedCount === 1 ? '' : 's'}? This cannot be undone. Questions students have answered, or that are in a mock, are unpublished instead so their history is kept.`)) return
+    run(async () => reportDelete(await (allMatching ? bulkDeleteMatching(filter) : bulkDeleteIds([...selected]))))
   }
   const doPublish = (published: boolean) =>
     run(() => (allMatching ? bulkSetPublishedMatching(filter, published) : bulkSetPublishedIds([...selected], published)))
@@ -195,7 +198,7 @@ export function QuestionsManager({
                     <button disabled={pending} onClick={() => run(() => bulkSetPublishedIds([q.id], !q.published))} className="text-muted hover:text-foreground disabled:opacity-50">
                       {q.published ? 'Unpublish' : 'Publish'}
                     </button>
-                    <button disabled={pending} onClick={() => { if (confirm('Delete this question?')) run(() => bulkDeleteIds([q.id])) }} className="text-[#dc2626] hover:opacity-80 disabled:opacity-50">
+                    <button disabled={pending} onClick={() => { if (confirm('Delete this question?')) run(async () => reportDelete(await bulkDeleteIds([q.id]))) }} className="text-[#dc2626] hover:opacity-80 disabled:opacity-50">
                       Delete
                     </button>
                   </div>

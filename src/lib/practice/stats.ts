@@ -6,6 +6,7 @@
 // leaks another user's identity — only aggregate counts.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/supabase/paginate'
 import { canonicalCategories, hidesExtraCategories } from './categories'
 
 export type SectionStat = {
@@ -32,23 +33,27 @@ export async function getSectionStats(examId: string, userId: string): Promise<S
   const subIds = subs.map((s) => s.id)
 
   // Available questions per section.
-  const { data: qs } = await supabase
+  const qs = await fetchAllRows((from, to) => supabase
     .from('questions')
-    .select('subtest_id')
+    .select('id, subtest_id')
     .eq('published', true)
     .in('subtest_id', subIds)
+    .order('id')
+    .range(from, to))
   const totalBySub = new Map<string, number>()
-  for (const q of qs ?? []) totalBySub.set(q.subtest_id, (totalBySub.get(q.subtest_id) ?? 0) + 1)
+  for (const q of qs) totalBySub.set(q.subtest_id, (totalBySub.get(q.subtest_id) ?? 0) + 1)
 
   // This user's attempts — keep the latest verdict per distinct question.
-  const { data: mine } = await supabase
+  const mine = await fetchAllRows((from, to) => supabase
     .from('question_attempts')
     .select('subtest_id, question_id, is_correct, answered_at')
     .eq('user_id', userId)
     .eq('exam_id', examId)
     .order('answered_at', { ascending: true })
+    .order('id')
+    .range(from, to))
   const latest = new Map<string, { subtest_id: string; correct: boolean }>()
-  for (const a of mine ?? []) latest.set(a.question_id, { subtest_id: a.subtest_id, correct: a.is_correct })
+  for (const a of mine) latest.set(a.question_id, { subtest_id: a.subtest_id, correct: a.is_correct })
   const attemptedBySub = new Map<string, number>()
   const correctBySub = new Map<string, number>()
   for (const { subtest_id, correct } of latest.values()) {
@@ -56,16 +61,15 @@ export async function getSectionStats(examId: string, userId: string): Promise<S
     if (correct) correctBySub.set(subtest_id, (correctBySub.get(subtest_id) ?? 0) + 1)
   }
 
-  // Pooled platform accuracy per section (all users, all attempts).
-  const { data: all } = await supabase
-    .from('question_attempts')
-    .select('subtest_id, is_correct')
-    .eq('exam_id', examId)
+  // Pooled platform accuracy per section (all users, all attempts), aggregated
+  // in SQL rather than by downloading every attempt row.
+  const { data: pooled, error: pooledError } = await supabase.rpc('platform_subtest_accuracy', { p_exam_id: examId })
+  if (pooledError) throw pooledError
   const poolTotal = new Map<string, number>()
   const poolCorrect = new Map<string, number>()
-  for (const a of all ?? []) {
-    poolTotal.set(a.subtest_id, (poolTotal.get(a.subtest_id) ?? 0) + 1)
-    if (a.is_correct) poolCorrect.set(a.subtest_id, (poolCorrect.get(a.subtest_id) ?? 0) + 1)
+  for (const row of pooled ?? []) {
+    poolTotal.set(row.subtest_id, Number(row.total))
+    poolCorrect.set(row.subtest_id, Number(row.correct))
   }
 
   return subs.map((s) => {
@@ -110,19 +114,22 @@ export async function getCategoryStats(
     .maybeSingle()
   if (!subtest || subtest.exam_id !== examId) return null
 
-  const { data: qs } = await supabase
+  const questions = await fetchAllRows((from, to) => supabase
     .from('questions')
     .select('id, tags')
     .eq('published', true)
     .eq('subtest_id', subtestId)
-  const questions = qs ?? []
+    .order('id')
+    .range(from, to))
 
-  const { data: mine } = await supabase
+  const mine = await fetchAllRows((from, to) => supabase
     .from('question_attempts')
     .select('question_id')
     .eq('user_id', userId)
     .eq('subtest_id', subtestId)
-  const attemptedIds = new Set((mine ?? []).map((a) => a.question_id))
+    .order('id')
+    .range(from, to))
+  const attemptedIds = new Set(mine.map((a) => a.question_id))
 
   const totalByTag = new Map<string, number>()
   const attemptedByTag = new Map<string, number>()

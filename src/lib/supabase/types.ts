@@ -955,6 +955,10 @@ export type Database = {
       claim_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string }; Returns: unknown }
       complete_interview_transcript_layout: { Args: { p_attempt_id: string; p_user_id: string; p_request_id: string; p_layout: unknown; p_model: string }; Returns: boolean }
       authorize_signup: { Args: { p_email: string; p_token_hash: string }; Returns: undefined }
+      platform_subtest_accuracy: { Args: { p_exam_id: string }; Returns: { subtest_id: string; total: number; correct: number }[] }
+      enqueue_essay_marking: { Args: { p_user_id: string; p_response_id: string; p_cost: number }; Returns: string }
+      find_user_id_by_email: { Args: { p_email: string }; Returns: string | null }
+      questions_with_history: { Args: { p_ids: string[] }; Returns: string[] }
       consume_interview_transcription: { Args: { p_user_id: string }; Returns: boolean }
       defer_interview_transcription: { Args: { p_job_id: string; p_worker: string }; Returns: boolean }
       list_interview_review_queue: { Args: { p_format: string; p_status: string; p_offset: number }; Returns: InterviewAttemptRow[] }

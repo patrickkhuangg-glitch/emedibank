@@ -2,10 +2,12 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { randomBytes, randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID, createHash } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
+// Test accounts need a signup ticket once require_signup_authorization is active.
+async function signupTicket(email){const token=randomBytes(32).toString('hex');const {error}=await admin.rpc('authorize_signup',{p_email:email,p_token_hash:createHash('sha256').update(token).digest('hex')});if(error)throw error;return token}
 if (!process.argv.includes('--authorised-public-beta-test')) throw new Error('Operator authorisation required')
 const app = process.argv.find(arg => arg.startsWith('https://'))
 if (!app || !new URL(app).hostname.endsWith('.vercel.app')) throw new Error('Supply a verified beta deployment URL')
@@ -15,7 +17,7 @@ const pass=label=>{checks.push(label);console.log('PASS '+label)}
 async function request(path,user,method='GET',body,origin=app){const response=await fetch(app+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(user?{Cookie:user.cookie}:{})},body:body===undefined?undefined:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(45000)});const text=await response.text();let data;try{data=JSON.parse(text)}catch{}return {status:response.status,text,data}}
 async function fixture(){
  const email=`practice-progress-${randomUUID()}@example.invalid`,password=randomBytes(32).toString('base64url')+'!Aa9'
- const result=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable practice progress test',interview_intro_v1:'skipped'}})
+ const result=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:'Disposable practice progress test',interview_intro_v1:'skipped',signup_authorization:await signupTicket(email)}})
  assert.ok(!result.error&&result.data.user);const id=result.data.user.id;ids.push(id)
  const jar=new Map(),client=createServerClient(url,publicKey,{cookies:{getAll:()=>[...jar].map(([name,value])=>({name,value})),setAll:items=>items.forEach(({name,value})=>jar.set(name,value))},auth:{autoRefreshToken:false}})
  assert.equal((await client.auth.signInWithPassword({email,password})).error,null)

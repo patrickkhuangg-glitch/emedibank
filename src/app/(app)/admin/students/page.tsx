@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { chunk, listAllAuthUsers } from '@/lib/supabase/users'
 import type { UserRole } from '@/lib/supabase/types'
 import { AccountAccessActions } from './account-access-actions'
 import { AccountManagement } from './account-management'
@@ -21,25 +22,25 @@ type AccountEntitlement = { user_id: string; exam_id: string; source: 'subscript
 export default async function AdminStudentsPage() {
   await requireAdmin()
   const admin = createAdminClient()
-  const { data: userData, error: userError } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  const users = (userData?.users ?? []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const { users: allUsers, error: userError } = await listAllAuthUsers()
+  const users = allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   const ids = users.map((user) => user.id)
-  const { data: profiles, error: profileError } = ids.length ? await admin.from('profiles').select('id,full_name,phone_number,role').in('id', ids) : { data: [] as AccountProfile[], error: null }
+  const profileResults = await Promise.all(chunk(ids).map((batch) => admin.from('profiles').select('id,full_name,phone_number,role').in('id', batch)))
+  const profileError = profileResults.find((result) => result.error)?.error ?? null
+  const profiles = profileResults.flatMap((result) => result.data ?? []) as AccountProfile[]
   if (userError || profileError) return <AccountsLoadError />
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile as AccountProfile]))
   const accounts = users.map((user) => ({ user, profile: profileById.get(user.id) }))
   const students = accounts.filter((account) => (account.profile?.role ?? 'student') === 'student')
   const staff = accounts.filter((account) => account.profile?.role === 'tutor' || account.profile?.role === 'admin')
   const studentIds = students.map((account) => account.user.id)
-  const [{ data: exams, error: examError }, entitlementResult] = await Promise.all([
+  const [{ data: exams, error: examError }, entitlementResults] = await Promise.all([
     admin.from('exams').select('id,name').eq('active', true).order('created_at'),
-    studentIds.length
-      ? admin.from('entitlements').select('user_id,exam_id,source,expires_at').in('user_id', studentIds)
-      : Promise.resolve({ data: [] as AccountEntitlement[], error: null }),
+    Promise.all(chunk(studentIds).map((batch) => admin.from('entitlements').select('user_id,exam_id,source,expires_at').in('user_id', batch))),
   ])
-  if (examError || entitlementResult.error) return <AccountsLoadError />
+  if (examError || entitlementResults.some((result) => result.error)) return <AccountsLoadError />
   const examList = (exams ?? []) as AccountExam[]
-  const entitlementsByUser = groupEntitlements((entitlementResult.data ?? []) as AccountEntitlement[])
+  const entitlementsByUser = groupEntitlements(entitlementResults.flatMap((result) => result.data ?? []) as AccountEntitlement[])
 
   return <Container className="py-10 sm:py-14"><main className="mx-auto max-w-6xl">
     <Link href="/admin" className="inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-foreground"><BackIcon /> Admin dashboard</Link>

@@ -4,6 +4,7 @@ import { Container } from '@/components/container'
 import { requireAdmin } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlan, StudyPlanItem } from '@/lib/supabase/types'
+import { listAllAuthUsers } from '@/lib/supabase/users'
 import { CreateStudyPlanForm } from './create-study-plan-form'
 
 export const dynamic = 'force-dynamic'
@@ -19,9 +20,9 @@ export default async function AdminStudyPlansPage({ searchParams }: { searchPara
   const [{ data: items }, { data: profiles }, usersResult] = await Promise.all([
     planList.length ? admin.from('study_plan_items').select('*').in('plan_id', planList.map((plan) => plan.id)).order('created_at') : Promise.resolve({ data: [] as StudyPlanItem[] }),
     userIds.length ? admin.from('profiles').select('id,full_name').in('id', userIds) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
-    admin.auth.admin.listUsers({ perPage: 1000 }),
+    listAllAuthUsers(),
   ])
-  const emailById = new Map((usersResult.data?.users ?? []).map((user) => [user.id, user.email ?? 'No email']))
+  const emailById = new Map(usersResult.users.map((user) => [user.id, user.email ?? 'No email']))
   const nameById = new Map((profiles ?? []).map((profile) => [profile.id, profile.full_name]))
   const itemsByPlan = new Map<string, StudyPlanItem[]>()
   for (const item of items ?? []) itemsByPlan.set(item.plan_id, [...(itemsByPlan.get(item.plan_id) ?? []), item])
