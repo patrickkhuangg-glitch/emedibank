@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Container } from '@/components/container'
 import { StudyPlanChecklist, StudyPlanExamDateDialog, type StudyPlanExamOption } from '@/components/study-plan-controls'
+import { isOnFreeTrial } from '@/lib/access'
 import { requireUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlan, StudyPlanExamDate, StudyPlanItem, StudyPlanTask, TutoringSession } from '@/lib/supabase/types'
@@ -28,10 +29,13 @@ export default async function StudyPlanPage() {
   const { data: items } = planIds.length
     ? await admin.from('study_plan_items').select('*').in('plan_id', planIds).order('created_at')
     : { data: [] as StudyPlanItem[] }
+  // A running free trial unlocks every active exam; otherwise only entitled ones.
   const examIds = [...new Set((entitlements ?? []).map((entitlement) => entitlement.exam_id))]
-  const { data: exams } = examIds.length
-    ? await admin.from('exams').select('id,name,slug,kind').in('id', examIds).eq('active', true)
-    : { data: [] as StudyPlanExamOption[] }
+  const { data: exams } = await isOnFreeTrial(user.id)
+    ? await admin.from('exams').select('id,name,slug,kind').eq('active', true)
+    : examIds.length
+      ? await admin.from('exams').select('id,name,slug,kind').in('id', examIds).eq('active', true)
+      : { data: [] as StudyPlanExamOption[] }
 
   const activeExams = sortExams((exams ?? []) as StudyPlanExamOption[])
   const activeExamIds = new Set(activeExams.map((exam) => exam.id))

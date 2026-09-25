@@ -133,7 +133,7 @@ export default async function DashboardPage() {
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
                       <span className="truncate">{sa.name}</span>
-                      {sa.locked ? <LockPill /> : sa.isFree ? <FreePill /> : null}
+                      {sa.locked ? <LockPill /> : null}
                     </span>
                     <span className={`font-display text-lg font-semibold ${sa.locked ? 'text-muted' : 'text-brand'}`}>Lv {level}</span>
                   </div>
@@ -330,14 +330,6 @@ function LockPill() {
   return (
     <span className="inline-flex flex-none items-center gap-1 rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted" title="Locked — unlock with a plan">
       <LockGlyph /> Locked
-    </span>
-  )
-}
-
-function FreePill() {
-  return (
-    <span className="flex-none rounded-full bg-success-muted px-1.5 py-0.5 text-[10px] font-medium text-success" title="Free — open on any plan">
-      Free
     </span>
   )
 }

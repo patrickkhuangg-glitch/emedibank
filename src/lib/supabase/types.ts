@@ -59,6 +59,7 @@ export type Database = {
           essay_credits: number
           mmi_credits: number
           phone_number: string | null
+          trial_ends_at: string
           created_at: string
         }
         Insert: {
@@ -70,6 +71,7 @@ export type Database = {
           essay_credits?: number
           mmi_credits?: number
           phone_number?: string | null
+          trial_ends_at?: string
           created_at?: string
         }
         Update: {
@@ -81,6 +83,7 @@ export type Database = {
           essay_credits?: number
           mmi_credits?: number
           phone_number?: string | null
+          trial_ends_at?: string
           created_at?: string
         }
         Relationships: [

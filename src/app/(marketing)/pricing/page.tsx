@@ -49,7 +49,7 @@ const cachedAmounts = unstable_cache(
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Pricing',
-  description: 'Free tier plus per-exam and all-access subscriptions.',
+  description: 'A 7-day free trial of everything, then per-exam and all-access subscriptions.',
   alternates: { canonical: '/pricing' },
 }
 
@@ -104,19 +104,19 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight">Everything, priced by the week</h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
-          Start free with full mock exams. For a limited time, every annual academic plan includes
+          Every new account gets 7 days of full access, free. For a limited time, every annual academic plan includes
           Interviews and 25 marked MMI stations free. Local pricing is shown in your currency.
         </p>
-        {signup === 'success' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-mint-muted px-4 py-3 text-sm font-medium text-mint-deep">Your email is verified. Choose a plan to start your 7-day trial. Add card details only if you choose to continue when it ends.</p> : null}
+        {signup === 'success' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-mint-muted px-4 py-3 text-sm font-medium text-mint-deep">Your 7-day free trial has started — full access to every exam and Interviews. Subscribe any time to keep your access when it ends.</p> : null}
         {checkout === 'cancelled' ? <p role="status" className="mx-auto mt-5 max-w-xl rounded-2xl bg-surface-muted px-4 py-3 text-sm text-muted">Checkout was cancelled. Your account is ready whenever you are.</p> : null}
       </div>
 
       <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-surface p-6 text-center">
-        <h2 className="text-lg font-semibold">Free</h2>
+        <h2 className="text-lg font-semibold">7-day free trial</h2>
         <p className="mt-1 text-sm text-muted">
-          Sit full, timed mock exams for free. No card required.
+          Full access to every exam and Interviews for 7 days. No card required.
         </p>
-        <ButtonLink href="/signup" className="mt-4 w-full">Start free</ButtonLink>
+        <ButtonLink href="/signup" className="mt-4 w-full">Start free trial</ButtonLink>
       </div>
 
       {plans.length > 0 ? (

@@ -45,8 +45,8 @@ export default async function MockExamPage({ params }: { params: Promise<{ examS
         const questions = mock.sections.reduce((sum, section) => sum + section.count, 0)
         const minutes = mock.sections.reduce((sum, section) => sum + section.minutes, 0)
         const ready = (counts[mock.assignmentKey] ?? 0) >= questions
-        const open = mock.free || entitled
-        const row = <ExamRow name={mock.name} free={mock.free} ready={ready} open={open} questions={questions} minutes={minutes} />
+        const open = entitled
+        const row = <ExamRow name={mock.name} ready={ready} open={open} questions={questions} minutes={minutes} />
         return <div key={mock.id} className="border-b border-border last:border-0">{ready ? <Link href={open ? `/mock/${exam.slug}/${mock.id}` : '/pricing'} className="eb-press group block transition-colors hover:bg-surface-muted">{row}</Link> : row}</div>
       })}</div>
     </section>
@@ -56,7 +56,7 @@ export default async function MockExamPage({ params }: { params: Promise<{ examS
 
 function Eyebrow({ children }: { children: React.ReactNode }) { return <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-brand">{children}</p> }
 function Status({ ready, text }: { ready: boolean; text: string }) { return <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${ready ? 'bg-[#e5f5ee] text-[#237357]' : 'bg-surface-muted text-muted'}`}>{text}</span> }
-function ExamRow({ name, free, ready, open, questions, minutes }: { name: string; free: boolean; ready: boolean; open: boolean; questions: number; minutes: number }) {
-  return <div className="flex items-center gap-4 px-5 py-4"><span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand"><ClipboardIcon /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold">{name}</span>{free && <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[11px] font-semibold text-brand">Free</span>}</div><p className="mt-0.5 text-sm tabular-nums text-muted">4 sections · {questions} questions · {minutes} minutes</p></div>{!ready ? <Status ready={false} text="Questions coming soon" /> : open ? <span className="hidden text-sm font-semibold text-brand sm:block">Start →</span> : <Status ready={false} text="Unlock" />}</div>
+function ExamRow({ name, ready, open, questions, minutes }: { name: string; ready: boolean; open: boolean; questions: number; minutes: number }) {
+  return <div className="flex items-center gap-4 px-5 py-4"><span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-brand-muted text-brand"><ClipboardIcon /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold">{name}</span></div><p className="mt-0.5 text-sm tabular-nums text-muted">4 sections · {questions} questions · {minutes} minutes</p></div>{!ready ? <Status ready={false} text="Questions coming soon" /> : open ? <span className="hidden text-sm font-semibold text-brand sm:block">Start →</span> : <Status ready={false} text="Unlock" />}</div>
 }
 function ClipboardIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="8" y="3" width="8" height="4" rx="1" /><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" /><path d="M9 13h6M9 17h4" /></svg> }

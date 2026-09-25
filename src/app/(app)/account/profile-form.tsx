@@ -13,7 +13,7 @@ export function ProfileForm({ fullName, phoneNumber }: { fullName: string; phone
     {state.message ? <Alert kind="success">{state.message}</Alert> : null}
     <Field label="Full name" name="full_name" type="text" autoComplete="name" defaultValue={fullName} required />
     <Field label="Mobile number" name="phone_number" type="tel" autoComplete="tel" placeholder="04xx xxx xxx" defaultValue={phoneNumber} required />
-    <p className="text-xs leading-5 text-muted">We use this to protect trial access. If you continue after your trial, card details are handled securely by Stripe, not Studocyte.</p>
+    <p className="text-xs leading-5 text-muted">We use this to protect free-trial access. Card details for subscriptions are handled securely by Stripe, not Studocyte.</p>
     <Button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save details'}</Button>
   </form>
 }

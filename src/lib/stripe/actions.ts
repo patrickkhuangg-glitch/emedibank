@@ -4,12 +4,14 @@ import { redirect } from 'next/navigation'
 import { paymentsAvailable } from '@/lib/security/payments'
 import { getStripe } from './client'
 import { getOrCreateCustomerId } from './customer'
-import { CURRENCIES, TRIAL_PERIOD_DAYS, type Currency, type Interval } from './pricing'
+import { CURRENCIES, type Currency, type Interval } from './pricing'
 import { getUser, getProfile } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getOrigin } from '@/lib/site'
 
-/** Start a subscription checkout for a product + interval. Redirects to Stripe. */
+/** Start a paid subscription checkout for a product + interval. Redirects to
+ *  Stripe. The free trial is account-level (profiles.trial_ends_at), so checkout
+ *  is always an immediate purchase — buying during the trial is allowed. */
 export async function startCheckoutAction(formData: FormData) {
   if (!paymentsAvailable()) redirect('/pricing?error=payments_unavailable')
   const user = await getUser()
@@ -61,21 +63,15 @@ export async function startCheckoutAction(formData: FormData) {
   }
 
   const profile = await getProfile()
-  if (!profile?.full_name || !profile.phone_number) redirect('/account?complete=trial')
   const customerId = await getOrCreateCustomerId(user.id, user.email, profile?.full_name)
   const origin = await getOrigin()
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    payment_method_collection: 'if_required',
     customer: customerId,
     line_items: lineItems,
     ...(currency ? { currency } : {}),
     subscription_data: {
-      trial_period_days: TRIAL_PERIOD_DAYS,
-      trial_settings: {
-        end_behavior: { missing_payment_method: 'pause' },
-      },
       metadata: { supabase_user_id: user.id },
     },
     success_url: `${origin}/account?checkout=success`,

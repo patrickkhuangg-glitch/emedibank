@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/app-header'
+import { TrialBanner } from '@/components/trial-banner'
 
 export const metadata: Metadata = {
   robots: {
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AppHeader />
+      <TrialBanner />
       <main className="flex-1">{children}</main>
     </>
   )

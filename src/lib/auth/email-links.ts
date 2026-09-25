@@ -3,7 +3,7 @@ export type AccountEmailType = typeof emailTypes[number]
 export type AccountEmailLink = { tokenHash: string; type: AccountEmailType; code: string; next: string }
 
 // Only destinations used by account emails are accepted, including legacy links.
-const destinations = new Set(['/dashboard', '/admin', '/bookings', '/account', '/update-password', '/pricing?signup=success'])
+const destinations = new Set(['/app', '/dashboard', '/admin', '/bookings', '/account', '/update-password', '/pricing?signup=success'])
 export function readAccountEmailLink(params: URLSearchParams): AccountEmailLink | null {
   const next = params.get('next') ?? ''
   const code = params.get('code') ?? ''

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getProfile, requireAdmin, requireUser } from '@/lib/auth/dal'
+import { hasActiveEntitlement } from '@/lib/access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyPlanItemKind, StudyPlanStatus } from '@/lib/supabase/types'
 
@@ -248,11 +249,10 @@ function isIsoDate(input: string) {
 
 async function requireUnlockedExam(userId: string, examId: string) {
   const admin = createAdminClient()
-  const nowIso = new Date().toISOString()
-  const [{ data: exam }, { data: entitlement }] = await Promise.all([
+  const [{ data: exam }, entitled] = await Promise.all([
     admin.from('exams').select('id,name,kind').eq('id', examId).eq('active', true).maybeSingle(),
-    admin.from('entitlements').select('id').eq('user_id', userId).eq('exam_id', examId).or(`expires_at.is.null,expires_at.gt.${nowIso}`).limit(1).maybeSingle(),
+    hasActiveEntitlement(userId, examId),
   ])
-  if (!exam || !entitlement) throw new Error('That exam is not currently unlocked on your account.')
+  if (!exam || !entitled) throw new Error('That exam is not currently unlocked on your account.')
   return exam
 }

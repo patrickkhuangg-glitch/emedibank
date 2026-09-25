@@ -1,6 +1,6 @@
 import { getUser } from '@/lib/auth/dal'
 import { interviewVideoEnabled } from '@/lib/interviews/config'
-import { readSmallJson, apiError, InterviewApiError } from '@/lib/interviews/api'
+import { readSmallJson, apiError, InterviewApiError, requireInterviewAccess } from '@/lib/interviews/api'
 import { readMockSession, startMockSession } from '@/lib/interviews/mock-session'
 import { makeMockSteps, mockView } from '@/lib/interviews/mock-plan'
 import type { MockSelection } from '@/lib/interviews/mock-types'
@@ -8,6 +8,7 @@ export const runtime='nodejs'
 export async function POST(request:Request) {
  try {
   const user=await getUser();if(!user)throw new InterviewApiError('Sign in required.',401)
+  await requireInterviewAccess(user.id)
   if(!interviewVideoEnabled())throw new InterviewApiError('Mock interviews are not available yet.',503)
   const body=await readSmallJson(request)
   if(body.action==='start') {

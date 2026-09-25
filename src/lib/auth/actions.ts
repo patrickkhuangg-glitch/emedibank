@@ -51,16 +51,16 @@ export async function signUpAction(
     password,
     options: {
       data: { full_name: fullName, phone_number: phoneNumber },
-      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent('/pricing?signup=success')}`,
+      emailRedirectTo: `${origin}/auth/confirm?next=/app`,
     },
   })
   if (error) return { error: error.message }
 
   // If email confirmation is on, there's no session yet.
   if (!data.session) {
-    return { message: 'Check your email to verify your account, then choose a plan and start your trial.' }
+    return { message: 'Check your email to verify your account. Your 7-day free trial is ready when you sign in.' }
   }
-  redirect('/pricing?signup=success')
+  redirect('/app')
 }
 
 export async function updateProfileAction(_previous: AuthState, formData: FormData): Promise<AuthState> {
@@ -75,7 +75,7 @@ export async function updateProfileAction(_previous: AuthState, formData: FormDa
   const { error } = await supabase.from('profiles').update({ full_name: fullName, phone_number: phoneNumber }).eq('id', user.id)
   if (error) return { error: error.message.includes('profiles_phone_number_unique') ? 'That mobile number is already linked to another account.' : 'Your details could not be saved. Please try again.' }
   revalidatePath('/account')
-  return { message: 'Your details have been saved. You can now start a trial.' }
+  return { message: 'Your details have been saved.' }
 }
 
 export async function signInWithGoogleAction(formData: FormData) {

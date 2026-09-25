@@ -5,7 +5,8 @@
 // exam. Interviews is available standalone and as an optional add-on to every
 // other plan. Base currency AUD, with equivalent
 // round prices (ending in 99) in GBP/HKD/NZD/SGD via Stripe currency options.
-// 7-day trial applied at checkout.
+// Checkout is an immediate purchase; the 7-day free trial is account-level
+// (profiles.trial_ends_at), not a Stripe trial.
 //
 // Only YEARLY amounts are configured; the monthly price is derived automatically
 // as ~yearly / 6, rounded to a .99 ending (A$399/yr -> A$66.99/mo). Amounts are
@@ -13,7 +14,6 @@
 // before `npm run seed:stripe` — the script refuses zeros.
 
 export const BASE_CURRENCY = 'aud'
-export const TRIAL_PERIOD_DAYS = 7
 
 export const BILLING_INTERVALS = ['month', 'year'] as const
 export type Interval = (typeof BILLING_INTERVALS)[number]

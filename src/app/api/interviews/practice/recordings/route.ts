@@ -2,7 +2,7 @@ import { INTERVIEW_STATIONS } from '@/lib/interviews/stations'
 import { getPracticeQuestionIndex } from '@/lib/interviews/timing'
 import { getUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { apiError, InterviewApiError, readSmallJson } from '@/lib/interviews/api'
+import { apiError, InterviewApiError, readSmallJson, requireInterviewAccess } from '@/lib/interviews/api'
 import { stationSnapshot, mediaExtension, baseMime } from '@/lib/interviews/video-validation'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   try {
     const user = await getUser()
     if (!user) throw new InterviewApiError('Sign in required.', 401)
+    await requireInterviewAccess(user.id)
     if (request.headers.get('origin') !== new URL(request.url).origin) throw new InterviewApiError('Request origin is not allowed.', 403)
     const body = await readSmallJson(request)
     if (typeof body.id !== 'string' || !uuid.test(body.id)) throw new InterviewApiError('Invalid recording. Please start a new practice session.')

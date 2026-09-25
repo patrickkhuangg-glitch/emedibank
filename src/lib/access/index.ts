@@ -4,20 +4,68 @@
 // service-role client so the answer is authoritative and can never be spoofed
 // from the browser. The one question the app answers:
 //
-//   canAccessSubtest(userId, subtestId):
-//     subtest = load(subtestId)
-//     if subtest.is_free: return true
-//     return hasActiveEntitlement(userId, subtest.exam_id)
+//   hasActiveEntitlement(userId, examId):
+//     if the account's 7-day free trial is running: return true (every exam)
+//     return an unexpired entitlement row exists for (user, exam)
 //
-// Free access is read live from subtests.is_free (an admin toggle changes it for
-// every free user instantly). Paid access is read from the derived entitlements
-// table, which the Stripe webhook keeps in sync.
+// There is no free tier. New accounts get a 7-day trial (profiles.trial_ends_at,
+// server-controlled); after that, access comes from the derived entitlements
+// table, which the Stripe webhook keeps in sync (plus manual 'comp' grants).
 import 'server-only'
 import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+/** When the account's free trial ends, or null (signed out / no profile).
+ *  Cached per request. */
+export const getTrialEndsAt = cache(async (
+  userId: string | null | undefined,
+): Promise<Date | null> => {
+  if (!userId) return null
+  const { data, error } = await createAdminClient()
+    .from('profiles')
+    .select('trial_ends_at')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.trial_ends_at ? new Date(data.trial_ends_at) : null
+})
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Whole days left in a trial (rounded up), or 0 once it has ended. */
+export function trialDaysLeft(endsAt: Date): number {
+  const remainingMs = endsAt.getTime() - Date.now()
+  return remainingMs > 0 ? Math.max(1, Math.ceil(remainingMs / DAY_MS)) : 0
+}
+
+/** True if an entitlement expiry is unset (never expires) or still ahead. */
+export function isUnexpired(expiresAt: string | null): boolean {
+  return !expiresAt || new Date(expiresAt).getTime() > Date.now()
+}
+
+/** True while the account's free trial is running. */
+export async function isOnFreeTrial(userId: string | null | undefined): Promise<boolean> {
+  const endsAt = await getTrialEndsAt(userId)
+  return !!endsAt && endsAt.getTime() > Date.now()
+}
+
+/** True if the user holds any unexpired entitlement (paid or comp), regardless
+ *  of trial. Cached per request. */
+export const hasAnyPaidAccess = cache(async (userId: string | null | undefined): Promise<boolean> => {
+  if (!userId) return false
+  const { data, error } = await createAdminClient()
+    .from('entitlements')
+    .select('id')
+    .eq('user_id', userId)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    .limit(1)
+  if (error) throw error
+  return (data?.length ?? 0) > 0
+})
+
 /**
- * True if the user holds an active (unexpired) entitlement for the exam.
+ * True if the user may use the exam: their free trial is running, or they hold
+ * an active (unexpired) entitlement for it.
  * Entitlements are derived from subscriptions by the webhook; a row is only
  * "active" while it exists and has not passed its expires_at.
  *
@@ -29,6 +77,7 @@ export const hasActiveEntitlement = cache(async (
   examId: string,
 ): Promise<boolean> => {
   if (!userId) return false
+  if (await isOnFreeTrial(userId)) return true
 
   const supabase = createAdminClient()
   const nowIso = new Date().toISOString()
@@ -45,10 +94,7 @@ export const hasActiveEntitlement = cache(async (
   return (data?.length ?? 0) > 0
 })
 
-/**
- * The core gate. Free subtests are open to any signed-up user (route protection
- * enforces sign-in); otherwise the user must be entitled to the subtest's exam.
- */
+/** Subtest-level gate: the user must be able to use the subtest's exam. */
 export async function canAccessSubtest(
   userId: string | null | undefined,
   subtestId: string,
@@ -57,21 +103,17 @@ export async function canAccessSubtest(
 
   const { data: subtest, error } = await supabase
     .from('subtests')
-    .select('id, exam_id, is_free')
+    .select('id, exam_id')
     .eq('id', subtestId)
     .maybeSingle()
 
   if (error) throw error
   if (!subtest) return false
-  if (subtest.is_free) return true
 
   return hasActiveEntitlement(userId, subtest.exam_id)
 }
 
-/**
- * Exam-level gate: does the user hold full (paid) access to the whole exam?
- * Free subtests remain reachable via canAccessSubtest regardless of this.
- */
+/** Exam-level gate: trial or paid access to the whole exam. */
 export async function canAccessExam(
   userId: string | null | undefined,
   examId: string,
@@ -83,14 +125,12 @@ export type SectionAccess = {
   id: string
   slug: string
   name: string
-  isFree: boolean
   locked: boolean
 }
 
 /**
- * Per-section access for an exam, for lock indicators. A section is locked only
- * when it is not free AND the user lacks an active entitlement — the same rule
- * canAccessSubtest enforces. Entitlement is checked once for the whole exam.
+ * Per-section access for an exam, for lock indicators. Access is exam-wide, so
+ * every section shares one check.
  */
 export async function getSectionAccess(
   userId: string | null | undefined,
@@ -100,7 +140,7 @@ export async function getSectionAccess(
   const [{ data: subs }, entitled] = await Promise.all([
     supabase
       .from('subtests')
-      .select('id, slug, name, is_free, sort_order')
+      .select('id, slug, name, sort_order')
       .eq('exam_id', examId)
       .order('sort_order'),
     hasActiveEntitlement(userId, examId),
@@ -109,7 +149,6 @@ export async function getSectionAccess(
     id: s.id,
     slug: s.slug,
     name: s.name,
-    isFree: s.is_free,
-    locked: !s.is_free && !entitled,
+    locked: !entitled,
   }))
 }

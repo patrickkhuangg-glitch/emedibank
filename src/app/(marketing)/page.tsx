@@ -193,7 +193,7 @@ export default function Home() {
       <section>
         <Container className="py-16 sm:py-24">
           <div className="rounded-3xl bg-ink px-8 py-14 text-center text-ink-foreground sm:px-12">
-            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Start with a free mock today.</h2>
+            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Start your 7-day free trial today.</h2>
             <p className="mx-auto mt-3 max-w-md text-ink-foreground/70">Pick your exam and practise in the interface you will actually sit.</p>
             <Link href="/app" className="eb-press eb-soft-hover mt-7 inline-flex items-center gap-1.5 rounded-full bg-brand px-6 py-3 font-semibold text-brand-foreground transition-all duration-200 hover:-translate-y-0.5">
               Open Studocyte <ArrowUpRight />
@@ -214,7 +214,7 @@ const STEPS = [
 
 const FAQS = [
   { q: 'Which exams are covered?', a: 'UCAT, GAMSAT and ISAT practice are available, alongside an Australian MMI and panel interview preparation workspace.' },
-  { q: 'Is there a free option?', a: 'Yes. Full, timed mock exams are free for every exam. A subscription unlocks the full question bank and video explanations.' },
+  { q: 'Is there a free trial?', a: 'Yes. Every new account gets 7 days of full access to every exam and Interviews, with no card required. After that, a subscription keeps everything unlocked — or subscribe any time during the trial.' },
   { q: 'Do explanations include video?', a: 'Every question has a written rationale, and paid plans add a video walkthrough for each one.' },
   { q: 'Does it match the real test?', a: 'The runner replicates the layout, fonts, timing and question types of the real interface, including a kiosk mode and on-screen calculator.' },
 ]

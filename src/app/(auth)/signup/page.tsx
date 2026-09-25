@@ -14,7 +14,7 @@ export default async function SignupPage() {
       <div>
         <h1 className="text-xl font-semibold">Create your account</h1>
         <p className="mt-1 text-sm text-muted">
-          Set up your free account, verify your email, then choose a plan to start your 7-day trial.
+          Your 7-day free trial starts when you create your account — full access to every exam and Interviews, no card required.
         </p>
       </div>
       <SignupForm />

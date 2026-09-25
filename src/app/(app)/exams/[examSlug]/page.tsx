@@ -54,7 +54,7 @@ export default async function ExamPage({
             <p className="px-4 py-4 text-sm text-muted">No subtests yet for this exam.</p>
           ) : (
             (subtests ?? []).map((s) => {
-              const unlocked = s.is_free || entitled
+              const unlocked = entitled
               return (
                 <Link
                   key={s.id}
@@ -64,7 +64,7 @@ export default async function ExamPage({
                   <span className="font-medium">{s.name}</span>
                   {unlocked ? (
                     <span className="rounded-full bg-success-muted px-3 py-1 text-xs font-medium text-success">
-                      {s.is_free ? 'Free' : 'Unlocked'}
+                      Unlocked
                     </span>
                   ) : (
                     <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-muted">

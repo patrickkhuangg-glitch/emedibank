@@ -3,7 +3,7 @@
 // Called by the Stripe webhook after it writes a subscription row. Resolution:
 //   per-exam subscription -> that one exam
 //   all-access bundle     -> every exam
-// Free access is never stored here (it lives on subtests.is_free). Manual 'comp'
+// The account free trial is never stored here (it lives on profiles.trial_ends_at). Manual 'comp'
 // grants are preserved; only 'subscription'/'bundle' rows are managed by this sync.
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'

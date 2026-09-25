@@ -4,6 +4,7 @@ import { Container } from '@/components/container'
 import { ButtonLink } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { requireUser, getProfile } from '@/lib/auth/dal'
+import { isOnFreeTrial, isUnexpired } from '@/lib/access'
 import { createClient } from '@/lib/supabase/server'
 import { BillingButton } from './billing-button'
 import { InterfaceModeToggle } from './interface-mode-toggle'
@@ -15,11 +16,11 @@ export const metadata: Metadata = { title: 'Account · Studocyte' }
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string; complete?: string }>
+  searchParams: Promise<{ checkout?: string }>
 }) {
   const user = await requireUser('/account')
   const profile = await getProfile()
-  const { checkout, complete } = await searchParams
+  const { checkout } = await searchParams
   const supabase = await createClient()
 
   const [{ data: exams }, { data: entitlements }, { data: subscriptions }] = await Promise.all([
@@ -28,7 +29,9 @@ export default async function AccountPage({
     supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
   ])
 
-  const entitledExamIds = new Set((entitlements ?? []).map((e) => e.exam_id))
+  const entitledExamIds = new Set((entitlements ?? []).filter((e) => isUnexpired(e.expires_at)).map((e) => e.exam_id))
+  const onTrial = await isOnFreeTrial(user.id)
+  const trialEnds = profile?.trial_ends_at ? new Date(profile.trial_ends_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : null
   const studentView = profile?.role === 'student'
   const hasBilling = studentView && Boolean(profile?.stripe_customer_id)
 
@@ -50,7 +53,6 @@ export default async function AccountPage({
 
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your details</h2>
-          {studentView && complete === 'trial' ? <p className="mt-2 text-sm leading-6 text-muted">Add your full name and mobile number before starting a free trial.</p> : null}
           <ProfileForm fullName={profile?.full_name ?? ''} phoneNumber={profile?.phone_number ?? ''} />
         </section>
 
@@ -67,9 +69,13 @@ export default async function AccountPage({
                     <span className="rounded-full bg-success-muted px-3 py-1 text-xs font-medium text-success">
                       Full access
                     </span>
+                  ) : onTrial ? (
+                    <span className="rounded-full bg-brand-muted px-3 py-1 text-xs font-medium text-brand">
+                      Free trial
+                    </span>
                   ) : (
                     <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-muted">
-                      Free tier
+                      Locked
                     </span>
                   )}
                 </div>
@@ -116,8 +122,12 @@ export default async function AccountPage({
           </section>
         ) : (
           <section className="rounded-lg border border-border bg-surface p-6 text-center">
-            <p className="text-muted">You&rsquo;re on the free tier.</p>
-            <ButtonLink href="/pricing" className="mt-4">See plans</ButtonLink>
+            <p className="text-muted">
+              {onTrial
+                ? `You’re on the 7-day free trial until ${trialEnds}. Subscribe any time to keep your access.`
+                : 'Your free trial has ended. Subscribe to unlock every feature again.'}
+            </p>
+            <ButtonLink href="/pricing" className="mt-4">{onTrial ? 'Subscribe now' : 'See plans'}</ButtonLink>
           </section>
         )) : (
           <section className="rounded-2xl border border-border bg-surface p-5">

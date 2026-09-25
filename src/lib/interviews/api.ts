@@ -1,10 +1,16 @@
 import 'server-only'
 import { getUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { canUseInterviews } from './access'
 export class InterviewApiError extends Error { constructor(message:string,public status=400){super(message)} }
+/** Interviews needs a running free trial or a paid plan; staff always pass. */
+export async function requireInterviewAccess(userId:string) {
+ if(!(await canUseInterviews(userId))) throw new InterviewApiError('Your free trial has ended. Subscribe to keep practising interviews.',403)
+}
 export async function ownedAttempt(id:string) {
  const user=await getUser()
  if(!user) throw new InterviewApiError('Sign in required.',401)
+ await requireInterviewAccess(user.id)
  const db=createAdminClient()
  const {data:attempt,error}=await db.from('interview_attempts').select('*').eq('id',id).eq('user_id',user.id).maybeSingle()
  if(error||!attempt) throw new InterviewApiError('Recording not found.',404)

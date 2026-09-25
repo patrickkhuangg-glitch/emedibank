@@ -2,11 +2,12 @@ import { getUser } from '@/lib/auth/dal'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { interviewVideoEnabled } from '@/lib/interviews/config'
 import { stationSnapshot,mediaExtension,baseMime } from '@/lib/interviews/video-validation'
-import { apiError,InterviewApiError,readSmallJson } from '@/lib/interviews/api'
+import { apiError,InterviewApiError,readSmallJson,requireInterviewAccess } from '@/lib/interviews/api'
 import { readMockSession,mockAttemptId } from '@/lib/interviews/mock-session'
 export async function POST(request:Request) {
  try{
  const user=await getUser();if(!user)throw new InterviewApiError('Sign in required.',401)
+ await requireInterviewAccess(user.id)
  if(!interviewVideoEnabled())throw new InterviewApiError('Video recording is not available yet.',503)
  const body=await readSmallJson(request)
  const ticket=body.mockToken?readMockSession(body.mockToken,user.id):null

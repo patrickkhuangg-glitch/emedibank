@@ -34,8 +34,8 @@ export default async function MockRunPage({
   const mock = findMock(examSlug, mockId)
   if (!mock) notFound()
 
-  // Free mocks are open to any signed-in user; premium mocks need entitlement.
-  if (!mock.free && !(await canAccessExam(user.id, exam.id))) redirect(`/mock/${exam.slug}`)
+  // Mocks need an active free trial or paid access, like the rest of the exam.
+  if (!(await canAccessExam(user.id, exam.id))) redirect(`/mock/${exam.slug}`)
 
   const resolved = await resolveMockSections(exam.id, mock)
   const expectedSections = mock.sections.length

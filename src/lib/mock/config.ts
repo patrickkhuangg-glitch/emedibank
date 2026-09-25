@@ -17,7 +17,6 @@ export type MockDef = {
   id: string
   assignmentKey: string
   name: string
-  free: boolean // free mocks are the free tier's headline feature; premium mocks need entitlement
   kind: 'mini' | 'full'
   sections: MockSection[]
 }
@@ -33,10 +32,10 @@ export const MINI_MOCKS_PER_SECTION = 4
 
 export const MOCK_EXAMS: Record<string, MockDef[]> = {
   ucat: [
-    { id: 'practice-test-1', assignmentKey: 'practice-test-1', name: 'Practice Test 1', free: true, kind: 'full', sections: UCAT_SECTIONS },
-    { id: 'practice-test-2', assignmentKey: 'practice-test-2', name: 'Practice Test 2', free: true, kind: 'full', sections: UCAT_SECTIONS },
-    { id: 'practice-test-3', assignmentKey: 'practice-test-3', name: 'Practice Test 3', free: false, kind: 'full', sections: UCAT_SECTIONS },
-    { id: 'practice-test-4', assignmentKey: 'practice-test-4', name: 'Practice Test 4', free: false, kind: 'full', sections: UCAT_SECTIONS },
+    { id: 'practice-test-1', assignmentKey: 'practice-test-1', name: 'Practice Test 1', kind: 'full', sections: UCAT_SECTIONS },
+    { id: 'practice-test-2', assignmentKey: 'practice-test-2', name: 'Practice Test 2', kind: 'full', sections: UCAT_SECTIONS },
+    { id: 'practice-test-3', assignmentKey: 'practice-test-3', name: 'Practice Test 3', kind: 'full', sections: UCAT_SECTIONS },
+    { id: 'practice-test-4', assignmentKey: 'practice-test-4', name: 'Practice Test 4', kind: 'full', sections: UCAT_SECTIONS },
   ],
 }
 
@@ -60,5 +59,5 @@ export function findMiniMock(examSlug: string, subtestSlug: string, mockId: stri
   if (!section || !match) return null
   const number = Number(match[1])
   if (number < 1 || number > MINI_MOCKS_PER_SECTION) return null
-  return { id: mockId, assignmentKey: `mini-${subtestSlug}-${number}`, name: `${section.name} Mini Mock ${number}`, free: false, kind: 'mini', sections: [section] }
+  return { id: mockId, assignmentKey: `mini-${subtestSlug}-${number}`, name: `${section.name} Mini Mock ${number}`, kind: 'mini', sections: [section] }
 }

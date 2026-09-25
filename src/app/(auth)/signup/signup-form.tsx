@@ -27,9 +27,9 @@ export function SignupForm() {
       />
       <input type="hidden" name="turnstileToken" value={turnstileToken} />
       <Turnstile onTokenChange={setTurnstileToken} />
-      <p className="text-xs leading-5 text-muted">Verify your email, then choose a plan. If you continue after the 7-day trial, card details are collected securely by Stripe.</p>
+      <p className="text-xs leading-5 text-muted">Verify your email to begin. To keep access after the 7-day trial, subscribe any time — card details are collected securely by Stripe.</p>
       <Button type="submit" className="w-full" disabled={pending || !turnstileToken}>
-        {pending ? 'Creating account…' : 'Create free account'}
+        {pending ? 'Creating account…' : 'Start free trial'}
       </Button>
     </form>
   )

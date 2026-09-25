@@ -183,9 +183,9 @@ export function PricingCards({ plans, defaultCurrency }: { plans: Plan[]; defaul
                   </label>
                 ) : null}
                 <Button type="submit" variant={featured ? 'primary' : 'secondary'} className="w-full">
-                  Start 7-day free trial
+                  Subscribe now
                 </Button>
-                <p className="mt-2 text-center text-[11px] text-muted">Then {week != null ? fmt(week, 2, currency) : ''}/week. Cancel anytime.</p>
+                <p className="mt-2 text-center text-[11px] text-muted">{week != null ? `${fmt(week, 2, currency)}/week. ` : ''}Unlocks immediately. Cancel anytime.</p>
               </form>
             </div>
           )
